@@ -14,11 +14,14 @@ description: 通过本机 Agent Workbench 按需读取已登记项目的约束�
 ```sh
 node <skill目录>/scripts/workbench.mjs projects
 node <skill目录>/scripts/workbench.mjs context --project <项目ID或目录>
-node <skill目录>/scripts/workbench.mjs read --project <项目ID或目录> --file docs/agent/frontend.md
+node <skill目录>/scripts/workbench.mjs read --project <项目ID或目录> --file .agent-workbench/rules/frontend.md
 node <skill目录>/scripts/workbench.mjs journal --project <项目ID或目录> --query <关键词>
+node <skill目录>/scripts/workbench.mjs maintenance --project <项目ID或目录> --query <关键词>
 ```
 
-`context` 返回全局／项目约束正文和模块索引；根据当前任务选择模块，再用 `read` 展开。不默认读取全部模块、历史日志或原始会话。不把维护背景、被否决方案和被替代说明当成有效指令。没有登记的项目需由用户在看板登记，不自行扩大读取范围。
+`context` 的 `rules` 返回全局／项目入口正文，`indexes` 返回 `.agent-workbench/rules/index.md` 等已登记模块根索引的正文，`modules` 只给出可展开文件。先按索引的任务条件选择模块，再用 `read` 展开；模块引用共用规则时读取链接目标，不复制另一份正文。不默认读取全部模块、历史日志或原始会话。不把维护背景、被否决方案和被替代说明当成有效指令。没有登记的项目需由用户在看板登记，不自行扩大读取范围。
+
+新项目固定使用根 `AGENTS.md`、`.agent-workbench/rules/` 和 `docs/maintenance/`；已有项目以登记映射为准，不额外猜测或扫描其他规则目录。小项目可只有入口文件，目录和模块索引不存在不代表需要自动创建。需要新入口时可参考工作台仓库的 `templates/project/`，仍通过提案审核写入。
 
 ## 提出新约束
 
@@ -35,5 +38,11 @@ node <skill目录>/scripts/workbench.mjs propose --project <项目ID或目录> -
 ## 维护背景
 
 重要变更完成后，可通过 `record --project <项目ID或目录> --input <记录JSON文件>` 留档。记录包含 `title`、`background`、`result`；可补 `verification`、`next`、`topic`、`alternatives`、`tradeoffs`。仅记录已发生的事实，明确缺失验证。普通维护日志不会自动变成约束。
+
+`maintenance` 返回决策摘要、来源、引用和关联迭代；需要完整取舍时再用 `read` 读取选定笔记。决策首次提出日不等于实际落地日。归档和被替代笔记只作为历史，不能通过引用数量推定其是有效约束。
+
+`record` 可补 `category`（architecture／feature／bug-fix／simplification／process／testing）、`decisionFiles`（已有决策的项目相对路径数组）、`relatedFiles`（已登记 Markdown 路径数组）。关联必须来自实际阅读，不按标题相似猜测。不要求每次小修改另建决策笔记。
+
+为一次记录生成稳定 `operationId`，响应丢失或超时后原样重试；同一标识不同内容会被拒绝。下一次真实迭代使用新标识。记录事实不会改变决策实施状态，不会批准约束。外部直接改约束尚无自动送审或最后已审快照，优先走候选审核。
 
 所有命令输出 JSON；非零退出或返回错误时，不声称读取、提案或记录已成功。该 Skill 没有批准命令，也不授予对其他项目的修改权限。

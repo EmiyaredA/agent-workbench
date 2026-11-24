@@ -29,7 +29,9 @@ jobs:
         if: always()
         with:
           name: browser-acceptance
-          path: .local/ui-acceptance/
+          path: |
+            .local/ui-acceptance/
+            .local/maintenance-ui/
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: ignore

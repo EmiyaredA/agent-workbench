@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 const checked = spawnSync(process.execPath,['scripts/check.mjs'],{stdio:'inherit'});
 if (checked.status !== 0) process.exit(checked.status ?? 1);
 fs.mkdirSync('dist',{recursive:true});
-for (const name of ['src','web','skills','README.md','LICENSE','NOTICE','package-lock.json']) fs.cpSync(name,path.join('dist',name),{recursive:true});
+for (const name of ['src','web','skills','templates','README.md','LICENSE','NOTICE','package-lock.json']) fs.cpSync(name,path.join('dist',name),{recursive:true});
 const manifest = JSON.parse(fs.readFileSync('package.json','utf8'));
 manifest.scripts = { start:'node src/server.mjs',demo:'node src/server.mjs --demo',agent:'node src/cli.mjs' };
 fs.writeFileSync('dist/package.json',JSON.stringify(manifest,null,2)+'\n');

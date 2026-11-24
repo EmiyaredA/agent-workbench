@@ -1,0 +1,27 @@
+{
+  "checks": {
+    "archive_moves_file": true,
+    "archive_keeps_implemented_status": true,
+    "archive_seal_verified": true,
+    "tamper_detected": true,
+    "successor_links_archived_snapshot": true,
+    "old_link_in_active_note_still_needs_repair": true,
+    "journal_old_link_not_repaired": true
+  },
+  "current_integration": {
+    "miniDiscoversNotesWithoutEntryLinks": false,
+    "workbenchReadsDecisionNotes": 2,
+    "externalEditAutoQueued": false,
+    "externalEditAlreadyInContext": true,
+    "identicalRecordCalls": 2
+  },
+  "sources": {
+    "write-notes": "8f3b404cf9fd8102f96561f390219877abf094a8",
+    "mini-trellis": "0f37e0f2115da85e7bdcdbaebeea038a8080bae8"
+  },
+  "scope": "Isolated local-source research; not a claim that proposed workbench features are implemented.",
+  "source_files": {
+    "workbench_store": "7521e1d5bbbaf4c30ad86d8b358ed6aeecf1dc865cff2ca229c949834f395870",
+    "write_notes_archive": "35edad10ca02ece4e1ddd9887327d224025dafbc7c784cb5dabf0191499ca084"
+  }
+}

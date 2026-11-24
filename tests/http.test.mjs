@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
@@ -16,6 +17,9 @@ async function service(t) {
 test('serves UI and all local runtime assets without external resources',async t => {
   const f = await service(t);
   for (const route of ['/','/app.js','/style.css','/vendor/marked.js','/vendor/purify.js','/icons/style.css','/icons/Phosphor.woff2']) assert.equal((await fetch(f.base+route)).status,200,route);
+  const skill = await fetch(f.base+'/api/skill').then(r => r.json());
+  assert.equal(skill.content,fs.readFileSync(new URL('../skills/agent-workbench/SKILL.md',import.meta.url),'utf8'));
+  assert.equal(skill.file,'skills/agent-workbench/SKILL.md');
   assert.equal((await fetch(f.base+'/unknown')).status,404);
 });
 test('mutations require same-origin UI nonce and invalid JSON is rejected',async t => {

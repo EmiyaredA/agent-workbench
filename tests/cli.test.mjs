@@ -9,7 +9,7 @@ const cli = path.resolve('src/cli.mjs');
 const skill = path.resolve('skills/agent-workbench/scripts/workbench.mjs');
 const run = (script,args,cwd) => spawnSync(process.execPath,[script,...args],{cwd,encoding:'utf8'});
 test('CLI and Skill wrapper read the same registry and expose no approval command',t => {
-  const f = fixture(t); f.write('AGENTS.md','# Fixture'); f.write('docs/agent/ui.md','# UI\nLarge module body');
+  const f = fixture(t); f.write('AGENTS.md','# Fixture'); f.write('.agent-workbench/rules/ui.md','# UI\nLarge module body');
   const output = run(skill,['context','--project',f.project.id,'--data',f.data],f.root); assert.equal(output.status,0,output.stderr);
   const context = JSON.parse(output.stdout); assert.equal(context.rules.length,1); assert.equal(context.modules[0].content,undefined);
   assert.notEqual(run(skill,['apply','--data',f.data],f.root).status,0);

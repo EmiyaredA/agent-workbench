@@ -4,20 +4,22 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { randomBytes } from 'node:crypto';
 import { Workbench, Fault } from './store.mjs';
-import { seedDemo } from './demo.mjs';
+import { seedDemo, demoDirectory } from './demo.mjs';
+import { projectLayout } from './layout.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(directory, '..');
 const iconsDirectory = path.dirname(fileURLToPath(import.meta.resolve('@phosphor-icons/web/regular')));
 const assets = {
   '/': ['web/index.html', 'text/html; charset=utf-8'],
+  '/maintenance.js': ['web/maintenance.js','text/javascript; charset=utf-8'],
   '/app.js': ['web/app.js', 'text/javascript; charset=utf-8'],
   '/style.css': ['web/style.css', 'text/css; charset=utf-8'],
   '/vendor/marked.js': [fileURLToPath(import.meta.resolve('marked')), 'text/javascript; charset=utf-8'],
   '/vendor/purify.js': [fileURLToPath(import.meta.resolve('dompurify')), 'text/javascript; charset=utf-8'],
 };
 const send = (res, status, data) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(data)); };
-export function createApp({ dataDir = path.join(root,'.runtime/workbench'), demo = false, store = new Workbench(dataDir) } = {}) {
+export function createApp({ demo = false, dataDir = path.join(root,'.runtime',demo ? demoDirectory : 'workbench'), store = new Workbench(dataDir) } = {}) {
   store.recover(); if (demo) seedDemo(store);
   const nonce = randomBytes(32).toString('hex');
   const server = http.createServer(async (req, res) => {
@@ -29,7 +31,11 @@ export function createApp({ dataDir = path.join(root,'.runtime/workbench'), demo
     res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
     const url = new URL(req.url, `http://${req.headers.host}`);
     const pathname = url.pathname;
-    if (req.method === 'GET' && pathname === '/api/session') return send(res, 200, { nonce, demo, dataDir: store.dataDir, root, version: '0.1.0' });
+    if (req.method === 'GET' && pathname === '/api/session') return send(res, 200, { nonce, demo, dataDir: store.dataDir, root, version: '0.1.0', layout: projectLayout });
+    if (req.method === 'GET' && pathname === '/api/skill') {
+      const file = 'skills/agent-workbench/SKILL.md';
+      return send(res, 200, { file, path: path.join(root,file), content: fs.readFileSync(path.join(root,file),'utf8') });
+    }
     let input = {};
     if (req.method !== 'GET') {
       if (req.headers.origin !== `http://${req.headers.host}` || req.headers['x-workbench-nonce'] !== nonce) throw new Fault('请从当前看板页面发起操作', 403);
@@ -48,7 +54,7 @@ export function createApp({ dataDir = path.join(root,'.runtime/workbench'), demo
     if (pathname === '/api/projects/inspect' && req.method === 'POST') return send(res,200,store.inspect(input));
     if (pathname === '/api/projects' && req.method === 'POST') return send(res, 201, store.register(input));
     if (pathname === '/api/global' && req.method === 'POST') { store.setGlobal(input.file); return send(res, 200, { ok: true }); }
-    const projectMatch = pathname.match(/^\/api\/projects\/([^/]+)(?:\/(document|journal|context|search))?$/);
+    const projectMatch = pathname.match(/^\/api\/projects\/([^/]+)(?:\/(document|journal|maintenance|context|search))?$/);
     if (projectMatch) {
       const [, id, operation] = projectMatch;
       if (!operation && req.method === 'GET') return send(res, 200, store.catalog(id));
@@ -56,6 +62,7 @@ export function createApp({ dataDir = path.join(root,'.runtime/workbench'), demo
       if (!operation && req.method === 'DELETE') { store.remove(id); return send(res, 200, { ok: true }); }
       if (operation === 'search' && req.method === 'GET') return send(res,200,store.search(id,url.searchParams.get('q') ?? '',url.searchParams.get('kind') ?? 'all'));
       if (operation === 'document' && req.method === 'GET') return send(res, 200, store.document(id, url.searchParams.get('file')));
+      if (operation === 'maintenance' && req.method === 'GET') return send(res, 200, store.maintenance(id));
       if (operation === 'journal' && req.method === 'GET') return send(res, 200, store.journal(id));
       if (operation === 'journal' && req.method === 'POST') return send(res, 201, store.record(id, input));
       if (operation === 'context' && req.method === 'GET') return send(res, 200, store.context(id, url.searchParams.get('query') ?? ''));
@@ -92,7 +99,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   const args = process.argv.slice(2);
   const value = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i+1]; };
   const demo = args.includes('--demo');
-  const dataDir = path.resolve(value('--data',process.env.AGENT_WORKBENCH_DATA ?? path.join(root,'.runtime',demo ? 'demo' : 'workbench')));
+  const dataDir = path.resolve(value('--data',process.env.AGENT_WORKBENCH_DATA ?? path.join(root,'.runtime',demo ? demoDirectory : 'workbench')));
   const port = Number(value('--port','4173'));
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw Error('端口格式不正确');
   const { server } = createApp({ dataDir,demo });

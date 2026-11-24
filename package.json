@@ -15,7 +15,7 @@
     "check": "node scripts/check.mjs",
     "build": "node scripts/build.mjs",
     "agent": "node src/cli.mjs",
-    "test:ui": "node scripts/verify-ui.mjs"
+    "test:ui": "node scripts/verify-ui.mjs && node scripts/verify-maintenance-ui.mjs"
   },
   "dependencies": {
     "mini-trellis-core": "0.4.2",

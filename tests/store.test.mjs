@@ -26,7 +26,7 @@ test('custom rule and journal mappings are classified correctly',t => {
   assert.throws(() => f.store.configure(f.project.id,{journalDir:'rules'}),/重叠/);
 });
 test('context includes global and project bodies, module index only; pending stays out',t => {
-  const f = fixture(t); f.write('AGENTS.md','# 项目\n当前规则'); f.write('docs/agent/frontend.md','# 前端\n按需正文');
+  const f = fixture(t); f.write('AGENTS.md','# 项目\n当前规则'); f.write('.agent-workbench/rules/frontend.md','# 前端\n按需正文');
   const global = path.join(f.root,'global.md'); fs.writeFileSync(global,'# 全局\n中文沟通'); f.store.setGlobal(global);
   f.proposal({content:'# 候选\n不应注入'});
   const result = f.store.context(f.project.id);
@@ -96,15 +96,15 @@ test('journal failure after target write can be repaired without a second target
 });
 test('path escapes, ordinary symlinks and dangling symlinks are rejected',t => {
   const f = fixture(t); const outside = path.join(f.root,'outside.md'); fs.writeFileSync(outside,'private');
-  fs.mkdirSync(path.join(f.projectRoot,'docs/agent'),{recursive:true});
-  fs.symlinkSync(outside,path.join(f.projectRoot,'docs/agent/link.md'));
-  fs.symlinkSync(path.join(f.root,'absent'),path.join(f.projectRoot,'docs/agent/dangling.md'));
-  for (const file of ['../outside.md','docs/agent/link.md','docs/agent/dangling.md']) assert.throws(() => f.proposal({file}));
+  fs.mkdirSync(path.join(f.projectRoot,'.agent-workbench/rules'),{recursive:true});
+  fs.symlinkSync(outside,path.join(f.projectRoot,'.agent-workbench/rules/link.md'));
+  fs.symlinkSync(path.join(f.root,'absent'),path.join(f.projectRoot,'.agent-workbench/rules/dangling.md'));
+  for (const file of ['../outside.md','.agent-workbench/rules/link.md','.agent-workbench/rules/dangling.md']) assert.throws(() => f.proposal({file}));
 });
 test('superseded module documents are not returned as effective context',t => {
   const f = fixture(t); f.write('AGENTS.md','# Root');
-  f.write('docs/agent/old.md','---\nstatus: superseded\nsuperseded_by: docs/agent/new.md\n---\n# Old'); f.write('docs/agent/new.md','# New');
-  assert.deepEqual(f.store.context(f.project.id).modules.map(d => d.file),['docs/agent/new.md']);
+  f.write('.agent-workbench/rules/old.md','---\nstatus: superseded\nsuperseded_by: .agent-workbench/rules/new.md\n---\n# Old'); f.write('.agent-workbench/rules/new.md','# New');
+  assert.deepEqual(f.store.context(f.project.id).modules.map(d => d.file),['.agent-workbench/rules/new.md']);
 });
 test('journal parser ignores headings inside fenced code',t => {
   const f = fixture(t); f.write('docs/maintenance/2026-11.md','# 日志\n\n## 2026-11-24 · One\n\n```md\n## Not a record\n```\n\n## 2026-11-23 · Two\n\nDone');
@@ -148,4 +148,34 @@ test('an interrupted approved transaction cannot be edited or rejected before re
   assert.throws(() => f.store.reject(p.id,'Reject later'),/部分写入/); assert.throws(() => f.store.rebase(p.id),/部分写入/);
   const restarted = new Workbench(f.data); restarted.apply(p.id,p);
   assert.equal(restarted.proposal(p.id).status,'applied'); assert.equal(restarted.journal(f.project.id).length,1);
+});
+
+
+test('standard directories are chosen without creating files; unrelated docs are not read as context',t => {
+  const f = fixture(t);
+  assert.deepEqual(f.project.ruleFiles,['AGENTS.md']);
+  assert.deepEqual(f.project.ruleRoots,['.agent-workbench/rules']);
+  assert.equal(f.project.journalDir,'docs/maintenance');
+  assert.deepEqual(fs.readdirSync(f.projectRoot),[]);
+  f.write('AGENTS.md','# Entry'); f.write('.agent-workbench/rules/frontend.md','# Frontend\nLazy body');
+  f.write('.agent-workbench/rules/index.md','# Routes\n\nFrontend work: [Frontend](frontend.md)');
+  f.write('.trellis/spec/old.md','# Legacy tree is not implicit');
+  f.write('docs/random.md','# Not a rule'); f.write('README.md','# Not context');
+  f.write('.trellis/research/example.md','# Unconfirmed investigation');
+  const context = f.store.context(f.project.id);
+  assert.deepEqual(context.rules.map(doc => doc.file),['AGENTS.md']);
+  assert.deepEqual(context.indexes.map(doc => doc.file),['.agent-workbench/rules/index.md']);
+  assert.ok(context.indexes[0].content.includes('frontend.md'));
+  assert.ok(context.modules.every(doc => doc.content === undefined));
+  assert.ok(!JSON.stringify(context).includes('Lazy body'));
+  assert.deepEqual(f.store.catalog(f.project.id).docs.map(doc => doc.file),['.agent-workbench/rules/index.md','AGENTS.md','.agent-workbench/rules/frontend.md'].sort((a,b) => (a.endsWith('/index.md') ? -1 : b.endsWith('/index.md') ? 1 : a.localeCompare(b))));
+  assert.throws(() => f.store.document(f.project.id,'docs/random.md'),/没有发现/);
+});
+test('explicit old directory mappings remain the only source of truth; no implicit second rule tree',t => {
+  const f = fixture(t); f.store.configure(f.project.id,{ruleRoots:['docs/agent']});
+  f.write('docs/agent/frontend.md','# Existing rule'); f.write('.agent-workbench/rules/other.md','# Other tree');
+  const restarted = new Workbench(f.data);
+  assert.deepEqual(restarted.context(f.project.id).modules.map(doc => doc.file),['docs/agent/frontend.md']);
+  assert.throws(() => restarted.document(f.project.id,'.agent-workbench/rules/other.md'),/没有发现/);
+  assert.throws(() => restarted.propose({projectId:f.project.id,file:'.agent-workbench/rules/other.md',title:'Wrong tree',reason:'No',source:'Fixture',content:'# No'}),/已登记/);
 });

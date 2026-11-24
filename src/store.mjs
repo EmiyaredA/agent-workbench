@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-import { discoverDocs, parseDocLineage, queryTerms, matchTerms } from 'mini-trellis-core/mem';
+import { parseDocLineage, queryTerms, matchTerms } from 'mini-trellis-core/mem';
 import { diffLines } from 'diff';
-import { marked } from 'marked';
+import { categories, journalBlocks, journalMetadata, maintenance } from './maintenance.mjs';
 import { atomic, exclusive, info } from './io.mjs';
+import { projectLayout, indexFiles } from './layout.mjs';
 export { atomic } from './io.mjs';
 
 export class Fault extends Error {
@@ -42,12 +43,12 @@ export class Workbench {
     catch { throw new Fault('目录不存在或无法读取'); }
     const duplicate = this.registry.projects.find(p => p.root === root);
     if (duplicate) throw new Fault('这个目录已经登记', 409);
-    return { root, discovered: ['AGENTS.md','docs/agent','.trellis/spec','docs/maintenance','.trellis/workspace'].filter(file => exists(path.join(root,file))) };
+    return { root, discovered: [...projectLayout.ruleFiles,...projectLayout.ruleRoots,projectLayout.journalDir,projectLayout.decisionDir,projectLayout.legacyJournalDir,'docs/agent','.trellis/spec'].filter(file => exists(path.join(root,file))) };
   }
   register(input) {
     const { root } = this.inspect(input);
     const item = { id: randomUUID(), name: short(input.name, path.basename(root), 80) || path.basename(root), root,
-      ruleRoots: ['docs/agent', '.trellis/spec'], ruleFiles: ['AGENTS.md'], journalDir: 'docs/maintenance', createdAt: now(), ...(input.demo ? { demo: true } : {}) };
+      ruleRoots: [...projectLayout.ruleRoots], ruleFiles: [...projectLayout.ruleFiles], journalDir: projectLayout.journalDir, createdAt: now(), ...(input.demo ? { demo: true } : {}) };
     this.mapping(item, input);
     this.registry.projects.push(item); this.saveRegistry(); return item;
   }
@@ -119,24 +120,25 @@ export class Workbench {
   }
   catalog(id) {
     const project = this.project(id);
-    const discovered = id === 'global' ? { docs: [{ relPath: project.file }], warnings: [] } : discoverDocs(project.root);
-    const found = new Set(discovered.docs.map(d => d.relPath)); const warnings = [...discovered.warnings];
+    // Registered sources define the read boundary; do not scan all README/docs/research.
+    const found = new Set(); const warnings = []; let entries = 0; let limited = false;
     const walk = (relative, depth = 0) => {
-      if (depth > 6 || found.size >= 1000) return;
+      if (depth > 6 || found.size >= 1000 || entries >= 10_000) { limited = true; return; }
       let dir;
       try { dir = this.safe(project, relative, false); } catch { return; }
       if (!info(dir)?.isDirectory()) return;
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (entry.isSymbolicLink() || entry.name.startsWith('.')) continue;
+        if (++entries > 10_000) { limited = true; break; }
+        if (entry.isSymbolicLink() || entry.name.startsWith('.') || ['node_modules','dist','build','coverage'].includes(entry.name)) continue;
         const child = `${relative}/${entry.name}`;
         if (entry.isDirectory()) walk(child, depth + 1);
-        else if (/\.md$/i.test(child)) found.add(child);
+        else if (/\.mdx?$/i.test(child)) found.add(child);
         if (found.size >= 1000) break;
       }
     };
     for (const file of project.ruleFiles) if (exists(path.join(project.root,file))) found.add(file);
-    if (id !== 'global') for (const dir of [...project.ruleRoots, project.journalDir, '.trellis/workspace', '.agents/notes']) walk(dir);
-    if (found.size >= 1000) warnings.push({ message: '文档发现达到 1000 项上限，结果可能不完整' });
+    if (id !== 'global') for (const dir of [...project.ruleRoots, project.journalDir, projectLayout.legacyJournalDir, projectLayout.decisionDir]) walk(dir);
+    if (limited || found.size >= 1000) warnings.push({ message: '固定来源扫描达到数量或深度上限，结果可能不完整' });
     const docs = [];
     for (const file of found) {
       try {
@@ -150,6 +152,7 @@ export class Workbench {
           date: path.basename(file).match(/^\d{4}-\d{2}(?:-\d{2})?/)?.[0] ?? '', ...lineage });
       } catch (error) { warnings.push({ message: `${file}: ${error.message}` }); }
     }
+    docs.sort((a,b) => Number(indexFiles(project).includes(b.file)) - Number(indexFiles(project).includes(a.file)) || a.file.localeCompare(b.file));
     return { project, docs, warnings };
   }
   document(id, file) {
@@ -221,32 +224,57 @@ export class Workbench {
     const marker = `<!-- awb:${key} -->`;
     if (project.id !== 'global') this.safe(project,path.relative(project.root,file).split(path.sep).join('/'));
     const old = this.text(file) ?? '# 项目维护日志\n'; if (old.includes(marker)) return file;
-    const section = `\n## ${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' })} · ${line(input.title)}\n\n${marker}\n\n` +
+    const metadata = input._metadata ? `<!-- awb-record:${JSON.stringify(input._metadata).replace(/</g,'\\u003c')} -->\n\n` : '';
+    const section = `\n## ${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' })} · ${line(input.title)}\n\n${marker}\n\n${metadata}` +
       [['背景', input.background], ['结果', input.result], ['放弃的备选', input.alternatives], ['收益与代价', input.tradeoffs], ['验证', input.verification], ['后续', input.next], ['相关文件', input.topic]].filter(([,v]) => v).map(([label,value]) => `- **${label}**：${String(value).replace(/\n/g, '\n  ')}`).join('\n') + '\n';
     if (Buffer.byteLength(old + section) > 1_000_000) throw new Fault('维护文件已超过 1 MB，请调整维护目录后重试');
-    atomic(file, old + section); return file;
+    const relative = project.id === 'global' ? 'global-maintenance.md' : path.relative(project.root,file).split(path.sep).join('/');
+    const links = [['关联决策',input._metadata?.decisionFiles],['关联文档',input._metadata?.relatedFiles]].filter(([,files])=>files?.length).map(([label,files])=>`- **${label}**：`+files.map(target=>`[${path.posix.basename(target).replace(/[\[\]]/g,'')}](<${path.posix.relative(path.posix.dirname(relative),target).split('/').map(part=>encodeURIComponent(part).replace(/[()]/g,char=>'%'+char.charCodeAt(0).toString(16))).join('/')}>)`).join(' · ')).join('\n');
+    if (Buffer.byteLength(old + section + links) > 1_000_000) throw new Fault('维护文件已超过 1 MB');
+    atomic(file, old + section + (links ? links+'\n' : '')); return file;
   }
   journal(id) {
     const catalog = this.catalog(id); const entries = [];
     for (const d of catalog.docs.filter(d => d.role === 'journal')) {
       const text = this.text(this.safe(catalog.project, d.file)) ?? '';
-      const blocks = []; let block = '';
-      for (const token of marked.lexer(text)) {
-        if (token.type === 'heading' && token.depth === 2) { if (block) blocks.push(block); block = token.raw; }
-        else if (block) block += token.raw;
-      }
-      if (block) blocks.push(block);
-      if (!blocks.length) entries.push({ ...d, content: text });
-      for (const [index, content] of blocks.entries()) entries.push({ ...d, key: d.file + ':' + index, title: content.match(/^##\s+(.+)/)?.[1] ?? d.title, date: content.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? d.date, content });
+      entries.push(...journalBlocks(d,text));
     }
-    if (id === 'global' && exists(path.join(this.dataDir, 'global-maintenance.md'))) entries.push({ file: 'global-maintenance.md', title: '全局约束变更', content: this.text(path.join(this.dataDir, 'global-maintenance.md')) });
+    if (id === 'global' && exists(path.join(this.dataDir, 'global-maintenance.md'))) entries.push(...journalBlocks({file:'global-maintenance.md',title:'全局约束变更'},this.text(path.join(this.dataDir,'global-maintenance.md'))));
     return entries.sort((a,b) => (b.date ?? '').localeCompare(a.date ?? ''));
   }
+  maintenance(id) { return maintenance(this,id); }
   record(id, input) {
-    validateFields(input,['title','background','result','alternatives','tradeoffs','verification','next','topic']);
+    const fields = ['title','background','result','alternatives','tradeoffs','verification','next','topic'];
+    validateFields(input,[...fields,'category','operationId']);
     if (!short(input.title) || !short(input.background) || !short(input.result)) throw new Fault('请填写标题、背景和实际结果');
-    const project = this.project(id); const file = this.appendJournal(project, input);
-    return { file: id === 'global' ? 'global-maintenance.md' : path.relative(project.root, file) };
+    if (input.operationId !== undefined && !/^[\w-]{1,80}$/.test(input.operationId)) throw new Fault('operationId 格式无效');
+    if (input.category && !categories.includes(input.category)) throw new Fault('类别无效');
+    const project = this.project(id);
+    for (const name of ['decisionFiles','relatedFiles']) {
+      const values = input[name] ?? [];
+      if (!Array.isArray(values) || values.length > 30 || values.some(value => typeof value !== 'string' || !value || value.length > 500 || /[\r\n<>]/.test(value))) throw new Fault(`${name} 格式无效`);
+      for (const file of values) this.safe(project,file);
+    }
+    const payload = Object.fromEntries(fields.map(key => [key,input[key] ?? '']));
+    Object.assign(payload,{category:input.category ?? '',decisionFiles:[...new Set(input.decisionFiles ?? [])].sort(),relatedFiles:[...new Set(input.relatedFiles ?? [])].sort()});
+    const digest = hash(JSON.stringify(payload));
+    if (input.operationId) {
+      const catalog = this.catalog(id);
+      if (catalog.warnings.length) throw new Fault('来源扫描不完整，不能安全核对重试标识');
+      for (const entry of this.journal(id)) {
+        const meta = journalMetadata(entry.content);
+        if (meta.operationId !== input.operationId) continue;
+        if (meta.digest !== digest) throw new Fault('同一 operationId 已用于不同内容',409);
+        return {file:entry.file,key:entry.key,replayed:true};
+      }
+    }
+    const catalog = this.catalog(id); const known = new Map(catalog.docs.map(doc => [doc.file,doc]));
+    for (const file of payload.decisionFiles) if (known.get(file)?.role !== 'decision') throw new Fault('关联决策未找到，请刷新后重新选择');
+    for (const file of payload.relatedFiles) if (!known.has(file)) throw new Fault('关联文件未找到或不在登记范围');
+    const key = randomUUID();
+    const file = this.appendJournal(project,{...payload,_metadata:{version:1,operationId:input.operationId ?? '',digest,category:payload.category,decisionFiles:payload.decisionFiles,relatedFiles:payload.relatedFiles}},key);
+    const relative = id === 'global' ? 'global-maintenance.md' : path.relative(project.root,file).split(path.sep).join('/');
+    return {file:relative,key:relative+':'+key,replayed:false};
   }
   apply(id, expected) {
     const existing = readJSON(path.join(this.dataDir,'receipts',id + '.json'));
@@ -289,13 +317,16 @@ export class Workbench {
   }
   context(id, query = '') {
     const sets = [this.catalog(id)]; if (id !== 'global' && this.registry.global) sets.unshift(this.catalog('global'));
-    const rules = []; const modules = []; const warnings = sets.flatMap(set => set.warnings);
+    const rules = []; const indexes = []; const modules = []; const warnings = sets.flatMap(set => set.warnings);
     for (const set of sets) for (const doc of set.docs.filter(d => d.role === 'rule' && !d.superseded)) {
       const entry = { ...doc,projectId:set.project.id };
-      if (doc.scope === 'module') modules.push(entry);
+      if (doc.scope === 'module') {
+        modules.push(entry);
+        if (indexFiles(set.project).includes(doc.file)) indexes.push({ ...entry,content:this.text(this.safe(set.project,doc.file)) });
+      }
       else rules.push({ ...entry,content:this.text(this.safe(set.project,doc.file)) });
     }
-    return { rules, modules: query ? modules.filter(doc => matchTerms(`${doc.title} ${doc.file}`,queryTerms(query)).length) : modules, warnings };
+    return { rules, indexes, modules: query ? modules.filter(doc => matchTerms(`${doc.title} ${doc.file}`,queryTerms(query)).length) : modules, warnings };
   }
   search(id, query, kind = 'all') {
     if (typeof query !== 'string' || query.length > 200) throw new Fault('搜索词格式无效或过长');

@@ -1,30 +1,65 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { Workbench, atomic } from './store.mjs';
+import { atomic } from './store.mjs';
+import { demoProjects, demoGlobalRules } from './demo-data.mjs';
+
+export const demoDirectory = 'demo-v3';
 
 export function seedDemo(store) {
   const marker = path.join(store.dataDir, 'demo-seeded');
   if (fs.existsSync(marker)) return;
   if (store.registry.projects.some(p => !p.demo)) throw Error('演示数据只能初始化到隔离的空工作区');
   const root = path.join(store.dataDir, 'demo-projects');
-  for (const name of ['agent-workbench', 'portfolio', 'api-service']) {
-    const directory = path.join(root, name); fs.mkdirSync(directory, { recursive: true });
-    atomic(path.join(directory, 'AGENTS.md'), `# 项目约束\n\n本文件定义 ${name} 项目的 Agent 工作约束，作为本地开发与协作时的统一参考。\n\n## 工作方式\n\n- 修改前确认目标文件。\n- 规则变更需先审核。\n- 按需读取模块文档。\n\n## 按任务读取\n\n- 前端开发：[前端约束](docs/agent/frontend.md)。\n- 维护背景：[维护日志](docs/maintenance/2026-11.md)。\n`);
-    atomic(path.join(directory, 'docs/agent/frontend.md'), '# 前端约束\n\n## 阅读体验\n\n- 页面以文档内容为主，避免无意义的统计卡片。\n- 控件提供键盘焦点与明确的操作结果。\n\n## 验证\n\n关键交互需在真实浏览器中验收。\n');
-    atomic(path.join(directory, 'docs/maintenance/2026-11.md'), '# 项目维护日志\n\n## 2026-11-24 · 确定轻量文件架构\n\n- **背景**：跨 Agent 使用时需要保留修改来由。\n- **结果**：项目约束与维护说明保留在 Markdown 中。\n- **验证**：示例内容，仅用于演示交互。\n\n## 2026-11-23 · 补充项目读取入口\n\n- **背景**：大型项目需要按模块读取约束。\n- **结果**：入口链接到前端约束与维护日志。\n- **后续**：按实际项目补充模块边界。\n');
-    const item = store.registry.projects.find(p => p.root === directory) ?? store.register({ name, root: directory, demo: true });
-    item.demo = true; store.saveRegistry();
-    if (name === 'agent-workbench') {
-      atomic(path.join(directory, '.agents/notes/implemented/architecture/2026-11-24-file-first.md'), '# Agent Note: 文件作为唯一正式来源\n\nStatus: implemented\n\n## Problem\n\n更换 Agent 后，不能依赖专有会话状态理解过去的决定。\n\n## Decision\n\n正式约束与维护记录保存在项目 Markdown 中。看板负责读取和审核，不复制另一套规则库。\n\n## Alternatives considered\n\n- **独立数据库**：检索方便，但会带来额外迁移与同步成本，因此不作为首版基础。\n\n## Consequences\n\n- 收益：文件可直接交接和版本管理。\n- 代价：不提供语义知识图谱。\n\n## Verification\n\n这是演示笔记，不能当成真实项目验收。\n');
-      atomic(path.join(directory, '.agents/notes/rejected/architecture/2026-11-23-background-observer.md'), '# Agent Note: 常驻观察服务\n\nStatus: rejected — 首版不需要常驻推理\n\n## Problem\n\n希望自动发现对话中稳定的新偏好。\n\n## Proposal\n\n使用额外进程持续观察所有工具调用。\n\n## Alternatives considered\n\n- **当前 Agent 按需提炼**：上下文已有，运行负担较少，首版优先采用。\n\n## Risks\n\n持续采集增加状态与上下文管理成本；当前决定为演示。\n');
-      const original = store.document(item.id, 'AGENTS.md').content;
-      store.propose({ projectId: item.id, file: 'AGENTS.md', title: '保留用户已有修改', reason: '避免覆盖尚未提交的工作。', source: '演示对话：先保留我已有的修改。', alternatives: '直接覆盖文件：操作简单，但会丢失既有工作。', tradeoffs: '需要在存在冲突时重新核对差异。', content: original.replace('- 修改前确认目标文件。', '- 修改前确认目标文件。\n- 保留用户已有修改，遇到冲突先展示差异。') });
-      store.propose({ projectId: item.id, file: 'docs/agent/frontend.md', title: '使用系统字体减少运行依赖', reason: '本地工作台应可离线阅读。', source: '演示提案：界面优先使用本机字体。', content: store.document(item.id, 'docs/agent/frontend.md').content + '\n- 使用系统字体，不依赖外部字体服务。\n' });
+  const projects = new Map();
+  for (const profile of demoProjects) {
+    const directory = path.join(root,profile.name); fs.mkdirSync(directory,{recursive:true});
+    atomic(path.join(directory,'AGENTS.md'),`# ${profile.name} 开发约束\n\n> 隔离演示资料；以下项目背景、历史与方案均为示例。\n\n${profile.description}\n\n## 工作方式\n\n- 修改前确认目标文件。\n- 正式约束变更先查看具体差异，再决定是否写入。\n- 按当前任务读取相关文件，不展开所有历史记录。\n\n## 按需读取\n\n从 [约束索引](.agent-workbench/rules/index.md) 选择相关文档。入口与其他约束在看板中统一展示。\n\n## 维护背景\n\n[近期维护记录](docs/maintenance/2026-11.md) 保存背景、结果与后续。工程决策单独保存取舍，不自动成为新规则。\n`);
+    const index = profile.rules.map(rule => `| ${rule.when} | [${rule.title}](${rule.file}.md) |`).join('\n');
+    atomic(path.join(directory,'.agent-workbench/rules/index.md'),`# 约束索引\n\n${profile.description}\n\n| 何时读取 | 文档 |\n| --- | --- |\n${index}\n\n相关约束通过链接引用同一份正文；只读当前任务需要的文件。\n`);
+    for (const rule of profile.rules) atomic(path.join(directory,'.agent-workbench/rules',rule.file+'.md'),rule.content);
+    const months = new Map();
+    for (const event of profile.events) {
+      const month = event.date.slice(0,7);
+      const related = profile.decisions.filter(note=>note.status === 'implemented').slice(0,2);
+      const links = related.map(note=>`[${note.title}](../../.agents/notes/${note.status}/${note.category}/${note.date}-${note.slug}.md)`).join(' · ');
+      const metadata = JSON.stringify({version:1,category:event.category ?? 'process'});
+      const section = `## ${event.date} · ${event.title}\n\n<!-- awb-record:${metadata} -->\n\n- **背景**：${event.background}\n- **结果**：${event.result}\n- **验证**：演示情节，不代表真实项目验收。\n- **后续**：${event.next}\n- **关联决策**：${links}\n\n`;
+      months.set(month,(months.get(month) ?? '# 示例维护记录\n\n')+section);
     }
+    for (const [month,content] of months) atomic(path.join(directory,'docs/maintenance',month+'.md'),content);
+    for (const note of profile.decisions) {
+      const rejected = note.status === 'rejected';
+      const proposed = rejected || note.status === 'proposed';
+      const content = `# Agent Note: ${note.title}\n\nStatus: ${note.status === 'archived' ? 'implemented' : note.status}${rejected ? ' — '+note.choice : ''}\n\n${note.supersededBy ? 'superseded_by: '+note.supersededBy+'\n\n' : ''}${note.status === 'archived' ? 'Archived: 2026-11-24\n\n' : ''}## Problem\n\n${note.problem}\n\n## ${proposed ? 'Proposal' : 'Decision'}\n\n${note.choice}\n\n## Alternatives considered\n\n${note.alternative}\n\n## ${proposed ? 'Risks' : 'Consequences'}\n\n${note.consequence}\n\n## 关联与验证\n\n[项目入口](../../../../AGENTS.md) · [约束索引](../../../../.agent-workbench/rules/index.md)\n\n这是示例决策，不代表真实项目已经完成相应验收。\n`;
+      atomic(path.join(directory,'.agents/notes',note.status,note.category,`${note.date}-${note.slug}.md`),content);
+    }
+    const project = store.registry.projects.find(p => p.root === directory) ?? store.register({name:profile.name,root:directory,demo:true});
+    projects.set(profile.name,project);
   }
-  const globalFile = path.join(root, 'global/AGENTS.md');
-  atomic(globalFile, '# 全局偏好\n\n- 使用中文简洁沟通，明确说明改动与验证。\n- 保留用户已有修改。\n- 优先保持脚手架轻量，按需读取项目文档。\n');
+  const propose = (name,file,title,reason,suggestion) => {
+    const project = projects.get(name); const content = store.document(project.id,file).content;
+    return store.propose({projectId:project.id,file,title,reason,source:'隔离演示：'+reason,content:suggestion(content)});
+  };
+  // Seed illustrative outcomes through the real store, only inside these fictional projects.
+  const applied = propose('agent-workbench','.agent-workbench/rules/testing.md','关键交互保留实际操作证据','交接时需要区分构建检查与真实交互验收。',text => text+'\n- 审核写入、冲突与恢复应有可复核的操作证据。\n');
+  store.apply(applied.id,applied);
+  const rejected = propose('agent-workbench','.agent-workbench/rules/architecture.md','为首版引入向量数据库','希望为文档提供语义检索。',text => text+'\n- 为全部文档新增向量数据库与同步服务。\n');
+  store.reject(rejected.id,'当前规模不需要额外存储与同步；先用文件和本机搜索。');
+  propose('agent-workbench','AGENTS.md','保留用户已有修改','用户纠正：修改前先保留我尚未提交的工作。',text => text.replace('- 修改前确认目标文件。','- 修改前确认目标文件。\n- 保留用户已有修改，遇到冲突先展示差异。'));
+  propose('agent-workbench','.agent-workbench/rules/frontend.md','使用系统字体减少运行依赖','界面应能在本机离线阅读。',text => text.replace('- 字体与图标使用本地资源。','- 使用系统字体与本地图标，不请求外部字体服务。'));
+  propose('agent-workbench','.agent-workbench/rules/review.md','区分临时例外与长期偏好','一次任务的例外不应被直接扩写为长期规则。',text => text+'\n- 提案注明适用条件；临时例外留在本次维护记录，不自动推广。\n');
+  const conflict = propose('agent-workbench','.agent-workbench/rules/storage.md','补充中断恢复的核对顺序','恢复时需要明确先确认实际文件，再补齐日志。',text => text+'\n- 恢复顺序：核对目标文件、核对回执、补齐维护记录。\n');
+  fs.appendFileSync(path.join(projects.get('agent-workbench').root,conflict.file),'\n- 用户后续编辑：恢复前也要核对来源映射是否仍指向原文件。\n');
+  try { store.apply(conflict.id,conflict); } catch(error) { if (error.status !== 409) throw error; }
+  const contentUpdate = propose('portfolio','.agent-workbench/rules/content.md','展示可核对的项目结果','作品介绍需要区分个人职责与团队成果。',text => text+'\n- 介绍中明确个人职责，无法核实的数据不作为成果展示。\n');
+  store.apply(contentUpdate.id,contentUpdate);
+  propose('portfolio','.agent-workbench/rules/assets.md','为项目封面补充替代文本','图片未加载时，读者仍应理解作品主题。',text => text+'\n- 封面提供简短的替代文本，说明项目主题而非重复文件名。\n');
+  const apiRejected = propose('api-service','.agent-workbench/rules/boundaries.md','直接复用另一服务的私有表','希望减少一次接口调用。',text => text+'\n- 允许调用方直接查询其他服务的私有表。\n');
+  store.reject(apiRejected.id,'这会增加隐式依赖和版本耦合，继续使用公开接口。');
+  propose('api-service','.agent-workbench/rules/api.md','错误响应补充 request_id','调用方需要将错误与服务日志关联。',text => text+'\n- 对可公开的错误返回 request_id，避免附带内部堆栈和凭据。\n');
+  const globalFile = path.join(root,'global/AGENTS.md'); atomic(globalFile,demoGlobalRules);
   if (!store.registry.global) store.setGlobal(globalFile);
+  store.propose({projectId:'global',file:'AGENTS.md',title:'保留反馈里的条件和例外',reason:'避免提炼后把局部要求写成绝对规则。',source:'隔离演示：用户纠正有明确的适用条件。',content:demoGlobalRules+'\n- 提炼偏好时保留原话中的条件、否定和例外。\n'});
   fs.mkdirSync(path.join(root,'new-project'),{recursive:true});
-  atomic(marker, 'Demo files only; user projects are never seeded.\n');
+  atomic(marker,'Rich fictional demo v3; real project files are never seeded.\n');
 }
