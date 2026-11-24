@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+const checked = spawnSync(process.execPath,['scripts/check.mjs'],{stdio:'inherit'});
+if (checked.status !== 0) process.exit(checked.status ?? 1);
+fs.mkdirSync('dist',{recursive:true});
+for (const name of ['src','web','skills','README.md','LICENSE','NOTICE','package-lock.json']) fs.cpSync(name,path.join('dist',name),{recursive:true});
+const manifest = JSON.parse(fs.readFileSync('package.json','utf8'));
+manifest.scripts = { start:'node src/server.mjs',demo:'node src/server.mjs --demo',agent:'node src/cli.mjs' };
+fs.writeFileSync('dist/package.json',JSON.stringify(manifest,null,2)+'\n');
+fs.writeFileSync('dist/README.md','# Agent Workbench\n\nNode.js 24+。运行 `npm ci --omit=dev --ignore-scripts` 后执行 `npm start`，默认空工作区。`npm run demo -- --port 4174` 启动隔离示例。\n\n完整源码、开发检查、设计与 Skill 说明：https://github.com/EmiyaredA/agent-workbench\n');
+console.log('Built dist/: Node source + static UI + Skill; no frontend framework or bundler.');

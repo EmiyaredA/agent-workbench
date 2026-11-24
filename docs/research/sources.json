@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "id": "agent-workbench-base-review",
+  "title": "Agent Workbench 轻量底座与融合设计",
+  "mode": "technical",
+  "stage": "complete",
+  "updated_at": "2026-11-24T00:00:00+08:00",
+  "brief": "围绕用户六项需求审查四个上游；输出可复核设计，不实施应用、不写入真实项目规则。日期字段按研究日记录。",
+  "questions": [
+    {
+      "id": "Q1",
+      "text": "哪些已有代码和方法可用于轻量底座？",
+      "priority": "critical",
+      "status": "answered",
+      "claim_ids": [
+        "C1",
+        "C5"
+      ],
+      "next_action": "实现时固定依赖与适配边界。"
+    },
+    {
+      "id": "Q2",
+      "text": "原始工作流是否满足每次约束更新人审？",
+      "priority": "critical",
+      "status": "answered",
+      "claim_ids": [
+        "C2"
+      ],
+      "next_action": "实现候选隔离、精确 diff 与 hash 绑定批准。"
+    },
+    {
+      "id": "Q3",
+      "text": "CloudCLI 作为必选底座会带来什么宿主依赖？",
+      "priority": "supporting",
+      "status": "answered",
+      "claim_ids": [
+        "C3"
+      ],
+      "next_action": "独立闭环可用后，有需求再验证宿主适配。"
+    },
+    {
+      "id": "Q4",
+      "text": "哪些源码行为经过实际运行验证？",
+      "priority": "supporting",
+      "status": "answered",
+      "claim_ids": [
+        "C4"
+      ],
+      "next_action": "实现后另做工作台功能验收。"
+    },
+    {
+      "id": "Q5",
+      "text": "真实 code agent 能否稳定自动提炼有价值约束并提供完整来源？",
+      "priority": "critical",
+      "status": "open",
+      "claim_ids": [
+        "C6"
+      ],
+      "next_action": "接入选定宿主，用明确纠正、无新偏好、局部例外和相互矛盾的对话样例评估；未经审核不生效。"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "title": "mini-trellis",
+      "url": "https://github.com/Tiger-zzZ/mini-trellis/tree/0f37e0f2115da85e7bdcdbaebeea038a8080bae8",
+      "kind": "code",
+      "publisher": "Tiger-zzZ",
+      "version": "0f37e0f2115da85e7bdcdbaebeea038a8080bae8",
+      "accessed_at": "2026-11-24T00:00:00+08:00",
+      "status": "inspected",
+      "independence_group": "Tiger-zzZ/mini-trellis",
+      "note": "审查固定提交；不是对所有功能或未来版本的保证。"
+    },
+    {
+      "id": "S2",
+      "title": "Compound Engineering",
+      "url": "https://github.com/EveryInc/compound-engineering-plugin/tree/fcb5e3adc1890db34f482f73e2449f3c57a2f423",
+      "kind": "code",
+      "publisher": "EveryInc",
+      "version": "fcb5e3adc1890db34f482f73e2449f3c57a2f423",
+      "accessed_at": "2026-11-24T00:00:00+08:00",
+      "status": "inspected",
+      "independence_group": "EveryInc/compound-engineering-plugin",
+      "note": "审查固定提交；不是对所有功能或未来版本的保证。"
+    },
+    {
+      "id": "S3",
+      "title": "ECC",
+      "url": "https://github.com/affaan-m/ECC/tree/4adeee6732a12d1540f49a4d50a38ce8c97f9a53",
+      "kind": "code",
+      "publisher": "affaan-m",
+      "version": "4adeee6732a12d1540f49a4d50a38ce8c97f9a53",
+      "accessed_at": "2026-11-24T00:00:00+08:00",
+      "status": "inspected",
+      "independence_group": "affaan-m/ECC",
+      "note": "审查固定提交；不是对所有功能或未来版本的保证。"
+    },
+    {
+      "id": "S4",
+      "title": "CloudCLI",
+      "url": "https://github.com/siteboon/claudecodeui/tree/b6959148ec006f258d737e72bb630ff2e5e84672",
+      "kind": "code",
+      "publisher": "siteboon",
+      "version": "b6959148ec006f258d737e72bb630ff2e5e84672",
+      "accessed_at": "2026-11-24T00:00:00+08:00",
+      "status": "inspected",
+      "independence_group": "siteboon/claudecodeui",
+      "note": "审查固定提交；不是对所有功能或未来版本的保证。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "source_id": "S1",
+      "question_ids": [
+        "Q1"
+      ],
+      "locator": "packages/core/package.json; src/mem/index.ts; docs.ts; lineage.ts",
+      "summary": "独立 core 与文档发现、来源、文档替代 API；文档边界与限制已实现。",
+      "basis": "observed",
+      "conditions": "固定提交；静态检查与隔离探针分别说明。",
+      "artifact": "mini-trellis.md"
+    },
+    {
+      "id": "E2",
+      "source_id": "S1",
+      "question_ids": [
+        "Q2",
+        "Q5"
+      ],
+      "locator": "packages/cli/src/templates/common/commands/remember.md:3-29",
+      "summary": "确认观点后直接写主题与日志，没有 workbench 要求的逐次精确差异批准。",
+      "basis": "observed",
+      "conditions": "固定提交；静态检查与隔离探针分别说明。",
+      "artifact": "mini-trellis.md"
+    },
+    {
+      "id": "E3",
+      "source_id": "S2",
+      "question_ids": [
+        "Q1",
+        "Q2"
+      ],
+      "locator": "skills/ce-compound/SKILL.md:19-64; references/refresh/worth-audit.md",
+      "summary": "经验价值门槛、收窄清理可参考；原工作流也允许直接写入。",
+      "basis": "observed",
+      "conditions": "固定提交；静态检查与隔离探针分别说明。",
+      "artifact": "source-review.md"
+    },
+    {
+      "id": "E4",
+      "source_id": "S3",
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q5"
+      ],
+      "locator": "agents/observer.md; scripts/hooks/session-start.js:458-518; instinct-cli.py:1629-1684",
+      "summary": "项目与全局及证据表达可用；注入按置信度，推广虽有确认仍非统一逐条人审。",
+      "basis": "observed",
+      "conditions": "固定提交；静态检查与隔离探针分别说明。",
+      "artifact": "source-review.md"
+    },
+    {
+      "id": "E5",
+      "source_id": "S4",
+      "question_ids": [
+        "Q1",
+        "Q3"
+      ],
+      "locator": "PluginTabContent.tsx:89-138; plugin-process.service.ts:54-137; project-management.service.ts:4-60",
+      "summary": "插件公开表面为上下文与 RPC，后端子进程及宿主项目 DB 增加依赖。",
+      "basis": "observed",
+      "conditions": "固定提交；静态检查与隔离探针分别说明。",
+      "artifact": "source-review.md"
+    },
+    {
+      "id": "E6",
+      "source_id": "S1",
+      "question_ids": [
+        "Q4"
+      ],
+      "locator": "probe_upstreams.py; core test/mem/{recall,api}.test.ts",
+      "summary": "123 项上游核心测试与三项日志探针通过。",
+      "basis": "reproduced",
+      "conditions": "固定提交；静态检查与隔离探针分别说明。",
+      "artifact": "verification.json"
+    },
+    {
+      "id": "E7",
+      "source_id": "S2",
+      "question_ids": [
+        "Q4"
+      ],
+      "locator": "probe_upstreams.py",
+      "summary": "五项解析器隔离探针通过，含 errors 与退出码不同义。",
+      "basis": "reproduced",
+      "conditions": "固定提交；静态检查与隔离探针分别说明。",
+      "artifact": "verification.json"
+    },
+    {
+      "id": "E8",
+      "source_id": "S3",
+      "question_ids": [
+        "Q4"
+      ],
+      "locator": "probe_upstreams.py; tests/lib/instinct-relevance.test.js",
+      "summary": "两项解析隔离探针及 20 项相关性测试通过。",
+      "basis": "reproduced",
+      "conditions": "固定提交；静态检查与隔离探针分别说明。",
+      "artifact": "verification.json"
+    }
+  ],
+  "claims": [
+    {
+      "id": "C1",
+      "text": "mini-trellis 已有可复用 core、现有文档发现、来源与日志实现；CE 有文件约定与精简方法。",
+      "question_ids": [
+        "Q1"
+      ],
+      "kind": "fact",
+      "status": "verified",
+      "evidence_ids": [
+        "E1",
+        "E3"
+      ],
+      "counter_evidence_ids": [],
+      "limitations": ""
+    },
+    {
+      "id": "C2",
+      "text": "审查的 mini-trellis、CE 与 ECC 写入／生效路径均不能原样作为逐次精确差异人审流程。",
+      "question_ids": [
+        "Q2"
+      ],
+      "kind": "fact",
+      "status": "verified",
+      "evidence_ids": [
+        "E2",
+        "E3",
+        "E4"
+      ],
+      "counter_evidence_ids": [],
+      "limitations": ""
+    },
+    {
+      "id": "C3",
+      "text": "审查的 CloudCLI 插件依赖宿主公开上下文和 RPC，后端为额外 Node 进程，项目管理使用宿主数据库。",
+      "question_ids": [
+        "Q3"
+      ],
+      "kind": "fact",
+      "status": "verified",
+      "evidence_ids": [
+        "E5"
+      ],
+      "counter_evidence_ids": [],
+      "limitations": ""
+    },
+    {
+      "id": "C4",
+      "text": "所列隔离探针与指定上游测试通过；没有验证新工作台产品功能。",
+      "question_ids": [
+        "Q4"
+      ],
+      "kind": "fact",
+      "status": "verified",
+      "evidence_ids": [
+        "E6",
+        "E7",
+        "E8"
+      ],
+      "counter_evidence_ids": [],
+      "limitations": ""
+    },
+    {
+      "id": "C5",
+      "text": "推荐 mini-trellis core 为底座，CE/ECC 以少量方法融合，CloudCLI 延后为可选入口。",
+      "question_ids": [
+        "Q1"
+      ],
+      "kind": "recommendation",
+      "status": "provisional",
+      "evidence_ids": [
+        "E1",
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "counter_evidence_ids": [],
+      "limitations": "这是针对六项需求与轻量偏好的设计选择，尚未实现看板、验证依赖打包或实际使用体验。"
+    },
+    {
+      "id": "C6",
+      "text": "自动提炼应依赖当前 code agent 并仅产生提案，其有效性仍需真实宿主验证。",
+      "question_ids": [
+        "Q5"
+      ],
+      "kind": "recommendation",
+      "status": "provisional",
+      "evidence_ids": [
+        "E2",
+        "E4"
+      ],
+      "counter_evidence_ids": [],
+      "limitations": "未采集真实用户对话或评估漏提／误提；自动触发受宿主上下文可用性和模型行为影响。"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "P1",
+      "at": "2026-11-24T00:00:00+08:00",
+      "stage": "complete",
+      "summary": "完成四个上游固定版本审查与指定验证，推荐 mini-trellis core；产品能力尚未实现。",
+      "next_action": "审阅设计后按只读展示、单文件审核、Agent 提案与留档顺序实施。",
+      "open_question_ids": [
+        "Q5"
+      ]
+    }
+  ],
+  "storage": {
+    "status": "local",
+    "knowledge_base_id": null,
+    "home_note_id": null,
+    "ledger_note_id": null,
+    "report_note_id": null,
+    "last_confirmed_at": null
+  }
+}

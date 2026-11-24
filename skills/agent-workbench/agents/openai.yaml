@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Workbench"
+  short_description: "读取已登记项目的约束与维护背景，并把新的修改建议提交为待审提案"
+  default_prompt: "使用 $agent-workbench 读取当前项目所需的约束和维护背景，按需提出待审建议。"

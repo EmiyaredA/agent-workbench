@@ -1,0 +1,18 @@
+Agent Workbench
+Copyright (c) 2026 Agent Workbench contributors
+
+This application uses mini-trellis-core 0.4.2 (AGPL-3.0-only in its package
+metadata), distributed separately as an npm dependency. Its LICENSE and
+COPYRIGHT remain in the installed package. Upstream:
+https://github.com/Tiger-zzZ/mini-trellis
+Copyright (C) 2026 Mindfold LLC and mini-trellis contributors.
+
+The project draws on the document practices of Compound Engineering and ECC,
+and the visual and decision-note concepts of write-notes-like-deepseek. Their
+product source code has not been copied into this application.
+https://github.com/EveryInc/compound-engineering-plugin
+https://github.com/affaan-m/ECC
+https://github.com/EmiyaredA/write-notes-like-deepseek
+
+Other runtime dependencies retain their notices in node_modules:
+@phosphor-icons/web, diff, marked and DOMPurify.

@@ -1,0 +1,59 @@
+{
+  "versions": {
+    "compound": "fcb5e3adc1890db34f482f73e2449f3c57a2f423",
+    "ecc": "4adeee6732a12d1540f49a4d50a38ce8c97f9a53",
+    "cloudcli": "b6959148ec006f258d737e72bb630ff2e5e84672",
+    "mini-trellis": "0f37e0f2115da85e7bdcdbaebeea038a8080bae8"
+  },
+  "checks": [
+    {
+      "name": "CE combines project and local absolute sources",
+      "passed": true
+    },
+    {
+      "name": "CE counts nested rules without publishing them as packs",
+      "passed": true
+    },
+    {
+      "name": "CE duplicate ids yield errors despite exit zero",
+      "passed": true
+    },
+    {
+      "name": "CE rejects a remote source without ref",
+      "passed": true
+    },
+    {
+      "name": "CE rejects a pack with an escaping symlink",
+      "passed": true
+    },
+    {
+      "name": "ECC parser falls back to 0.5 for out-of-range confidence",
+      "passed": true
+    },
+    {
+      "name": "ECC import and parsing create no persistent data",
+      "passed": true
+    },
+    {
+      "name": "mini-trellis records a topic link",
+      "passed": true
+    },
+    {
+      "name": "mini-trellis same-key retry preserves journal and index",
+      "passed": true
+    },
+    {
+      "name": "mini-trellis no-commit defeats auto-commit configuration",
+      "passed": true
+    },
+    {
+      "name": "ECC relevance upstream suite: 20 passed, 0 failed",
+      "passed": true
+    },
+    {
+      "name": "mini-trellis core upstream suites: 123 passed",
+      "passed": true
+    }
+  ],
+  "scope": "Source probes only; no application or full upstream suite tested."
+}

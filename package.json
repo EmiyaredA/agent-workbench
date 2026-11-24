@@ -1,0 +1,30 @@
+{
+  "name": "agent-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "node --watch src/server.mjs",
+    "demo": "node src/server.mjs --demo",
+    "test": "node scripts/test.mjs",
+    "check": "node scripts/check.mjs",
+    "build": "node scripts/build.mjs",
+    "agent": "node src/cli.mjs",
+    "test:ui": "node scripts/verify-ui.mjs"
+  },
+  "dependencies": {
+    "mini-trellis-core": "0.4.2",
+    "@phosphor-icons/web": "2.1.2",
+    "diff": "^8.0.2",
+    "marked": "^17.0.0",
+    "dompurify": "^3.3.0"
+  },
+  "devDependencies": {
+    "playwright": "1.65.1"
+  }
+}

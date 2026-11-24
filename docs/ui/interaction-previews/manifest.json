@@ -1,0 +1,196 @@
+{
+  "date": "2026-11-24",
+  "status": "static-design-preview",
+  "generator": "built-in image_gen",
+  "reference": "selected-blue-white-document-workspace",
+  "shared_prompt": "Use case: ui-mockup. Create exactly ONE full-size UI screen for ONE interaction, not a collage, not a storyboard and not multiple screens. Desktop web application agent-workbench, target 1440 x 1024 landscape. The attached reference is the selected design system and persistent app shell: white/light cool-gray document workspace, navy typography, blue #1D4ED8 primary action, thin gray borders, subtle engineering-grid sidebar only, 6px corners, restrained shadows only for dialogs, consistent thin-line icons, 15-16px readable Simplified Chinese. Left persistent project sidebar about 220px with agent-workbench selected, portfolio, api-service, + 登记项目, bottom 全局偏好, Skill 接入, 本地文件. Main header agent-workbench, small fictional /projects/agent-workbench, tabs 总览 / 约束 / 提案 / 维护记录 and a search field. Keep this shell consistent. User wants individual detailed interaction previews, so focus this image on the requested interaction with large legible text, realistic controls, generous whitespace and a clear primary action. Current date 2026-11-24; fictional demo content only. Amber is pending/conflict, green success, red deletion/error. No chat, no terminal emulator, no model or agent orchestration, no CloudCLI, no graphs, no fake KPI cards, no marketing headline, no device frame, no browser chrome. This is a static design preview, not implemented software. ",
+  "screens": [
+    {
+      "slug": "01-register-project",
+      "title": "登记项目",
+      "source_file": "exec-380f2b30-96f5-4255-9c89-46326df0dcb1.png",
+      "file": "01-register-project.png",
+      "description": "填写项目名称与本机目录，预览已发现的文档映射，仅登记，不改项目文件。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "02-configure-sources",
+      "title": "配置文档来源",
+      "source_file": "exec-d1359fc4-8594-4aff-9305-4865ed38df59.png",
+      "file": "02-configure-sources.png",
+      "description": "配置全局偏好文件、项目入口、模块目录与维护目录，保存来源映射。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "03-read-module-rules",
+      "title": "切换并阅读模块约束",
+      "source_file": "exec-3b3d3b49-6cb5-4736-8046-04c301b41382.png",
+      "file": "03-read-module-rules.png",
+      "description": "按全局、项目、模块切换，阅读约束与适用范围，支持原文切换和关联文档。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "04-search",
+      "title": "搜索文档与提案",
+      "source_file": "exec-4faae690-f237-4c4f-9b14-0d2ee93aa426.png",
+      "file": "04-search.png",
+      "description": "在当前项目中查找文档、待审提案和维护记录，结果保留来源。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "05-create-proposal",
+      "title": "新建提案",
+      "source_file": "exec-bf7eb8e0-883e-4f10-94b0-38482a500cc2.png",
+      "file": "05-create-proposal.png",
+      "description": "填写目标文件、完整建议内容、修改理由与来源，保存为待审提案。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "06-edit-proposal",
+      "title": "编辑待审提案",
+      "source_file": "exec-0428dce8-9202-4ee8-9a00-d2928e3c6d04.png",
+      "file": "06-edit-proposal.png",
+      "description": "修改候选文本和理由，保存后重新查看最终差异，不沿用旧版批准。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "07-review-diff",
+      "title": "审核差异",
+      "source_file": "exec-04e67240-0fe3-4140-8b23-606bc6909961.png",
+      "file": "07-review-diff.png",
+      "description": "并排核对当前内容、建议内容、来源与理由，准确区分新增和删除。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "08-approve",
+      "title": "批准当前差异",
+      "source_file": "exec-22c142db-b4f4-4931-b886-e0a695d25cd7.png",
+      "file": "08-approve.png",
+      "description": "核对本次写入的目标与影响范围，绑定已查看的具体差异后批准。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "09-applied",
+      "title": "写入成功",
+      "source_file": "exec-013a65f0-009a-4289-b536-2c228c5e8d1b.png",
+      "file": "09-applied.png",
+      "description": "查看更新后的约束以及关联维护记录；文件写入成功不代表功能测试通过。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "10-reject",
+      "title": "拒绝提案",
+      "source_file": "exec-716f79b5-a9ef-4b75-9cdb-a437772cd8d7.png",
+      "file": "10-reject.png",
+      "description": "填写拒绝原因，保留判断依据，不改原约束文件。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "11-conflict",
+      "title": "原文冲突",
+      "source_file": "exec-5ecbb3b4-0eff-4c48-803a-4bf06391579f.png",
+      "file": "11-conflict.png",
+      "description": "检测到原文变化时停止写入，基于当前原文生成新待审提案并重新审核。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "12-maintenance-timeline",
+      "title": "维护路径",
+      "source_file": "exec-a714a9fa-bfc0-4ea4-ad6e-ad196f8a4a83.png",
+      "file": "12-maintenance-timeline.png",
+      "description": "按月份与类型筛选维护记录，追溯背景、结果和验证。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "13-create-journal-entry",
+      "title": "添加维护记录",
+      "source_file": "exec-cc184eb7-6444-48f3-a419-8a8c12f7e1e2.png",
+      "file": "13-create-journal-entry.png",
+      "description": "填写发生过的事实：背景、实际结果、验证、后续及关联文件；不自动形成规则。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "14-decision-detail",
+      "title": "决策详情",
+      "source_file": "exec-3883923a-17a1-49d8-b624-d217db8afcd2.png",
+      "file": "14-decision-detail.png",
+      "description": "侧栏展示背景、采用方案、真实备选、收益代价和关联文档；工程决定状态与约束审核状态分开。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "15-skill-connection",
+      "title": "Skill 接入",
+      "source_file": "exec-5262db55-9827-4302-9e05-09c7a5aad3b3.png",
+      "file": "15-skill-connection.png",
+      "description": "展示 Skill 位置与命令示例；支持读取约束、查询背景和提交候选，不提供批准入口。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "16-empty-proposals",
+      "title": "待审队列为空",
+      "source_file": "exec-439136b4-57c8-43b3-9c43-fa921a4bb8b2.png",
+      "file": "16-empty-proposals.png",
+      "description": "无待审提案时提供新建提案、查看已处理记录与 Skill 接入入口。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    },
+    {
+      "slug": "17-directory-error",
+      "title": "目录不可读",
+      "source_file": "exec-b5bb5dc0-0a6f-420d-95d4-e5c4603b3c10.png",
+      "file": "17-directory-error.png",
+      "description": "目录校验失败时保留输入、就地显示原因，修正路径后重试，不自动创建目录。",
+      "pixels": [
+        1487,
+        1058
+      ]
+    }
+  ]
+}

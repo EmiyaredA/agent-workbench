@@ -1,0 +1,328 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { createHash, randomUUID } from 'node:crypto';
+import { discoverDocs, parseDocLineage, queryTerms, matchTerms } from 'mini-trellis-core/mem';
+import { diffLines } from 'diff';
+import { marked } from 'marked';
+import { atomic, exclusive, info } from './io.mjs';
+export { atomic } from './io.mjs';
+
+export class Fault extends Error {
+  constructor(message, status = 400) { super(message); this.status = status; }
+}
+export const hash = text => text === null ? null : createHash('sha256').update(text).digest('hex');
+const now = () => new Date().toISOString();
+const short = (value, fallback = '', limit = 500) => String(value ?? fallback).trim().slice(0, limit);
+const line = value => short(value).replace(/[\r\n]/g, ' ');
+const validateFields = (input, keys) => { for (const key of keys) if (input[key] !== undefined && (typeof input[key] !== 'string' || input[key].length > 10_000)) throw new Fault(`${key}格式无效或过长`); };
+const within = (root, file) => file === root || file.startsWith(root + path.sep);
+const exists = file => info(file) !== null;
+const readJSON = (file, fallback) => exists(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : fallback;
+
+export class Workbench {
+  constructor(dataDir, hooks = {}) {
+    this.dataDir = path.resolve(dataDir); this.hooks = hooks;
+    this.registryFile = path.join(this.dataDir, 'projects.json');
+    this.load(); this.recoveryWarnings = [];
+  }
+  load() { this.registry = readJSON(this.registryFile, { projects: [], global: null }); }
+  saveRegistry() { atomic(this.registryFile, JSON.stringify(this.registry, null, 2)); }
+  project(id) {
+    if (!this.writing) this.load();
+    if (id === 'global' && this.registry.global) return { ...this.registry.global, id, name: '全局偏好', scope: 'global', ruleRoots: [], ruleFiles: [this.registry.global.file] };
+    const item = this.registry.projects.find(p => p.id === id);
+    if (!item) throw new Fault('项目尚未登记', 404);
+    return item;
+  }
+  inspect(input) {
+    validateFields(input,['root','name']);
+    if (!path.isAbsolute(input.root ?? '')) throw new Fault('请输入已存在目录的绝对路径');
+    let root;
+    try { root = fs.realpathSync(input.root); if (!fs.statSync(root).isDirectory()) throw Error(); fs.accessSync(root,fs.constants.R_OK); }
+    catch { throw new Fault('目录不存在或无法读取'); }
+    const duplicate = this.registry.projects.find(p => p.root === root);
+    if (duplicate) throw new Fault('这个目录已经登记', 409);
+    return { root, discovered: ['AGENTS.md','docs/agent','.trellis/spec','docs/maintenance','.trellis/workspace'].filter(file => exists(path.join(root,file))) };
+  }
+  register(input) {
+    const { root } = this.inspect(input);
+    const item = { id: randomUUID(), name: short(input.name, path.basename(root), 80) || path.basename(root), root,
+      ruleRoots: ['docs/agent', '.trellis/spec'], ruleFiles: ['AGENTS.md'], journalDir: 'docs/maintenance', createdAt: now(), ...(input.demo ? { demo: true } : {}) };
+    this.mapping(item, input);
+    this.registry.projects.push(item); this.saveRegistry(); return item;
+  }
+  mapping(project, input) {
+    const files = input.ruleFiles ?? project.ruleFiles;
+    const roots = input.ruleRoots ?? project.ruleRoots;
+    const journal = input.journalDir ?? project.journalDir;
+    if (!Array.isArray(files) || !files.length || files.length > 20 || !Array.isArray(roots) || roots.length > 10) throw new Fault('约束来源列表格式不正确');
+    for (const file of files) this.safe(project,file);
+    for (const root of roots) { const file = this.safe(project,root,false); if (info(file) && !info(file).isDirectory()) throw new Fault('模块来源必须是目录'); }
+    this.safe(project,journal,false);
+    const journalTarget = this.safe(project,journal,false);
+    if (info(journalTarget) && !info(journalTarget).isDirectory()) throw new Fault('维护来源必须是目录');
+    if (files.some(file => file.startsWith(journal + '/')) || roots.some(root => root === journal || root.startsWith(journal + '/') || journal.startsWith(root + '/'))) throw new Fault('维护目录不能与活动约束目录重叠');
+    project.ruleFiles = [...new Set(files)]; project.ruleRoots = [...new Set(roots)]; project.journalDir = journal;
+  }
+  configure(id, input) {
+    const project = this.project(id);
+    if (id === 'global') throw new Fault('请从全局来源设置修改');
+    this.mapping(project,input);
+    project.name = short(input.name, project.name, 80) || project.name;
+    this.saveRegistry(); return project;
+  }
+  remove(id) {
+    this.project(id);
+    if (this.proposals().some(p => p.projectId === id && ['pending', 'conflict'].includes(p.status))) throw new Fault('先处理这个项目的待审或冲突提案', 409);
+    this.registry.projects = this.registry.projects.filter(p => p.id !== id); this.saveRegistry();
+  }
+  setGlobal(file) {
+    if (!file) {
+      if (this.proposals().some(p => p.projectId === 'global' && ['pending','conflict'].includes(p.status))) throw new Fault('请先处理全局来源的待审或冲突提案',409);
+      this.registry.global = null; this.saveRegistry(); return;
+    }
+    if (typeof file !== 'string' || !path.isAbsolute(file)) throw new Fault('请填写全局 Markdown 文件的绝对路径');
+    const absolute = path.resolve(file);
+    if (!info(absolute)?.isFile() || !/\.md$/i.test(absolute)) throw new Fault('请选择已有的普通 Markdown 文件');
+    this.text(absolute);
+    this.registry.global = { root: fs.realpathSync(path.dirname(absolute)), file: path.basename(absolute) }; this.saveRegistry();
+  }
+  safe(project, relative, markdown = true) {
+    if (typeof relative !== 'string' || !relative || relative.includes('\\') || path.isAbsolute(relative) || relative.split('/').some(s => !s || ['..', '.', '.git', 'node_modules', '.runtime'].includes(s))) throw new Fault('文件路径不在允许范围');
+    if (markdown && !/\.(md|mdx)$/i.test(relative)) throw new Fault('只支持 Markdown 文件');
+    const file = path.resolve(project.root, relative);
+    try { if (fs.realpathSync(project.root) !== project.root || !fs.statSync(project.root).isDirectory()) throw Error(); }
+    catch { throw new Fault('项目目录已移动或发生变化，请重新登记',409); }
+    if (!within(project.root, file) || file === project.root) throw new Fault('路径越过项目边界');
+    let cursor = project.root;
+    for (const part of relative.split('/')) {
+      cursor = path.join(cursor, part);
+      if (exists(cursor) && fs.lstatSync(cursor).isSymbolicLink()) throw new Fault('首版不经符号链接读写文件');
+    }
+    return file;
+  }
+  isRule(project, relative) {
+    return typeof relative === 'string' && (project.ruleFiles.includes(relative) || project.ruleRoots.some(root => relative.startsWith(root + '/')));
+  }
+  target(project, relative) {
+    const file = this.safe(project, relative);
+    if (!this.isRule(project, relative)) throw new Fault('提案只能修改已登记的约束入口或模块目录');
+    if (exists(file) && fs.statSync(file).size > 1_000_000) throw new Fault('文件超过 1 MB，首版不支持修改');
+    return file;
+  }
+  text(file) {
+    if (!exists(file)) return null;
+    if (!fs.statSync(file).isFile() || fs.statSync(file).size > 1_000_000) throw new Fault('文件无法读取或超过 1 MB');
+    const bytes = fs.readFileSync(file);
+    if (bytes.length > 1_000_000) throw new Fault('文件超过 1 MB');
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch { throw new Fault('文件不是有效的 UTF-8 文本'); }
+  }
+  catalog(id) {
+    const project = this.project(id);
+    const discovered = id === 'global' ? { docs: [{ relPath: project.file }], warnings: [] } : discoverDocs(project.root);
+    const found = new Set(discovered.docs.map(d => d.relPath)); const warnings = [...discovered.warnings];
+    const walk = (relative, depth = 0) => {
+      if (depth > 6 || found.size >= 1000) return;
+      let dir;
+      try { dir = this.safe(project, relative, false); } catch { return; }
+      if (!info(dir)?.isDirectory()) return;
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isSymbolicLink() || entry.name.startsWith('.')) continue;
+        const child = `${relative}/${entry.name}`;
+        if (entry.isDirectory()) walk(child, depth + 1);
+        else if (/\.md$/i.test(child)) found.add(child);
+        if (found.size >= 1000) break;
+      }
+    };
+    for (const file of project.ruleFiles) if (exists(path.join(project.root,file))) found.add(file);
+    if (id !== 'global') for (const dir of [...project.ruleRoots, project.journalDir, '.trellis/workspace', '.agents/notes']) walk(dir);
+    if (found.size >= 1000) warnings.push({ message: '文档发现达到 1000 项上限，结果可能不完整' });
+    const docs = [];
+    for (const file of found) {
+      try {
+        const content = this.text(this.safe(project, file)); if (content === null) continue;
+        const title = content.match(/^#\s+(?:Agent Note[:：]\s*)?(.+)$/m)?.[1] ?? path.basename(file);
+        const note = file.match(/^\.agents\/notes\/(proposed|implemented|rejected|archived)\/([^/]+)\//);
+        const lineage = parseDocLineage(content, project.root, file);
+        const role = note ? 'decision' : this.isRule(project, file) ? 'rule' : file.startsWith(project.journalDir + '/') || file.startsWith('.trellis/workspace/') ? 'journal' : 'document';
+        docs.push({ file, title, role, scope: project.scope ?? (project.ruleFiles.includes(file) ? 'project' : 'module'),
+          status: note?.[1] ?? (lineage.superseded ? 'superseded' : 'current'), category: note?.[2] ?? '',
+          date: path.basename(file).match(/^\d{4}-\d{2}(?:-\d{2})?/)?.[0] ?? '', ...lineage });
+      } catch (error) { warnings.push({ message: `${file}: ${error.message}` }); }
+    }
+    return { project, docs, warnings };
+  }
+  document(id, file) {
+    const { project, docs } = this.catalog(id);
+    if (!docs.some(d => d.file === file) && !this.isRule(project, file)) throw new Fault('没有发现这个文档', 404);
+    const content = this.text(this.safe(project, file));
+    return { file, content: content ?? '', exists: content !== null, hash: hash(content) };
+  }
+  proposalFile(id) { if (!/^[\w-]{1,80}$/.test(id)) throw new Fault('提案标识无效'); return path.join(this.dataDir, 'proposals', id + '.json'); }
+  proposals() {
+    const dir = path.join(this.dataDir, 'proposals');
+    if (!exists(dir)) return [];
+    return fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => readJSON(path.join(dir, f))).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+  proposal(id) { const p = readJSON(this.proposalFile(id)); if (!p) throw new Fault('提案不存在', 404); return p; }
+  saveProposal(p) { atomic(this.proposalFile(p.id), JSON.stringify(p, null, 2)); return p; }
+  propose(input) {
+    validateFields(input,['title','reason','source','alternatives','tradeoffs','file']);
+    const project = this.project(input.projectId); const file = this.target(project, input.file);
+    const baseContent = this.text(file); const content = input.content;
+    if (typeof content !== 'string' || Buffer.byteLength(content) > 500_000) throw new Fault('候选内容必须为文本且不超过 500 KB');
+    if (content === baseContent) throw new Fault('候选内容与当前文件相同，无需提案');
+    if (!short(input.reason) || !short(input.source)) throw new Fault('请填写修改理由和来源');
+    return this.saveProposal({ id: randomUUID(), projectId: project.id, file: input.file, target: file,
+      scope: project.scope ?? (project.ruleFiles.includes(input.file) ? 'project' : 'module'),
+      title: short(input.title, '更新约束', 120), reason: short(input.reason, '', 4000), source: short(input.source, '', 4000),
+      alternatives: short(input.alternatives, '', 4000), tradeoffs: short(input.tradeoffs, '', 4000),
+      baseContent, baseHash: hash(baseContent), content, contentHash: hash(content), revision: 1, status: 'pending', createdAt: now(), updatedAt: now() });
+  }
+  diff(id) {
+    const p = this.proposal(id); let currentContent; let currentError;
+    try { currentContent = this.text(this.target(this.project(p.projectId),p.file)); } catch(error) { currentError = error.message; }
+    const applicationPending = readJSON(path.join(this.dataDir,'receipts',p.id + '.json'))?.state === 'applying';
+    return { ...p, currentContent, currentError, applicationPending, changes: diffLines(p.baseContent ?? '', p.content) };
+  }
+  ensureNotApplying(id) {
+    if (readJSON(path.join(this.dataDir,'receipts',id + '.json'))?.state === 'applying') throw new Fault('已有部分写入，先完成维护记录或重启恢复，不能编辑、拒绝或重提',409);
+  }
+  revise(id, input) {
+    this.ensureNotApplying(id);
+    const p = this.proposal(id); if (p.status !== 'pending') throw new Fault('只能编辑待审提案', 409);
+    if (input.contentHash !== p.contentHash) throw new Fault('提案已变化，请刷新后编辑', 409);
+    if (typeof input.content !== 'string' || Buffer.byteLength(input.content) > 500_000) throw new Fault('候选内容过长或格式无效');
+    p.content = input.content; p.contentHash = hash(p.content); p.revision++; p.updatedAt = now();
+    if (input.reason !== undefined) {
+      if (typeof input.reason !== 'string' || !input.reason.trim() || input.reason.length > 4000) throw new Fault('请填写有效的修改理由');
+      p.reason = input.reason.trim();
+    }
+    return this.saveProposal(p);
+  }
+  reject(id, reason) {
+    this.ensureNotApplying(id);
+    const p = this.proposal(id); if (!['pending', 'conflict'].includes(p.status)) throw new Fault('提案已经处理', 409);
+    if (typeof reason !== 'string' || !reason.trim() || reason.length > 4000) throw new Fault('请留下一句拒绝原因，便于后续查阅');
+    p.status = 'rejected'; p.rejectionReason = short(reason, '', 4000); p.updatedAt = now(); return this.saveProposal(p);
+  }
+  rebase(id) {
+    this.ensureNotApplying(id);
+    const old = this.proposal(id); if (!['pending', 'conflict'].includes(old.status)) throw new Fault('这个提案不能重新生成', 409);
+    const target = this.target(this.project(old.projectId),old.file);
+    if (target !== old.target) throw new Fault('目标来源已改变，请针对新来源手动创建提案',409);
+    if (this.text(target) === old.content) { old.status = 'superseded'; old.resolution = '当前文件已包含全部建议，无剩余差异'; this.saveProposal(old); return { ...old,noChanges:true }; }
+    const next = this.propose(old); old.status = 'superseded'; old.replacedBy = next.id; old.updatedAt = now(); this.saveProposal(old); return next;
+  }
+  journalPath(project) {
+    return project.id === 'global' ? path.join(this.dataDir, 'global-maintenance.md') : this.safe(project, `${project.journalDir}/${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' }).slice(0, 7)}.md`);
+  }
+  appendJournal(project, input, key = randomUUID(), file = this.journalPath(project)) {
+    const marker = `<!-- awb:${key} -->`;
+    if (project.id !== 'global') this.safe(project,path.relative(project.root,file).split(path.sep).join('/'));
+    const old = this.text(file) ?? '# 项目维护日志\n'; if (old.includes(marker)) return file;
+    const section = `\n## ${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' })} · ${line(input.title)}\n\n${marker}\n\n` +
+      [['背景', input.background], ['结果', input.result], ['放弃的备选', input.alternatives], ['收益与代价', input.tradeoffs], ['验证', input.verification], ['后续', input.next], ['相关文件', input.topic]].filter(([,v]) => v).map(([label,value]) => `- **${label}**：${String(value).replace(/\n/g, '\n  ')}`).join('\n') + '\n';
+    if (Buffer.byteLength(old + section) > 1_000_000) throw new Fault('维护文件已超过 1 MB，请调整维护目录后重试');
+    atomic(file, old + section); return file;
+  }
+  journal(id) {
+    const catalog = this.catalog(id); const entries = [];
+    for (const d of catalog.docs.filter(d => d.role === 'journal')) {
+      const text = this.text(this.safe(catalog.project, d.file)) ?? '';
+      const blocks = []; let block = '';
+      for (const token of marked.lexer(text)) {
+        if (token.type === 'heading' && token.depth === 2) { if (block) blocks.push(block); block = token.raw; }
+        else if (block) block += token.raw;
+      }
+      if (block) blocks.push(block);
+      if (!blocks.length) entries.push({ ...d, content: text });
+      for (const [index, content] of blocks.entries()) entries.push({ ...d, key: d.file + ':' + index, title: content.match(/^##\s+(.+)/)?.[1] ?? d.title, date: content.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? d.date, content });
+    }
+    if (id === 'global' && exists(path.join(this.dataDir, 'global-maintenance.md'))) entries.push({ file: 'global-maintenance.md', title: '全局约束变更', content: this.text(path.join(this.dataDir, 'global-maintenance.md')) });
+    return entries.sort((a,b) => (b.date ?? '').localeCompare(a.date ?? ''));
+  }
+  record(id, input) {
+    validateFields(input,['title','background','result','alternatives','tradeoffs','verification','next','topic']);
+    if (!short(input.title) || !short(input.background) || !short(input.result)) throw new Fault('请填写标题、背景和实际结果');
+    const project = this.project(id); const file = this.appendJournal(project, input);
+    return { file: id === 'global' ? 'global-maintenance.md' : path.relative(project.root, file) };
+  }
+  apply(id, expected) {
+    const existing = readJSON(path.join(this.dataDir,'receipts',id + '.json'));
+    if (existing?.state === 'applying') this.recoverOne(existing);
+    const p = this.proposal(id); if (p.status === 'applied') return p;
+    if (p.status !== 'pending') throw new Fault('这个提案当前无法批准', 409);
+    if (expected.contentHash !== p.contentHash || expected.baseHash !== p.baseHash) throw new Fault('审核版本已经变化，请重新查看差异', 409);
+    const project = this.project(p.projectId); let target;
+    try { target = this.target(project,p.file); }
+    catch { p.status = 'conflict'; this.saveProposal(p); throw new Fault('目标来源已变化，请重新核对文件与来源设置',409); }
+    if (target !== p.target || hash(this.text(target)) !== p.baseHash) {
+      p.status = 'conflict'; p.updatedAt = now(); this.saveProposal(p); throw new Fault('原文已变化，请重新核对差异', 409);
+    }
+    const receipt = { proposalId: id, state: 'applying', at: now(), project, journalFile: this.journalPath(project) };
+    const receiptFile = path.join(this.dataDir, 'receipts', id + '.json'); atomic(receiptFile, JSON.stringify(receipt));
+    atomic(target, p.content); this.hooks.afterWrite?.();
+    return this.finish(p, receipt);
+  }
+  finish(p, receipt) {
+    const project = receipt.project;
+    this.appendJournal(project, { title: p.title, background: p.reason, result: `审核后写入 ${p.file}。`, alternatives: p.alternatives, tradeoffs: p.tradeoffs,
+      verification: '文件内容与审核版本 hash 一致；此记录不代表功能测试通过。', topic: p.file }, p.id, receipt.journalFile);
+    p.status = 'applied'; p.updatedAt = now(); this.saveProposal(p);
+    atomic(path.join(this.dataDir,'receipts',p.id + '.json'), JSON.stringify({ ...receipt, state: 'complete', completedAt: now(), contentHash: p.contentHash })); return p;
+  }
+  recoverOne(receipt) {
+    const p = this.proposal(receipt.proposalId); const target = this.target(this.project(p.projectId),p.file);
+    const actual = hash(this.text(target));
+    if (target === p.target && actual === p.contentHash) return this.finish(p,receipt);
+    p.status = target === p.target && actual === p.baseHash ? 'pending' : 'conflict'; this.saveProposal(p);
+    atomic(path.join(this.dataDir,'receipts',p.id + '.json'),JSON.stringify({ ...receipt,state:'interrupted' })); return p;
+  }
+  recover() {
+    this.recoveryWarnings = [];
+    const dir = path.join(this.dataDir, 'receipts'); if (!exists(dir)) return;
+    for (const name of fs.readdirSync(dir).filter(n => n.endsWith('.json'))) {
+      const receiptFile = path.join(dir, name); const receipt = readJSON(receiptFile); if (receipt.state !== 'applying') continue;
+      try { this.recoverOne(receipt); } catch(error) { this.recoveryWarnings.push(`恢复未完成：${error.message}。修正后可重试批准或重启服务。`); }
+    }
+  }
+  context(id, query = '') {
+    const sets = [this.catalog(id)]; if (id !== 'global' && this.registry.global) sets.unshift(this.catalog('global'));
+    const rules = []; const modules = []; const warnings = sets.flatMap(set => set.warnings);
+    for (const set of sets) for (const doc of set.docs.filter(d => d.role === 'rule' && !d.superseded)) {
+      const entry = { ...doc,projectId:set.project.id };
+      if (doc.scope === 'module') modules.push(entry);
+      else rules.push({ ...entry,content:this.text(this.safe(set.project,doc.file)) });
+    }
+    return { rules, modules: query ? modules.filter(doc => matchTerms(`${doc.title} ${doc.file}`,queryTerms(query)).length) : modules, warnings };
+  }
+  search(id, query, kind = 'all') {
+    if (typeof query !== 'string' || query.length > 200) throw new Fault('搜索词格式无效或过长');
+    if (!query.trim()) return { hits:[],warnings:[],truncated:false };
+    const terms = queryTerms(query); const catalog = this.catalog(id); const hits = [];
+    const add = item => {
+      if (!matchTerms(`${item.title} ${item.file ?? ''} ${item.content}`,terms).length) return;
+      const index = item.content.toLowerCase().indexOf(query.toLowerCase()); const begin = Math.max(0,index - 40);
+      const { content,...metadata } = item; hits.push({ ...metadata,excerpt:content.slice(begin,begin + 180) });
+    };
+    if (['all','document','journal'].includes(kind)) for (const doc of catalog.docs) {
+      if (kind === 'journal' && !['journal','decision'].includes(doc.role)) continue;
+      if (kind === 'document' && ['journal','decision'].includes(doc.role)) continue;
+      add({ kind:doc.role === 'journal' ? 'journal' : 'document',title:doc.title,file:doc.file,content:this.text(this.safe(catalog.project,doc.file)) ?? '' });
+    }
+    if (['all','proposal'].includes(kind)) for (const p of this.proposals().filter(p => p.projectId === id)) add({ kind:'proposal',title:p.title,proposalId:p.id,status:p.status,file:p.file,content:`${p.reason}\n${p.source}\n${p.content}` });
+    return { hits:hits.slice(0,30),warnings:catalog.warnings,truncated:hits.length > 30 };
+  }
+}
+
+// All public mutations share a cross-process lock. Read methods never acquire it.
+for (const name of ['register','configure','remove','setGlobal','propose','revise','reject','rebase','record','apply','recover']) {
+  const operation = Workbench.prototype[name];
+  Workbench.prototype[name] = function (...args) {
+    if (this.writing) return operation.apply(this,args);
+    return exclusive(this.dataDir,() => { this.load(); this.writing = true;
+      try { return operation.apply(this,args); } finally { this.writing = false; }
+    });
+  };
+}
