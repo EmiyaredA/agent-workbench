@@ -15,6 +15,12 @@ const assets = {
   '/maintenance.js': ['web/maintenance.js','text/javascript; charset=utf-8'],
   '/app.js': ['web/app.js', 'text/javascript; charset=utf-8'],
   '/style.css': ['web/style.css', 'text/css; charset=utf-8'],
+  '/theme.css': ['web/theme.css', 'text/css; charset=utf-8'],
+  '/assets/kurisu-avatar.png': ['web/assets/kurisu-avatar.png', 'image/png'],
+  '/assets/kurisu-favicon-32.png': ['web/assets/kurisu-favicon-32.png', 'image/png'],
+  '/assets/kurisu-icon-192.png': ['web/assets/kurisu-icon-192.png', 'image/png'],
+  '/assets/kurisu-apple-touch-icon.png': ['web/assets/kurisu-apple-touch-icon.png', 'image/png'],
+  '/favicon.ico': ['web/assets/favicon.ico', 'image/x-icon'],
   '/vendor/marked.js': [fileURLToPath(import.meta.resolve('marked')), 'text/javascript; charset=utf-8'],
   '/vendor/purify.js': [fileURLToPath(import.meta.resolve('dompurify')), 'text/javascript; charset=utf-8'],
 };
@@ -97,7 +103,6 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     if (req.method === 'GET' && assets[pathname]) {
       const [relative, type] = assets[pathname]; res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' }); return res.end(fs.readFileSync(path.isAbsolute(relative) ? relative : path.join(root,relative)));
     }
-    if (req.method === 'GET' && pathname === '/favicon.ico') { res.writeHead(204); return res.end(); }
     throw new Fault('没有这个页面或接口', 404);
   } catch (error) { send(res, error.status ?? 500, { error: error.code && ['EACCES','EPERM'].includes(error.code) ? '文件无法读取或写入，请检查目录权限' : error.message }); }
 });

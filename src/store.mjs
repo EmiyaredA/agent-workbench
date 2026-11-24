@@ -56,14 +56,20 @@ export class Workbench {
     const files = input.ruleFiles ?? project.ruleFiles;
     const roots = input.ruleRoots ?? project.ruleRoots;
     const journal = input.journalDir ?? project.journalDir;
+    const references = input.referenceFiles ?? project.referenceFiles ?? [];
     if (!Array.isArray(files) || !files.length || files.length > 20 || !Array.isArray(roots) || roots.length > 10) throw new Fault('约束来源列表格式不正确');
+    if (!Array.isArray(references) || references.length>50) throw new Fault('只读参考文档列表格式不正确');
     for (const file of files) this.safe(project,file);
+    for (const file of references) {
+      this.safe(project,file);
+      if (files.includes(file) || roots.some(root=>file.startsWith(root+'/'))) throw new Fault('只读参考文档不能与约束来源重叠');
+    }
     for (const root of roots) { const file = this.safe(project,root,false); if (info(file) && !info(file).isDirectory()) throw new Fault('模块来源必须是目录'); }
     this.safe(project,journal,false);
     const journalTarget = this.safe(project,journal,false);
     if (info(journalTarget) && !info(journalTarget).isDirectory()) throw new Fault('维护来源必须是目录');
     if (files.some(file => file.startsWith(journal + '/')) || roots.some(root => root === journal || root.startsWith(journal + '/') || journal.startsWith(root + '/'))) throw new Fault('维护目录不能与活动约束目录重叠');
-    project.ruleFiles = [...new Set(files)]; project.ruleRoots = [...new Set(roots)]; project.journalDir = journal;
+    project.ruleFiles = [...new Set(files)]; project.ruleRoots = [...new Set(roots)]; project.journalDir = journal; project.referenceFiles=[...new Set(references)];
   }
   configure(id, input) {
     const project = this.project(id);
@@ -137,6 +143,7 @@ export class Workbench {
       }
     };
     for (const file of project.ruleFiles) if (exists(path.join(project.root,file))) found.add(file);
+    for (const file of project.referenceFiles ?? []) if (exists(path.join(project.root,file))) found.add(file);
     if (id !== 'global') for (const dir of [...project.ruleRoots, project.journalDir, projectLayout.legacyJournalDir, projectLayout.decisionDir]) walk(dir);
     if (limited || found.size >= 1000) warnings.push({ message: '固定来源扫描达到数量或深度上限，结果可能不完整' });
     const docs = [];

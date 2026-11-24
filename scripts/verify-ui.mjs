@@ -11,8 +11,9 @@ const output = path.resolve(process.env.AWB_QA_DIR ?? '.local/ui-acceptance');
 fs.mkdirSync(output,{recursive:true});
 const temporary = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'awb-ui-')));
 const projectRoot = path.join(temporary,'project'); fs.mkdirSync(projectRoot);
-const original = '# 项目约束\n\n本文件保存项目的长期偏好与工作边界。\n\n## 工作方式\n\n- 修改前确认目标文件。\n- 规则变更需先审核。\n- 按需读取模块文档。\n\n## 按任务读取\n\n- [前端约束](.agent-workbench/rules/frontend.md)\n';
+const original = '# 项目约束\n\n本文件保存项目的长期偏好与工作边界。\n\n## 工作方式\n\n- 修改前确认目标文件。\n- 规则变更需先审核。\n- 按需读取模块文档。\n\n## 按任务读取\n\n- [前端约束](.agent-workbench/rules/frontend.md)\n- [公开契约参考](docs/api.md)\n';
 atomic(path.join(projectRoot,'AGENTS.md'),original);
+atomic(path.join(projectRoot,'docs/api.md'),'# 公开契约参考\n\n既有契约只读打开，保持文档职责。\n');
 atomic(path.join(projectRoot,'.agent-workbench/rules/frontend.md'),'# 前端约束\n\n- 页面以文档内容为主。\n- 使用系统字体，支持离线阅读。\n');
 atomic(path.join(projectRoot,'.agents/notes/implemented/architecture/2026-11-24-file-first.md'),'# Agent Note: 文件作为正式来源\n\nStatus: implemented\n\n## Problem\n\n更换 Agent 后仍需理解过去的决定。\n\n## Decision\n\n正式约束保存在项目 Markdown 中。\n\n## Alternatives considered\n\n独立数据库方便检索，但增加迁移成本。\n\n## Consequences\n\n文件便于交接；首版不提供语义知识图谱。\n\n## 关联文档\n\n[项目 AGENTS.md](../../../../AGENTS.md)\n');
 atomic(path.join(projectRoot,'.agents/notes/rejected/architecture/2026-11-23-observer.md'),'# Agent Note: 常驻观察服务\n\nStatus: rejected — 首版无需额外推理\n\n## Problem\n\n需要提出新约束。\n\n## Proposal\n\n常驻观察工具事件。\n\n## Alternatives considered\n\n当前 Agent 按需提出候选。\n\n## Risks\n\n增加运行负担。\n');
@@ -68,8 +69,17 @@ try {
 
   await page.locator('[data-action=global]').click(); await fill('file',globalFile); await submit(); await waitFormClosed();
   await page.locator('.header [data-action=settings]').click(); await dialog().locator('summary').click(); await capture('02-configure-sources');
-  await fill('journalDir','docs/logs'); await submit(); await waitFormClosed();
+  await fill('journalDir','docs/logs'); await fill('referenceFiles','docs/api.md'); await submit(); await waitFormClosed();
   assert.equal(store.project(projectId).journalDir,'docs/logs'); check('configure global source and custom maintenance mapping');
+
+  assert.deepEqual(store.project(projectId).referenceFiles,['docs/api.md']);
+  assert.equal(await page.locator('.file-button[data-file="docs/api.md"]').count(),0);
+  await page.locator('.reader a[href="docs/api.md"]').click();
+  await visible(dialog().getByRole('heading',{name:'公开契约参考',exact:true}));
+  assert.equal(await dialog().locator('[data-action=new-change]').count(),0);
+  await capture('reference-document'); await close();
+  check('explicit reference mapping opens linked documents without adding rule targets');
+
 
   assert.equal(await page.locator('[data-action=scope][data-scope=global]').count(),0);
   await page.locator('[data-action=global]').click(); await visible(page.locator('.reader').getByText('使用中文简洁沟通。'));
@@ -84,7 +94,11 @@ try {
   const directory = page.locator('details[data-directory=".agent-workbench"]');
   await directory.locator(':scope > summary').click();
   await page.locator('.file-button[data-file=".agent-workbench/rules/frontend.md"]').waitFor({state:'hidden'});
+  assert.deepEqual(await page.locator('.doc-toolbar [role=group][aria-label="文档显示方式"] button').allTextContents(),['预览','Markdown']);
+  assert.equal(await page.locator('.display-mode [data-mode=read]').getAttribute('aria-pressed'),'true');
   await page.locator('.doc-toolbar [data-action=read-mode][data-mode=raw]').click(); await visible(page.locator('.reader > pre'));
+  assert.equal(await page.locator('.display-mode [data-mode=raw]').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.locator('.display-mode [data-mode=read]').getAttribute('aria-pressed'),'false');
   assert.equal(await directory.evaluate(node => node.open),false);
   await page.locator('.doc-toolbar [data-action=read-mode][data-mode=read]').click(); await visible(page.locator('.reader h1'));
   await directory.locator(':scope > summary').focus(); await page.keyboard.press('Enter');
@@ -109,6 +123,7 @@ try {
   assert.equal(store.proposal(p.id).revision,2); await capture('07-review-diff'); check('edit pending proposal and review real diff');
 
   await openTab('rules'); await visible(page.locator('.reader h1')); await page.waitForFunction(() => !document.querySelector('#toast')?.classList.contains('show')); await capture('main');
+  assert.equal(await page.locator('.reader .related-log').count(),0); assert.equal(await page.locator('.inspector .related-log').count(),2); await capture('document-sidebar');
   await page.keyboard.press('/'); await page.locator('#search-query').fill('保留'); await visible(page.locator('#search-results button').first()); await capture('04-search');
   await page.locator('[data-action=search-kind][data-kind=proposal]').click(); await visible(page.locator('#search-results button').first());
   await page.locator('#search-results button').first().click(); await waitFormClosed(); await visible(page.getByRole('heading',{name:'保留用户已有修改',exact:true})); check('search documents and candidates with source navigation');
@@ -174,7 +189,12 @@ try {
   assert.equal(globalChange.category,'process'); assert.equal(store.maintenance('global').entries[0].category,'process');
   await visible(page.locator('.change-detail .proposal-meta').getByText('流程',{exact:true}));
   assert.equal(await page.locator('.change-detail [data-action=approve-proposal]').count(),0);
-  await capture('global-iteration-detail'); await closeChange(); await capture('global-iteration-timeline');
+  const verifyChangeBadges=async()=>{
+    const boxes=await page.locator(`.change-card[data-id="${globalChange.id}"] .change-card-badges .pill`).evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top};}));
+    assert.equal(boxes.length,2); assert.ok(Math.abs(boxes[0].top-boxes[1].top)<1,'change badges are not aligned');
+    assert.ok(boxes[1].left-boxes[0].right>=4 && boxes[1].left-boxes[0].right<=8,'change badges are spread apart');
+  };
+  await capture('global-iteration-detail'); await closeChange(); await verifyChangeBadges(); await capture('global-iteration-timeline');
   await page.locator('[data-action=proposal-filter][data-filter=all]').click();
   await page.locator('#change-query').fill('补充全局'); await page.locator('#change-query').press('Enter');
   await visible(page.locator(`.change-card[data-id="${globalChange.id}"]`)); await page.locator('[data-action=change-view][data-view=list]').click();
@@ -183,7 +203,7 @@ try {
   await page.locator(`.change-card[data-id="${globalChange.id}"]`).click(); await visible(page.locator('.change-detail'));
   await page.keyboard.press('Escape'); await page.locator('.change-detail').waitFor({state:'hidden'});
   await page.goBack(); await visible(page.locator('.change-detail')); await closeChange();
-  await page.setViewportSize({width:390,height:844}); await page.locator(`.change-card[data-id="${globalChange.id}"]`).click(); await visible(page.locator('.change-detail'));
+  await page.setViewportSize({width:390,height:844}); await verifyChangeBadges(); await capture('change-badges-mobile'); await page.locator(`.change-card[data-id="${globalChange.id}"]`).click(); await visible(page.locator('.change-detail'));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false); await capture('global-iteration-mobile'); await closeChange();
   await page.setViewportSize({width:1440,height:1024});
   await page.locator(`.projects [data-id="${projectId}"]`).click(); await visible(page.locator('.reader h1'));
@@ -193,7 +213,7 @@ try {
   await openTab('rules'); await visible(page.locator('.file-button[data-file=".agent-workbench/rules/untrusted.md"]')); await page.locator('.file-button[data-file=".agent-workbench/rules/untrusted.md"]').click(); await visible(page.locator('.reader h1').getByText('Untrusted'));
   assert.equal(await page.locator('.markdown img,.markdown [data-action],.markdown [id]').count(),0); assert.equal(await page.evaluate(() => window.__injected),undefined); check('untrusted Markdown is sanitized and cannot invoke UI actions');
   await page.locator('.file-button[data-file="AGENTS.md"]').click(); await visible(page.locator('.reader h1').getByText('项目约束',{exact:true}));
-  await page.setViewportSize({width:390,height:844}); await visible(page.locator('.mobile-project')); await visible(page.locator('.reader h1').getByText('项目约束',{exact:true})); await capture('mobile'); assert.equal(await page.locator('.sidebar').count(),1);
+  await page.setViewportSize({width:390,height:844}); await visible(page.locator('.mobile-project')); await visible(page.locator('.reader h1').getByText('项目约束',{exact:true})); await capture('mobile'); await page.locator('.inspector').scrollIntoViewIfNeeded(); await capture('document-sidebar-mobile'); await page.locator('.brand').scrollIntoViewIfNeeded(); assert.equal(await page.locator('.sidebar').count(),1);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1),'mobile viewport overflows');
   const switcherBounds = await page.locator('.mobile-project').boundingBox(); const brandBounds = await page.locator('.brand').boundingBox(); assert.ok(switcherBounds.y < brandBounds.y+brandBounds.height,'project dropdown moved below the mobile header');
   await page.locator('.mobile-project .dropdown-trigger').click(); await visible(page.locator('.mobile-project [role=listbox]')); await capture('custom-project-dropdown'); await page.locator('.mobile-project [role=option][data-value=__connect]').click(); await visible(page.locator('.skill-content h1').getByText('Agent Workbench',{exact:true})); check('mobile layout and access to secondary navigation');

@@ -33,6 +33,22 @@ test('context includes global and project bodies, module index only; pending sta
   assert.equal(result.rules.length,2); assert.equal(result.modules.length,1);
   assert.equal(result.modules[0].content,undefined); assert.ok(!JSON.stringify(result).includes('不应注入'));
 });
+test('explicit reference documents can be read without becoming active rules or writable targets',t=>{
+  const f=fixture(t); f.write('AGENTS.md','# Entry'); f.write('docs/api.md','# API\nPublic contract'); f.write('docs/decisions.md','# Historical decisions');
+  f.store.configure(f.project.id,{referenceFiles:['docs/api.md','docs/decisions.md']});
+  assert.equal(f.store.document(f.project.id,'docs/api.md').content,'# API\nPublic contract');
+  assert.equal(f.store.catalog(f.project.id).docs.find(d=>d.file==='docs/api.md').role,'document');
+  assert.equal(f.store.context(f.project.id).rules.length,1); assert.equal(f.store.context(f.project.id).modules.length,0);
+  assert.throws(()=>f.proposal({file:'docs/api.md'}),/约束入口或模块/);
+  assert.throws(()=>f.store.writeChange({projectId:f.project.id,file:'docs/api.md',title:'Forbidden',reason:'Reference',source:'Test',content:'# New',category:'testing',operationId:'reference-test',baseHash:hash('# API\nPublic contract')}),/约束入口或模块/);
+  assert.throws(()=>f.store.configure(f.project.id,{referenceFiles:Array(51).fill('docs/api.md')}),/列表格式/);
+  assert.throws(()=>f.store.configure(f.project.id,{referenceFiles:['../outside.md']}),/允许范围/);
+  assert.throws(()=>f.store.configure(f.project.id,{referenceFiles:['AGENTS.md']}),/重叠/);
+  assert.throws(()=>f.store.configure(f.project.id,{referenceFiles:['.agent-workbench/rules/api.md']}),/重叠/);
+  const link=path.join(f.projectRoot,'docs/link.md'); fs.symlinkSync(path.join(f.projectRoot,'docs/api.md'),link);
+  assert.throws(()=>f.store.configure(f.project.id,{referenceFiles:['docs/link.md']}),/符号链接/);
+  const reopened=new Workbench(f.data); assert.equal(reopened.document(f.project.id,'docs/decisions.md').exists,true);
+});
 test('proposals stay pending until exact approval; applying preserves permissions and is idempotent',t => {
   const f = fixture(t); const file = f.write('AGENTS.md','# Original\n'); fs.chmodSync(file,0o660);
   const p = f.proposal(); assert.equal(fs.readFileSync(file,'utf8'),'# Original\n');

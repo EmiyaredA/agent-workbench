@@ -8,6 +8,7 @@
 | 项目约束 | 项目根 AGENTS.md | 每次需要项目上下文时读取，保持简短 |
 | 模块读取路由 | .agent-workbench/rules/index.md | 存在时随 context 返回；用 Markdown 表格写适用任务和实际文件链接 |
 | 模块约束 | .agent-workbench/rules/ 下的 Markdown | 按索引或当前任务选择，用 read 展开；不全量注入 |
+| 只读参考文档（可选） | referenceFiles 显式登记的既有 Markdown | 打开索引中的契约／背景链接，不加入活动约束或自动上下文，不作为约束修改目标 |
 | 维护日志 | docs/maintenance/YYYY-MM.md | 按主题或时间查询，不作为当前指令 |
 | 工程决策（可选） | .agents/notes/{proposed,implemented,rejected,archived}/类别/日期-主题.md | 沿用 write-notes 的既有结构；方案、否决、归档不变成约束 |
 | 既有 mini-trellis 日志 | .trellis/workspace/ | 兼容只读；新日志仍追加配置的维护目录 |
@@ -25,7 +26,7 @@
 
 `context` 的 `rules` 返回全局与项目入口正文，`indexes` 返回已存在且未被替代的模块根索引，`modules` 仅返回可展开的文件索引。嵌套模块可在根索引链接自身 index.md，再按需逐层读取。没有索引时返回已有模块列表，不自动造文件。
 
-模块之间用相对 Markdown 链接指向同一份共用约束，在链接旁写清“何时还需要读”。不增加 depends_on 配置、规则包安装器或依赖图引擎。索引链接不会扩大文件读取权限；工作台只读取登记的入口和目录，越界或不存在的文件明确报错。
+模块之间用相对 Markdown 链接指向同一份共用约束，在链接旁写清“何时还需要读”。不增加 depends_on 配置、规则包安装器或依赖图引擎。索引链接不会扩大文件读取权限；工作台只读取登记的入口、目录和只读参考文件，越界或不存在的文件明确报错。
 
 ## 固定边界与兼容
 

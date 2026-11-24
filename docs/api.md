@@ -10,7 +10,7 @@
 | `GET /api/session` | 本机 UI 会话、数据目录与运行模式 |
 | `GET /api/state` | 已登记项目、全局来源、提案摘要、恢复提示；只读 |
 | `POST /api/projects/inspect` | 输入 `root`，检查已存在目录与已发现的来源，不登记、不写项目 |
-| `POST /api/projects` | 登记 `root`、`name`；可指定 `ruleFiles`、`ruleRoots`、`journalDir` |
+| `POST /api/projects` | 登记 `root`、`name`；可指定 `ruleFiles`、`ruleRoots`、`journalDir`、`referenceFiles` |
 | `GET /api/projects/:id` | 项目来源、文档索引与扫描提示 |
 | `PATCH /api/projects/:id` | 更新名称和来源映射，不改原文档 |
 | `DELETE /api/projects/:id` | 解除登记，不删除文件；待审或冲突提案须先处理 |
@@ -31,6 +31,8 @@
 | `POST /api/proposals/:id/rebase` | 以当前原文新建待审版本，保留旧提案关联；没有剩余差异时关闭旧候选 |
 
 项目 ID 来自登记结果或 CLI `projects`；全局来源的 ID 为 `global`。提案状态为 pending、applied、rejected、conflict、superseded；工程笔记的 implemented 等生命周期独立呈现。差异查询中的 `applicationPending` 表示批准写入曾中断：此时候选冻结，可重试补齐记录，不能编辑、拒绝或重提。
+
+`referenceFiles` 是可选的只读 Markdown 相对路径数组，最多50项，可在项目目录设置中维护。用于打开索引引用的既有契约和背景文档，不扫描其所在目录，不加入 `context` 的活动规则或模块，也不能作为 change／propose 的目标。它不能与约束来源重叠，仍受项目边界、符号链接和单文件大小限制。
 
 候选必需：`projectId`、目标相对路径 `file`、`title`、`reason`、`source` 、必填标签 `category` 和完整新文本 `content`。可补 `alternatives`、`tradeoffs`。候选正文最多500 KB（按 UTF-8 字节），不会因保存而生效。
 

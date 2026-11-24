@@ -16,7 +16,13 @@ async function service(t) {
 }
 test('serves UI and all local runtime assets without external resources',async t => {
   const f = await service(t);
-  for (const route of ['/','/app.js','/style.css','/vendor/marked.js','/vendor/purify.js','/icons/style.css','/icons/Phosphor.woff2']) assert.equal((await fetch(f.base+route)).status,200,route);
+  for (const route of ['/','/app.js','/style.css','/theme.css','/vendor/marked.js','/vendor/purify.js','/icons/style.css','/icons/Phosphor.woff2']) assert.equal((await fetch(f.base+route)).status,200,route);
+  for (const route of ['/assets/kurisu-avatar.png','/assets/kurisu-favicon-32.png','/assets/kurisu-icon-192.png','/assets/kurisu-apple-touch-icon.png']) {
+    const asset=await fetch(f.base+route);
+    assert.equal(asset.status,200,route);assert.equal(asset.headers.get('content-type'),'image/png');
+    assert.equal(Buffer.from(await asset.arrayBuffer()).subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+  }
+  const favicon=await fetch(f.base+'/favicon.ico');assert.equal(favicon.status,200);assert.equal(favicon.headers.get('content-type'),'image/x-icon');
   const skill = await fetch(f.base+'/api/skill').then(r => r.json());
   assert.equal(skill.content,fs.readFileSync(new URL('../skills/agent-workbench/SKILL.md',import.meta.url),'utf8'));
   assert.equal(skill.file,'skills/agent-workbench/SKILL.md');
