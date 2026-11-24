@@ -31,8 +31,20 @@ test('mutations require same-origin UI nonce and invalid JSON is rejected',async
   assert.equal((await f.request(route,{},'POST',{'X-Workbench-Nonce':'wrong'})).status,403);
   assert.equal((await f.request(route,[])).status,400);
 });
+test('direct changes require the UI nonce and expose history without duplicating snapshot bodies in state',async t=>{
+  const f=await service(t); f.write('AGENTS.md','# Before');
+  const payload={projectId:f.project.id,file:'AGENTS.md',title:'Direct iteration',reason:'User task',category:'process',source:'User',baseHash:f.store.document(f.project.id,'AGENTS.md').hash,content:'# After',operationId:'http-direct'};
+  assert.equal((await f.request('/api/changes',{...payload,category:''})).status,400);
+  assert.equal((await fetch(f.base+'/api/changes',{method:'POST',body:JSON.stringify(payload)})).status,403);
+  const response=await f.request('/api/changes',payload); assert.equal(response.status,201);
+  const change=await response.json(); assert.equal(change.status,'recorded');
+  const state=await fetch(f.base+'/api/state').then(r=>r.json());
+  assert.equal(state.proposals[0].request,undefined); assert.equal(state.proposals[0].content,undefined);
+  const detail=await fetch(f.base+'/api/proposals/'+change.id).then(r=>r.json()); assert.equal(detail.baseContent,'# Before'); assert.equal(detail.content,'# After');
+  assert.equal((await f.request('/api/changes/'+change.id+'/retry',{})).status,200); assert.equal(f.store.journal(f.project.id).length,1);
+});
 test('HTTP approval requires exact versions and returns applied state',async t => {
-  const f = await service(t); const proposalResponse = await f.request('/api/proposals',{projectId:f.project.id,file:'AGENTS.md',title:'HTTP proposal',reason:'Test',source:'Fixture',content:'# New rule'});
+  const f = await service(t); const proposalResponse = await f.request('/api/proposals',{projectId:f.project.id,file:'AGENTS.md',title:'HTTP proposal',reason:'Test',category:'process',source:'Fixture',content:'# New rule'});
   assert.equal(proposalResponse.status,201); const p = await proposalResponse.json();
   assert.equal((await f.request(`/api/proposals/${p.id}/apply`,{baseHash:p.baseHash,contentHash:'wrong'})).status,409);
   assert.equal((await f.request(`/api/proposals/${p.id}/apply`,p)).status,200);

@@ -49,7 +49,9 @@ test('record persists portable links, stable keys and exact idempotency across r
   assert.equal(data.entries[0].links.filter(link=>link.file===file).length,1);
 });
 test('record validates links and remains backward compatible; global history has individual entries',t=>{
-  const f=fixture(t); const input={title:'维护',background:'原因',result:'结果'};
+  const f=fixture(t); const input={category:'process',title:'维护',background:'原因',result:'结果'};
+  for (const category of [undefined,'','unknown']) assert.throws(()=>f.store.record(f.project.id,{...input,category}),/标签|类别/);
+  assert.equal(f.store.journal(f.project.id).length,0);
   assert.throws(()=>f.store.record(f.project.id,{...input,operationId:'bad -->'}));
   assert.throws(()=>f.store.record(f.project.id,{...input,decisionFiles:['../private.md']}));
   assert.throws(()=>f.store.record(f.project.id,{...input,decisionFiles:['AGENTS.md']}));
@@ -72,7 +74,7 @@ test('maintenance HTTP and CLI query the same read-only facts; writes retain non
   assert.deepEqual(fs.readdirSync(f.data),['projects.json']);
 });
 test('same operation retried in concurrent CLI processes is recorded once',async t=>{
-  const f=fixture(t);const input=path.join(f.root,'record.json');fs.writeFileSync(input,JSON.stringify({title:'一次操作',background:'原因',result:'完成',operationId:'concurrent-operation'}));
+  const f=fixture(t);const input=path.join(f.root,'record.json');fs.writeFileSync(input,JSON.stringify({category:'testing',title:'一次操作',background:'原因',result:'完成',operationId:'concurrent-operation'}));
   await Promise.all([0,1,2].map(async()=>{const child=spawn(process.execPath,['src/cli.mjs','record','--project',f.project.id,'--data',f.data,'--input',input],{stdio:['ignore','pipe','pipe']});let error='';child.stderr.on('data',data=>error+=data);const [code]=await once(child,'exit');assert.equal(code,0,error);}));
   assert.equal(f.store.journal(f.project.id).length,1);
 });

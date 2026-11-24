@@ -15,6 +15,8 @@
 | `PATCH /api/projects/:id` | 更新名称和来源映射，不改原文档 |
 | `DELETE /api/projects/:id` | 解除登记，不删除文件；待审或冲突提案须先处理 |
 | `POST /api/global` | `file` 为已有 Markdown 绝对路径；空值解除映射 |
+| `POST /api/changes` | 直接修改并记录已登记约束；必填 projectId、file、title、reason、source、content、baseHash、category、operationId；不经过提案批准 |
+| `POST /api/changes/:id/retry` | 重试原直接修改意图，核对内容与来源；已完成只返回原记录 |
 | `GET /api/projects/:id/document?file=…` | 读取已发现文档或登记入口，返回内容、存在状态和 hash |
 | `GET /api/projects/:id/context?query=…` | rules 为全局／项目正文，indexes 为模块根索引正文，modules 为文件索引；不返回候选 |
 | `GET /api/projects/:id/search?q=…&kind=…` | 当前项目检索；kind 为 all/document/proposal/journal，最多30条，带来源与截断提示 |
@@ -23,20 +25,22 @@
 | `POST /api/projects/:id/journal` | 追加事实记录，不能指定任意落盘目标 |
 | `POST /api/proposals` | 创建候选，不改目标文件 |
 | `GET /api/proposals/:id` | 候选、基线、当前原文及真实差异 |
-| `POST /api/proposals/:id/revise` | 输入 `content`、`contentHash`，可补 `reason`；编辑后需重新审核 |
-| `POST /api/proposals/:id/apply` | 输入已查看的 `baseHash`、`contentHash`；核对目标映射与当前原文后写入 |
+| `POST /api/proposals/:id/revise` | 输入 `content`、`contentHash`，可补 `reason`、`category`（旧提案缺标签时须补齐）；编辑后需重新审核 |
+| `POST /api/proposals/:id/apply` | 输入已查看的 `baseHash`、`contentHash`；旧提案缺标签时须显式提供 category；核对目标映射与当前原文后写入 |
 | `POST /api/proposals/:id/reject` | 必填 `reason`，不改目标文件 |
 | `POST /api/proposals/:id/rebase` | 以当前原文新建待审版本，保留旧提案关联；没有剩余差异时关闭旧候选 |
 
 项目 ID 来自登记结果或 CLI `projects`；全局来源的 ID 为 `global`。提案状态为 pending、applied、rejected、conflict、superseded；工程笔记的 implemented 等生命周期独立呈现。差异查询中的 `applicationPending` 表示批准写入曾中断：此时候选冻结，可重试补齐记录，不能编辑、拒绝或重提。
 
-候选必需：`projectId`、目标相对路径 `file`、`title`、`reason`、`source` 和完整新文本 `content`。可补 `alternatives`、`tradeoffs`。候选正文最多500 KB（按 UTF-8 字节），不会因保存而生效。
+候选必需：`projectId`、目标相对路径 `file`、`title`、`reason`、`source` 、必填标签 `category` 和完整新文本 `content`。可补 `alternatives`、`tradeoffs`。候选正文最多500 KB（按 UTF-8 字节），不会因保存而生效。
 
-维护记录必需 `title`、`background`、`result`，可补 `verification`、`next`、`topic`、`alternatives`、`tradeoffs`。写入配置维护目录下的当月 Markdown；`journalFile` 等未知输入不能改变目标位置。
+维护记录必需 `title`、`background`、`result`、`category`，可补 `verification`、`next`、`topic`、`alternatives`、`tradeoffs`。写入配置维护目录下的当月 Markdown；`journalFile` 等未知输入不能改变目标位置。
 
 只读 CLI 不需要启动服务；与看板共用数据目录。写入共用存储层的跨进程互斥，约束写入中断后由服务启动恢复；GET 与 CLI 读取不触发恢复。锁与回执不是对其他同用户文件程序的系统沙箱。
 
 ## 决策笔记 CLI（无新增 HTTP 写接口）
+
+约束直接修改的 CLI 为 `change --project <项目ID或global> --input <JSON文件>`。它要求刚读取的 baseHash 与稳定 operationId（1–64位），与直接修改 HTTP 接口使用同一存储方法。状态为 recording／recorded；失败冲突仍为 conflict。记录与原提案复用 proposals 文件和 diff 查询，但带 mode:direct，日志使用“直接修改并记录”，不能称为“已审核”。GET /api/state 不返回请求正文和版本正文，详情按 ID 单独读取。完整请求原样重试返回同一记录；同 operationId 不同输入拒绝。此前的提案批准入口保持原行为。
 
 `notes --project <ID或目录> --action verify|archive|apply` 与 Skill wrapper 共用已登记项目解析，不接受 global；可指定相同的 `--data`。
 
@@ -50,9 +54,9 @@
 
 `maintenance --project <ID或目录> [--query <关键词>]` 与 HTTP 查询共用解析，返回摘要及来源，完整决策正文用 `read` 展开。`notes` 包括 `file/title/status/category/date/summary/sections/alternatives/rejectionReason/links/inbound/entryKeys`；`entries` 保留原文并补 `key/date/category/background/result/verification/next/links`。章节摘要最长360字，完整原文不受摘要截断影响。日期未标注时不推测；笔记日期表示首次提出，不表示实施时间。
 
-日志追加兼容旧字段，新增可选：
+旧日志保持只读兼容；新日志追加的标签为必填，其他关联仍可选：
 
-- `category`：architecture、feature、bug-fix、simplification、process、testing，留空为未分类。
+- `category`（必填标签）：architecture、feature、bug-fix、simplification、process、testing；空值或未知值拒绝。
 - `decisionFiles`、`relatedFiles`：最多各30个已发现的 Markdown 项目相对路径；前者必须为决策笔记。
 - `operationId`：1–80位字母、数字、下划线或连字符；一次真实操作使用一个稳定值。
 

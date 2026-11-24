@@ -8,7 +8,7 @@ export function renderMaintenance(data,S,u) {
   const active = note => note.status === 'implemented' && !note.superseded;
   const noteMap = new Map(data.notes.map(note => [note.file,note]));
   const entryMap = new Map(data.entries.map(entry => [entry.key,entry]));
-  const category = item => item.category ? `<span class="pill category-${esc(item.category)}">${esc(categories[item.category] ?? item.category)}</span>` : '';
+  const category = item => `<span class="pill ${item.category ? 'category-'+esc(item.category) : 'unlabeled'}">${esc(categories[item.category] ?? '未标注')}</span>`;
   const match = item => (!S.month || item.date?.startsWith(S.month)) && (!S.maintenanceCategory || item.category === S.maintenanceCategory) && (!S.maintenanceQuery || JSON.stringify([item.title,item.summary,item.sections,item.alternatives,item.rejectionReason,item.content,item.file]).toLowerCase().includes(S.maintenanceQuery.toLowerCase()));
   const sorted = items => items.slice().sort((a,b) => (b.date ?? '').localeCompare(a.date ?? '') || a.file.localeCompare(b.file));
   const global = S.projectId === 'global';

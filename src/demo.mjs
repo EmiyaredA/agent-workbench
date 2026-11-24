@@ -53,7 +53,7 @@ export function seedDemo(store) {
   }
   const propose = (name,file,title,reason,suggestion) => {
     const project = projects.get(name); const content = store.document(project.id,file).content;
-    return store.propose({projectId:project.id,file,title,reason,source:'隔离演示：'+reason,content:suggestion(content)});
+    return store.propose({projectId:project.id,file,title,reason,category:'process',source:'隔离演示：'+reason,content:suggestion(content)});
   };
   // Seed illustrative outcomes through the real store, only inside these fictional projects.
   const applied = propose('agent-workbench','.agent-workbench/rules/testing.md','关键交互保留实际操作证据','交接时需要区分构建检查与真实交互验收。',text => text+'\n- 审核写入、冲突与恢复应有可复核的操作证据。\n');
@@ -74,7 +74,7 @@ export function seedDemo(store) {
   propose('api-service','.agent-workbench/rules/api.md','错误响应补充 request_id','调用方需要将错误与服务日志关联。',text => text+'\n- 对可公开的错误返回 request_id，避免附带内部堆栈和凭据。\n');
   const globalFile = path.join(root,'global/AGENTS.md'); atomic(globalFile,demoGlobalRules);
   if (!store.registry.global) store.setGlobal(globalFile);
-  store.propose({projectId:'global',file:'AGENTS.md',title:'保留反馈里的条件和例外',reason:'避免提炼后把局部要求写成绝对规则。',source:'隔离演示：用户纠正有明确的适用条件。',content:demoGlobalRules+'\n- 提炼偏好时保留原话中的条件、否定和例外。\n'});
+  store.propose({projectId:'global',file:'AGENTS.md',title:'保留反馈里的条件和例外',reason:'避免提炼后把局部要求写成绝对规则。',category:'process',source:'隔离演示：用户纠正有明确的适用条件。',content:demoGlobalRules+'\n- 提炼偏好时保留原话中的条件、否定和例外。\n'});
   fs.mkdirSync(path.join(root,'new-project'),{recursive:true});
   atomic(marker,'Decision-centered fictional demo v4; real project files are never seeded.\n');
 }

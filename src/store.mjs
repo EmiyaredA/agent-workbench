@@ -74,12 +74,12 @@ export class Workbench {
   }
   remove(id) {
     this.project(id);
-    if (this.proposals().some(p => p.projectId === id && ['pending', 'conflict'].includes(p.status))) throw new Fault('先处理这个项目的待审或冲突提案', 409);
+    if (this.proposals().some(p => p.projectId === id && ['pending', 'conflict','recording'].includes(p.status))) throw new Fault('先处理这个项目的待审、冲突或未完成修改', 409);
     this.registry.projects = this.registry.projects.filter(p => p.id !== id); this.saveRegistry();
   }
   setGlobal(file) {
     if (!file) {
-      if (this.proposals().some(p => p.projectId === 'global' && ['pending','conflict'].includes(p.status))) throw new Fault('请先处理全局来源的待审或冲突提案',409);
+      if (this.proposals().some(p => p.projectId === 'global' && ['pending','conflict','recording'].includes(p.status))) throw new Fault('请先处理全局来源的待审、冲突或未完成修改',409);
       this.registry.global = null; this.saveRegistry(); return;
     }
     if (typeof file !== 'string' || !path.isAbsolute(file)) throw new Fault('请填写全局 Markdown 文件的绝对路径');
@@ -169,18 +169,45 @@ export class Workbench {
   }
   proposal(id) { const p = readJSON(this.proposalFile(id)); if (!p) throw new Fault('提案不存在', 404); return p; }
   saveProposal(p) { atomic(this.proposalFile(p.id), JSON.stringify(p, null, 2)); return p; }
-  propose(input) {
+  propose(input, direct = false) {
     validateFields(input,['title','reason','source','alternatives','tradeoffs','file']);
     const project = this.project(input.projectId); const file = this.target(project, input.file);
     const baseContent = this.text(file); const content = input.content;
     if (typeof content !== 'string' || Buffer.byteLength(content) > 500_000) throw new Fault('候选内容必须为文本且不超过 500 KB');
     if (content === baseContent) throw new Fault('候选内容与当前文件相同，无需提案');
     if (!short(input.reason) || !short(input.source)) throw new Fault('请填写修改理由和来源');
+    if (!categories.includes(input.category)) throw new Fault('请选择有效的迭代标签');
     return this.saveProposal({ id: randomUUID(), projectId: project.id, file: input.file, target: file,
       scope: project.scope ?? (project.ruleFiles.includes(input.file) ? 'project' : 'module'),
-      title: short(input.title, '更新约束', 120), reason: short(input.reason, '', 4000), source: short(input.source, '', 4000),
+      title: short(input.title, '更新约束', 120), reason: short(input.reason, '', 4000), source: short(input.source, '', 4000), category:input.category,
       alternatives: short(input.alternatives, '', 4000), tradeoffs: short(input.tradeoffs, '', 4000),
-      baseContent, baseHash: hash(baseContent), content, contentHash: hash(content), revision: 1, status: 'pending', createdAt: now(), updatedAt: now() });
+      baseContent, baseHash: hash(baseContent), content, contentHash: hash(content), revision: 1, status: direct ? 'recording' : 'pending', createdAt: now(), updatedAt: now(), ...(direct ? {mode:'direct',operationId:input.operationId,request:input} : {}) });
+  }
+  writeChange(input) {
+    if (!/^[\w-]{1,64}$/.test(input.operationId ?? '')) throw new Fault('直接修改需要稳定的 operationId（1–64位字母、数字、下划线或连字符）');
+    const request=Object.fromEntries(['projectId','file','title','reason','source','content','baseHash','operationId','category'].map(key=>[key,input[key]]));
+    let p=this.proposals().find(item=>item.mode==='direct' && item.projectId===input.projectId && item.operationId===input.operationId);
+    if (p) {
+      if (JSON.stringify(p.request)!==JSON.stringify(request)) throw new Fault('同一 operationId 已用于不同的修改',409);
+      if (p.status==='recorded') return p;
+      if (p.status!=='recording') throw new Fault('这次直接修改已中止，请根据当前文件重新记录',409);
+    } else {
+      const project=this.project(input.projectId); const target=this.target(project,input.file);
+      if (!Object.hasOwn(input,'baseHash') || input.baseHash!==hash(this.text(target))) throw new Fault('原文已变化，请重新读取后修改',409);
+      p=this.propose(request,true);
+      if (p.baseHash!==request.baseHash) { p.status='conflict'; this.saveProposal(p); throw new Fault('原文在保存前发生变化，未写入',409); }
+    }
+    const project=this.project(p.projectId); const target=this.target(project,p.file);
+    if (target!==p.target) throw new Fault('来源映射已变化，停止直接修改',409);
+    const actual=hash(this.text(target));
+    const receiptFile=path.join(this.dataDir,'receipts',p.id+'.json');
+    let receipt=readJSON(receiptFile);
+    if (receipt && actual===p.contentHash) return this.finish(p,receipt);
+    if (actual!==p.baseHash) { p.status='conflict'; this.saveProposal(p); throw new Fault('原文已变化，保留外部修改，请重新记录',409); }
+    receipt={proposalId:p.id,state:'applying',at:now(),project,journalFile:this.journalPath(project)};
+    atomic(receiptFile,JSON.stringify(receipt));
+    atomic(target,p.content); this.hooks.afterWrite?.();
+    return this.finish(p,receipt);
   }
   diff(id) {
     const p = this.proposal(id); let currentContent; let currentError;
@@ -201,6 +228,8 @@ export class Workbench {
       if (typeof input.reason !== 'string' || !input.reason.trim() || input.reason.length > 4000) throw new Fault('请填写有效的修改理由');
       p.reason = input.reason.trim();
     }
+    const category=input.category ?? p.category;
+    if (!categories.includes(category)) throw new Fault('请选择有效的迭代标签'); p.category=category;
     return this.saveProposal(p);
   }
   reject(id, reason) {
@@ -209,13 +238,13 @@ export class Workbench {
     if (typeof reason !== 'string' || !reason.trim() || reason.length > 4000) throw new Fault('请留下一句拒绝原因，便于后续查阅');
     p.status = 'rejected'; p.rejectionReason = short(reason, '', 4000); p.updatedAt = now(); return this.saveProposal(p);
   }
-  rebase(id) {
+  rebase(id, input = {}) {
     this.ensureNotApplying(id);
     const old = this.proposal(id); if (!['pending', 'conflict'].includes(old.status)) throw new Fault('这个提案不能重新生成', 409);
     const target = this.target(this.project(old.projectId),old.file);
     if (target !== old.target) throw new Fault('目标来源已改变，请针对新来源手动创建提案',409);
     if (this.text(target) === old.content) { old.status = 'superseded'; old.resolution = '当前文件已包含全部建议，无剩余差异'; this.saveProposal(old); return { ...old,noChanges:true }; }
-    const next = this.propose(old); old.status = 'superseded'; old.replacedBy = next.id; old.updatedAt = now(); this.saveProposal(old); return next;
+    const next = this.propose({...old,category:input.category ?? old.category}); old.status = 'superseded'; old.replacedBy = next.id; old.updatedAt = now(); this.saveProposal(old); return next;
   }
   journalPath(project) {
     return project.id === 'global' ? path.join(this.dataDir, 'global-maintenance.md') : this.safe(project, `${project.journalDir}/${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' }).slice(0, 7)}.md`);
@@ -226,7 +255,7 @@ export class Workbench {
     const old = this.text(file) ?? '# 项目维护日志\n'; if (old.includes(marker)) return file;
     const metadata = input._metadata ? `<!-- awb-record:${JSON.stringify(input._metadata).replace(/</g,'\\u003c')} -->\n\n` : '';
     const section = `\n## ${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' })} · ${line(input.title)}\n\n${marker}\n\n${metadata}` +
-      [['背景', input.background], ['结果', input.result], ['放弃的备选', input.alternatives], ['收益与代价', input.tradeoffs], ['验证', input.verification], ['后续', input.next], ['相关文件', input.topic]].filter(([,v]) => v).map(([label,value]) => `- **${label}**：${String(value).replace(/\n/g, '\n  ')}`).join('\n') + '\n';
+      [['标签',input.category],['背景', input.background], ['结果', input.result], ['放弃的备选', input.alternatives], ['收益与代价', input.tradeoffs], ['验证', input.verification], ['后续', input.next], ['相关文件', input.topic]].filter(([,v]) => v).map(([label,value]) => `- **${label}**：${String(value).replace(/\n/g, '\n  ')}`).join('\n') + '\n';
     if (Buffer.byteLength(old + section) > 1_000_000) throw new Fault('维护文件已超过 1 MB，请调整维护目录后重试');
     const relative = project.id === 'global' ? 'global-maintenance.md' : path.relative(project.root,file).split(path.sep).join('/');
     const links = [['关联决策',input._metadata?.decisionFiles],['关联文档',input._metadata?.relatedFiles]].filter(([,files])=>files?.length).map(([label,files])=>`- **${label}**：`+files.map(target=>`[${path.posix.basename(target).replace(/[\[\]]/g,'')}](<${path.posix.relative(path.posix.dirname(relative),target).split('/').map(part=>encodeURIComponent(part).replace(/[()]/g,char=>'%'+char.charCodeAt(0).toString(16))).join('/')}>)`).join(' · ')).join('\n');
@@ -268,6 +297,7 @@ export class Workbench {
         return {file:entry.file,key:entry.key,replayed:true};
       }
     }
+    if (!categories.includes(input.category)) throw new Fault('请选择有效的迭代标签');
     const catalog = this.catalog(id); const known = new Map(catalog.docs.map(doc => [doc.file,doc]));
     for (const file of payload.decisionFiles) if (known.get(file)?.role !== 'decision') throw new Fault('关联决策未找到，请刷新后重新选择');
     for (const file of payload.relatedFiles) if (!known.has(file)) throw new Fault('关联文件未找到或不在登记范围');
@@ -279,9 +309,13 @@ export class Workbench {
   apply(id, expected) {
     const existing = readJSON(path.join(this.dataDir,'receipts',id + '.json'));
     if (existing?.state === 'applying') this.recoverOne(existing);
-    const p = this.proposal(id); if (p.status === 'applied') return p;
+    const p = this.proposal(id); if (p.mode==='direct') throw new Fault('直接修改不经过提案批准，请重试原修改记录',409); if (p.status === 'applied') return p;
     if (p.status !== 'pending') throw new Fault('这个提案当前无法批准', 409);
     if (expected.contentHash !== p.contentHash || expected.baseHash !== p.baseHash) throw new Fault('审核版本已经变化，请重新查看差异', 409);
+    if (!categories.includes(p.category)) {
+      if (!categories.includes(expected.category)) throw new Fault('旧提案缺少迭代标签，请选择标签后再写入');
+      p.category=expected.category; this.saveProposal(p);
+    } else if (expected.category!==undefined && expected.category!==p.category) throw new Fault('迭代标签已变化，请重新查看',409);
     const project = this.project(p.projectId); let target;
     try { target = this.target(project,p.file); }
     catch { p.status = 'conflict'; this.saveProposal(p); throw new Fault('目标来源已变化，请重新核对文件与来源设置',409); }
@@ -295,16 +329,17 @@ export class Workbench {
   }
   finish(p, receipt) {
     const project = receipt.project;
-    this.appendJournal(project, { title: p.title, background: p.reason, result: `审核后写入 ${p.file}。`, alternatives: p.alternatives, tradeoffs: p.tradeoffs,
-      verification: '文件内容与审核版本 hash 一致；此记录不代表功能测试通过。', topic: p.file }, p.id, receipt.journalFile);
-    p.status = 'applied'; p.updatedAt = now(); this.saveProposal(p);
+    this.appendJournal(project, { title: p.title, background: p.reason, result: `${p.mode==='direct' ? '直接修改并记录' : '审核后写入'} ${p.file}。`, alternatives: p.alternatives, tradeoffs: p.tradeoffs,
+      verification: `文件内容与${p.mode==='direct' ? '记录' : '审核'}版本 hash 一致；此记录不代表功能测试通过。`, topic: p.file, category:p.category,
+      _metadata:{version:1,category:p.category ?? ''} }, p.id, receipt.journalFile);
+    p.status = p.mode==='direct' ? 'recorded' : 'applied'; p.updatedAt = now(); this.saveProposal(p);
     atomic(path.join(this.dataDir,'receipts',p.id + '.json'), JSON.stringify({ ...receipt, state: 'complete', completedAt: now(), contentHash: p.contentHash })); return p;
   }
   recoverOne(receipt) {
     const p = this.proposal(receipt.proposalId); const target = this.target(this.project(p.projectId),p.file);
     const actual = hash(this.text(target));
     if (target === p.target && actual === p.contentHash) return this.finish(p,receipt);
-    p.status = target === p.target && actual === p.baseHash ? 'pending' : 'conflict'; this.saveProposal(p);
+    p.status = target === p.target && actual === p.baseHash ? (p.mode==='direct' ? 'recording':'pending') : 'conflict'; this.saveProposal(p);
     atomic(path.join(this.dataDir,'receipts',p.id + '.json'),JSON.stringify({ ...receipt,state:'interrupted' })); return p;
   }
   recover() {
@@ -348,7 +383,7 @@ export class Workbench {
 }
 
 // All public mutations share a cross-process lock. Read methods never acquire it.
-for (const name of ['register','configure','remove','setGlobal','propose','revise','reject','rebase','record','apply','recover']) {
+for (const name of ['register','configure','remove','setGlobal','propose','writeChange','revise','reject','rebase','record','apply','recover']) {
   const operation = Workbench.prototype[name];
   Workbench.prototype[name] = function (...args) {
     if (this.writing) return operation.apply(this,args);

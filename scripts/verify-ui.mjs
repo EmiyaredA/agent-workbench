@@ -32,8 +32,10 @@ const check = name => { checks.push(name); console.log('PASS',name); };
 const dialog = () => page.locator('#dialog');
 const fill = (name,value) => dialog().locator(`[name="${name}"]`).fill(value);
 const submit = () => dialog().locator('button[type=submit]').click();
+const chooseTag=async(id,value)=>{ await dialog().locator(`#${id} .dropdown-trigger`).click(); await dialog().locator(`#${id} [data-value="${value}"]`).click(); };
 const close = async () => { await dialog().locator('[data-action=close]').first().click(); await dialog().waitFor({state:'hidden'}); };
-const openTab = async view => { await page.locator(`.tabs [data-view=${view}]`).click(); await page.waitForTimeout(150); };
+const closeChange = async () => { if (await page.locator('.change-detail').count()) { await page.locator('.change-detail [data-action=change-close]').click(); await page.locator('.change-detail').waitFor({state:'hidden'}); } };
+const openTab = async view => { await closeChange(); await page.locator(`.tabs [data-view=${view}]`).click(); await page.waitForTimeout(150); };
 const waitFormClosed = async () => dialog().waitFor({state:'hidden',timeout:15000});
 
 try {
@@ -98,6 +100,7 @@ try {
 
   await page.locator('.doc-toolbar [data-action=new-proposal]').click(); await fill('title','保留用户已有修改'); await fill('reason','避免覆盖尚未提交的工作。'); await fill('source','用户明确纠正：先保留我的修改。');
   await fill('content',original.replace('- 修改前确认目标文件。','- 保留用户已有修改。\n- 遇到冲突先展示差异。'));
+  await chooseTag('change-category','process');
   await capture('05-create-proposal'); await submit(); await waitFormClosed(); await visible(page.getByRole('heading',{name:'保留用户已有修改',exact:true}));
   const p = store.proposals().find(item => item.title === '保留用户已有修改');
   assert.equal(fs.readFileSync(path.join(projectRoot,'AGENTS.md'),'utf8'),original); check('create proposal without applying it');
@@ -110,16 +113,16 @@ try {
   await page.locator('[data-action=search-kind][data-kind=proposal]').click(); await visible(page.locator('#search-results button').first());
   await page.locator('#search-results button').first().click(); await waitFormClosed(); await visible(page.getByRole('heading',{name:'保留用户已有修改',exact:true})); check('search documents and candidates with source navigation');
 
-  const rejected = store.propose({projectId,file:'.agent-workbench/rules/frontend.md',title:'待拒绝的示例',reason:'Only a demo',source:'Fixture',content:'# 不需要的新规则'});
-  await page.reload(); await visible(page.locator(`.proposal-card[data-id="${rejected.id}"]`)); await page.locator(`.proposal-card[data-id="${rejected.id}"]`).click();
+  const rejected = store.propose({projectId,file:'.agent-workbench/rules/frontend.md',title:'待拒绝的示例',reason:'Only a demo',source:'Fixture',category:'process',content:'# 不需要的新规则'});
+  await page.reload(); await visible(page.locator(`.proposal-card[data-id="${rejected.id}"]`)); await closeChange(); await page.locator(`.proposal-card[data-id="${rejected.id}"]`).click();
   await visible(page.getByRole('heading',{name:'待拒绝的示例',exact:true})); await page.locator('[data-action=reject-proposal]').click(); await fill('reason','仅适用于本次任务，不形成长期约束。');
   await capture('10-reject'); await submit(); await waitFormClosed(); await visible(page.getByRole('heading',{name:'待拒绝的示例',exact:true}));
   assert.equal(store.proposal(rejected.id).status,'rejected'); assert.ok(fs.readFileSync(path.join(projectRoot,'.agent-workbench/rules/frontend.md'),'utf8').includes('前端约束')); check('reject candidate and retain reason without file changes');
-  await page.locator('[data-action=proposal-filter][data-filter=pending]').click(); await visible(page.getByRole('heading',{name:'保留用户已有修改',exact:true}));
+  await closeChange(); await page.locator('[data-action=proposal-filter][data-filter=pending]').click(); await page.locator(`.proposal-card[data-id="${p.id}"]`).click(); await visible(page.getByRole('heading',{name:'保留用户已有修改',exact:true}));
   await page.locator('[data-action=approve-proposal]').click(); await capture('08-approve'); await submit(); await waitFormClosed(); await visible(page.locator('.notice.success')); await visible(page.locator('.reader h1'));
   assert.equal(store.proposal(p.id).status,'applied'); assert.equal(store.journal(projectId).length,1); await capture('09-applied'); check('approve exact diff and persist updated file plus one maintenance entry');
 
-  const conflict = store.propose({projectId,file:'AGENTS.md',title:'冲突验收提案',reason:'Example',source:'Fixture',content:store.document(projectId,'AGENTS.md').content+'\n- 候选补充。\n'});
+  const conflict = store.propose({projectId,file:'AGENTS.md',title:'冲突验收提案',reason:'Example',source:'Fixture',category:'process',content:store.document(projectId,'AGENTS.md').content+'\n- 候选补充。\n'});
   fs.appendFileSync(path.join(projectRoot,'AGENTS.md'),'\n- 用户后续编辑。\n');
   await openTab('proposals'); await visible(page.locator(`.proposal-card[data-id="${conflict.id}"]`)); await page.locator(`.proposal-card[data-id="${conflict.id}"]`).click();
   await visible(page.locator('.notice.warning')); await capture('11-conflict'); assert.equal(await page.locator('[data-action=approve-proposal]').count(),0);
@@ -130,6 +133,7 @@ try {
 
   await openTab('journal'); await visible(page.getByRole('heading',{name:'维护路径',exact:true})); await page.locator('[data-action=add-journal]').click();
   for (const [name,value] of Object.entries({title:'浏览器验收记录',background:'验证完整闭环',result:'记录保存在自定义维护目录',verification:'实际运行本地浏览器',next:'后续按真实项目维护',topic:'AGENTS.md'})) await fill(name,value);
+  await chooseTag('record-category','testing');
   await capture('13-create-journal-entry'); await submit(); await waitFormClosed(); await visible(page.locator('.maintenance-detail h1').getByText('浏览器验收记录',{exact:true})); await page.locator('[data-action=maintenance-close]').click(); await page.locator('.maintenance-detail').waitFor({state:'hidden'}); await page.locator('[data-action=maintenance-open][data-kind=history]').click(); await visible(page.locator('.maintenance-history').getByRole('button',{name:'浏览器验收记录',exact:true})); await capture('12-maintenance-history'); await page.locator('[data-action=maintenance-close]').click(); await page.locator('.maintenance-detail').waitFor({state:'hidden'});
   assert.equal(store.journal(projectId).length,2); await page.locator('#month-filter .dropdown-trigger').click(); await visible(page.locator('#month-filter [role=listbox]'));
   assert.equal(await page.locator('select').count(),0); await capture('custom-month-dropdown');
@@ -156,6 +160,34 @@ try {
   await close();
   check('Skill decision reference and nested template open without project document access');
   await openTab('proposals'); await page.locator('[data-action=proposal-filter][data-filter=pending]').click(); await visible(page.getByRole('heading',{name:'暂无待审提案',exact:true})); await capture('16-empty-proposals'); check('empty queue after settling proposals');
+  await page.locator('[data-action=global]').click(); await visible(page.locator('.reader h1'));
+  const beforeGlobal=fs.readFileSync(globalFile,'utf8');
+  await page.locator('.doc-toolbar [data-action=new-change]').click();
+  await fill('title','补充全局迭代留档习惯'); await fill('reason','每次修改保留来由，后续可追溯'); await fill('source','隔离浏览器验收任务');
+  await fill('content',beforeGlobal+'\n- 重要修改记录实际结果。\n');
+  await submit(); await visible(dialog().getByText('请选择迭代标签',{exact:true}));
+  assert.equal(fs.readFileSync(globalFile,'utf8'),beforeGlobal); assert.equal(store.proposals().some(p=>p.title==='补充全局迭代留档习惯'),false);
+  await chooseTag('change-category','process'); await submit(); await waitFormClosed();
+  await visible(page.locator('.change-detail').getByRole('heading',{name:'补充全局迭代留档习惯',exact:true}));
+  const globalChange=store.proposals().find(item=>item.title==='补充全局迭代留档习惯');
+  assert.equal(globalChange.status,'recorded'); assert.equal(globalChange.baseContent,beforeGlobal); assert.equal(store.journal('global').length,1);
+  assert.equal(globalChange.category,'process'); assert.equal(store.maintenance('global').entries[0].category,'process');
+  await visible(page.locator('.change-detail .proposal-meta').getByText('流程',{exact:true}));
+  assert.equal(await page.locator('.change-detail [data-action=approve-proposal]').count(),0);
+  await capture('global-iteration-detail'); await closeChange(); await capture('global-iteration-timeline');
+  await page.locator('[data-action=proposal-filter][data-filter=all]').click();
+  await page.locator('#change-query').fill('补充全局'); await page.locator('#change-query').press('Enter');
+  await visible(page.locator(`.change-card[data-id="${globalChange.id}"]`)); await page.locator('[data-action=change-view][data-view=list]').click();
+  assert.equal(await page.locator(`.change-card[data-id="${globalChange.id}"] time`).textContent(),new Date(globalChange.createdAt).toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'}));
+  assert.equal(await page.locator('#change-query').inputValue(),'补充全局');
+  await page.locator(`.change-card[data-id="${globalChange.id}"]`).click(); await visible(page.locator('.change-detail'));
+  await page.keyboard.press('Escape'); await page.locator('.change-detail').waitFor({state:'hidden'});
+  await page.goBack(); await visible(page.locator('.change-detail')); await closeChange();
+  await page.setViewportSize({width:390,height:844}); await page.locator(`.change-card[data-id="${globalChange.id}"]`).click(); await visible(page.locator('.change-detail'));
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false); await capture('global-iteration-mobile'); await closeChange();
+  await page.setViewportSize({width:1440,height:1024});
+  await page.locator(`.projects [data-id="${projectId}"]`).click(); await visible(page.locator('.reader h1'));
+  check('direct global iterations retain before/after history, searchable views, drawer navigation and mobile layout');
 
   atomic(path.join(projectRoot,'.agent-workbench/rules/untrusted.md'),'# Untrusted\n\n<img src="https://example.invalid/x" onerror="window.__injected=true"><a href="javascript:window.__injected=true">Bad</a><div id="app" data-action="approve-proposal">fake</div>');
   await openTab('rules'); await visible(page.locator('.file-button[data-file=".agent-workbench/rules/untrusted.md"]')); await page.locator('.file-button[data-file=".agent-workbench/rules/untrusted.md"]').click(); await visible(page.locator('.reader h1').getByText('Untrusted'));

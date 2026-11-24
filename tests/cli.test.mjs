@@ -20,13 +20,13 @@ test('CLI read from an absent workspace does not create persistent state',t => {
 });
 test('CLI submits pending proposals, not effective rules',t => {
   const f = fixture(t); const input = path.join(f.root,'candidate.json');
-  fs.writeFileSync(input,JSON.stringify({file:'AGENTS.md',title:'Candidate',reason:'Why',source:'User',content:'# Proposed'}));
+  fs.writeFileSync(input,JSON.stringify({file:'AGENTS.md',title:'Candidate',reason:'Why',category:'process',source:'User',content:'# Proposed'}));
   const result = run(skill,['propose','--project',f.project.id,'--input',input,'--data',f.data],f.root);
   assert.equal(result.status,0,result.stderr); assert.equal(JSON.parse(result.stdout).status,'pending');
   assert.equal(fs.existsSync(path.join(f.projectRoot,'AGENTS.md')),false);
 });
 test('parallel CLI records do not lose updates',async t => {
-  const f = fixture(t); const files = [0,1,2,3].map(index => { const file = path.join(f.root,`entry-${index}.json`); fs.writeFileSync(file,JSON.stringify({title:`Entry ${index}`,background:'Why',result:'Done'})); return file; });
+  const f = fixture(t); const files = [0,1,2,3].map(index => { const file = path.join(f.root,`entry-${index}.json`); fs.writeFileSync(file,JSON.stringify({title:`Entry ${index}`,category:'testing',background:'Why',result:'Done'})); return file; });
   await Promise.all(files.map(async input => {
     const child = spawn(process.execPath,[cli,'record','--project',f.project.id,'--data',f.data,'--input',input],{stdio:['ignore','ignore','pipe']});
     let error = ''; child.stderr.on('data',data => error+=data); const [code] = await once(child,'exit'); assert.equal(code,0,error);

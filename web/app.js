@@ -6,12 +6,15 @@ const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const icon = name => `<i class="ph ph-${name}" aria-hidden="true"></i>`;
 const button = (label, action, attributes = '', classes = '') => `<button type="button" class="btn ${classes}" data-action="${action}" ${attributes}>${label}</button>`;
-const statusNames = {pending:'待审',applied:'已写入',rejected:'已拒绝',conflict:'冲突',superseded:'已替代',implemented:'已落地',proposed:'方案稿',archived:'已归档',current:'当前文档'};
+const statusNames = {pending:'待审',applied:'已写入',recorded:'已记录',recording:'记录中',rejected:'已拒绝',conflict:'冲突',superseded:'已替代',implemented:'已落地',proposed:'方案稿',archived:'已归档',current:'当前文档'};
 const categoryNames = {architecture:'架构',feature:'功能', 'bug-fix':'缺陷修复',simplification:'简化',process:'流程',testing:'验证'};
+const categoryBadge = item => `<span class="pill ${item.category ? 'category-'+esc(item.category) : 'unlabeled'}">${esc(categoryNames[item.category] ?? '未标注')}</span>`;
+const categoryField = (id,value='') => `<div class="field"><span>迭代标签 *</span>${dropdown(id,'迭代标签',[{value:'',label:'请选择标签'},...Object.entries(categoryNames).map(([value,label])=>({value,label}))],value)}<input type="hidden" name="category" value="${esc(value)}"></div>`;
 const scopeNames = {global:'全局',project:'项目',module:'项目'};
 const badge = status => `<span class="pill ${esc(status)}">${esc(statusNames[status] ?? status)}</span>`;
 const scopeBadge = scope => `<span class="pill">${esc(scopeNames[scope] ?? scope)}</span>`;
 const plain = content => String(content ?? '').replace(/<!--[^]*?-->/g,'').replace(/^#{1,6}\s.*$/gm,'').replace(/[*`]/g,'').trim();
+const localDate = value => new Date(value).toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'});
 function markdown(content, file = '', projectId = '', decision = false) {
   const renderer = new marked.Renderer();
   renderer.html = ({text}) => text.replace(/<!--[^]*?-->/g,'').trim() ? esc(text) : '';
@@ -48,11 +51,12 @@ function openDropdown(control, position) {
   options[index]?.focus();
 }
 
-const S = {session:null,data:null,projectId:'',view:'rules',file:'',proposal:'',raw:false,skillRaw:false,proposalFilter:'pending',logMode:'journal',month:'',noteStatus:'all',searchKind:'all',lastProject:'',message:null};
+const S = {session:null,data:null,projectId:'',view:'rules',file:'',proposal:'',raw:false,skillRaw:false,proposalFilter:'all',changeView:'timeline',changeQuery:'',logMode:'journal',month:'',noteStatus:'all',searchKind:'all',lastProject:'',message:null};
 const maintenanceDefaults = {maintenanceView:'baseline',maintenanceSelection:'',maintenanceFormat:'read',month:'',noteStatus:'all',maintenanceCategory:'',maintenanceQuery:'',maintenanceSort:'newest'};
 Object.assign(S,maintenanceDefaults);
 let lastMaintenanceFocus; let focusMaintenanceAfterRender=false; let maintenanceOriginScroll; let maintenanceAnchor=''; let maintenanceDrawerScroll;
 let renderSequence = 0; let lastFocus; let toastTimeout;
+let lastChangeFocus=''; let restoreChangeFocus=false;
 const collapsedFolders = new Set();
 const folderKey = folder => JSON.stringify([S.projectId,folder]);
 function revealFile(file) {
@@ -88,16 +92,19 @@ function toast(message,error = false) {
   toastTimeout = setTimeout(() => node.className = '',error ? 7000 : 4000);
 }
 function route(view, options = {}) {
-  if (options.projectId && options.projectId !== S.projectId) Object.assign(S,maintenanceDefaults);
+  if (options.projectId && options.projectId !== S.projectId) Object.assign(S,maintenanceDefaults,{changeQuery:'',changeView:'timeline',proposalFilter:'all',proposal:''});
   Object.assign(S,options,{view});
   if (options.file) revealFile(options.file);
-  const hash = new URLSearchParams({project:S.projectId,view,file:S.file,proposal:S.proposal,...(view === 'journal' ? Object.fromEntries(Object.keys(maintenanceDefaults).map(key=>[key,S[key]])) : {})}).toString();
+  const hash = new URLSearchParams({project:S.projectId,view,file:S.file,proposal:S.proposal,...(view==='proposals' ? {changeView:S.changeView,changeQuery:S.changeQuery,proposalFilter:S.proposalFilter} : {}),...(view === 'journal' ? Object.fromEntries(Object.keys(maintenanceDefaults).map(key=>[key,S[key]])) : {})}).toString();
   if (location.hash.slice(1) === hash) load(); else location.hash = hash;
 }
 function readRoute() {
   const previous = S.projectId+'|'+S.file;
   const values = new URLSearchParams(location.hash.slice(1));
   for (const [field,key] of [['projectId','project'],['view','view'],['file','file'],['proposal','proposal']]) if (values.has(key)) S[field] = values.get(key);
+  for (const key of ['changeView','changeQuery','proposalFilter']) if (values.has(key)) S[key]=values.get(key);
+  if (!['timeline','list'].includes(S.changeView)) S.changeView='timeline';
+  if (!['all','pending','recorded','applied','rejected'].includes(S.proposalFilter)) S.proposalFilter='all';
   if (values.get('project') && values.get('project') !== previous.split('|')[0]) Object.assign(S,maintenanceDefaults);
   for (const [key,value] of Object.entries(maintenanceDefaults)) S[key] = values.has(key) ? values.get(key) : value;
   if (!['baseline','timeline','pitfalls','list'].includes(S.maintenanceView)) S.maintenanceView='baseline';
@@ -115,8 +122,8 @@ function keepSelectedFileVisible() {
   else if (item.bottom > bounds.bottom) tree.scrollTop += item.bottom - bounds.bottom;
 }
 function updateMaintenanceLayout() {
-  const modal = S.view==='journal' && !!S.maintenanceSelection && !!document.querySelector('.maintenance-detail');
-  document.querySelectorAll('.sidebar,.header,.maintenance-nav,.maintenance-filters,.maintenance-content,.demo-bar,.maintenance-warnings').forEach(node=>node.inert=modal);
+  const modal = (S.view==='journal' && !!S.maintenanceSelection || S.view==='proposals' && !!S.proposal) && !!document.querySelector('.maintenance-detail');
+  document.querySelectorAll('.sidebar,.header,.maintenance-nav,.maintenance-filters,.maintenance-content,.change-controls,.change-stream,.demo-bar,.maintenance-warnings').forEach(node=>node.inert=modal);
   const detail=document.querySelector('.maintenance-detail');
   if (detail) { if (modal) { detail.setAttribute('role','dialog'); detail.setAttribute('aria-modal','true'); } else { detail.removeAttribute('role'); detail.removeAttribute('aria-modal'); } }
   document.body.classList.toggle('maintenance-drawer-open',modal);
@@ -125,7 +132,7 @@ window.addEventListener('resize',updateMaintenanceLayout);
 function shell(content) {
   const project = activeProject();
   const projectButtons = S.data.projects.map(p => `<button class="project-button ${S.projectId === p.id ? 'active' : ''}" data-action="project" data-id="${esc(p.id)}">${icon('folder')}<span>${esc(p.name)}</span>${pending(p.id).length ? `<span class="pill pending">${pending(p.id).length}</span>` : ''}</button>`).join('');
-  const tabs = (S.projectId === 'global' ? [['rules','全局约束'],['proposals','提案'],['journal','维护记录']] : [['rules','约束'],['proposals','提案'],['journal','维护记录']]).map(([id,label]) => `<button class="tab ${S.view === id ? 'active' : ''}" data-action="tab" data-view="${id}" aria-current="${S.view === id ? 'page' : 'false'}">${label}${id === 'proposals' && pending().length ? `<span class="count">${pending().length}</span>` : ''}</button>`).join('');
+  const tabs = (S.projectId === 'global' ? [['rules','全局约束'],['proposals','变更记录'],['journal','维护记录']] : [['rules','约束'],['proposals','变更记录'],['journal','维护记录']]).map(([id,label]) => `<button class="tab ${S.view === id ? 'active' : ''}" data-action="tab" data-view="${id}" aria-current="${S.view === id ? 'page' : 'false'}">${label}${id === 'proposals' && pending().length ? `<span class="count">${pending().length}</span>` : ''}</button>`).join('');
   $('#app').innerHTML = `<aside class="sidebar"><div class="brand"><span class="brand-mark">${icon('brackets-curly')}</span>agent-workbench</div><div class="project-label">项目 <span>${S.data.projects.length}</span></div><div class="projects">${projectButtons || '<p class="muted small">尚未登记项目</p>'}</div>${button(icon('plus')+' 登记项目','register','','register')}<div class="sidebar-bottom"><button class="project-button ${S.projectId === 'global' ? 'active':''}" data-action="global">${icon('gear-six')}<span>全局偏好</span></button><button class="project-button ${S.view === 'connect' ? 'active':''}" data-action="connect">${icon('plugs')}<span>Skill 接入</span></button><button class="project-button" data-action="local">${icon('folder-open')}<span>本地文件</span></button></div><div class="local-note">LOCAL · FILES FIRST · v0.1</div>${dropdown('project-switcher','切换项目',[...S.data.projects.map(p => ({value:p.id,label:p.name})),{value:'__global',label:'全局偏好'},{value:'__connect',label:'Skill 接入'},{value:'__register',label:'登记项目…'}],S.view === 'connect' ? '__connect' : S.projectId === 'global' ? '__global' : S.projectId,'mobile-project')}</aside><main class="app-main"><header class="header"><div class="header-top"><h1 title="${esc(project?.root ?? '')}">${esc(project?.name ?? '我的项目')}</h1><span class="root-path" title="${esc(project?.root)}">${esc(project?.root ?? '登记项目后开始使用')}</span><nav class="tabs" aria-label="项目页面">${tabs}</nav><div class="header-context" role="group" aria-label="当前页面操作"></div><button class="btn header-search" data-action="search" ${!project ? 'disabled':''}>${icon('magnifying-glass')}<span class="search-text">搜索文档与提案</span><span class="key">/</span></button>${button(icon('gear-six'),'settings','aria-label="文档来源设置" title="文档来源设置"','icon')}</div></header>${S.session.demo ? '<div class="demo-bar">演示工作区 · 数据隔离</div>':''}${S.data.warnings?.length ? `<div class="page">${S.data.warnings.map(w => `<p class="notice warning">${esc(w)}</p>`).join('')}</div>` : ''}${S.message ? `<div class="page"><div class="notice ${esc(S.message.type ?? 'success')}">${esc(S.message.text)}</div></div>`:''}${content}</main>`;
   const toolbar = document.querySelector('.app-main > .page .proposal-toolbar, .app-main > .page .maintenance-nav');
   if (toolbar) {
@@ -134,6 +141,8 @@ function shell(content) {
   }
   keepSelectedFileVisible();
   updateMaintenanceLayout();
+  if (S.view==='proposals' && S.proposal) $('.change-detail')?.focus({preventScroll:true});
+  if (restoreChangeFocus) { [...document.querySelectorAll('.change-card')].find(node=>node.dataset.id===lastChangeFocus)?.focus({preventScroll:true}); restoreChangeFocus=false; }
   if (S.view === 'journal' && S.maintenanceSelection) {
     const detail=$('.maintenance-detail');
     if (detail) {
@@ -148,7 +157,7 @@ function shell(content) {
 function empty(title, description, actions = '', glyph = 'files') { return `<div class="empty">${icon(glyph)}<h2>${esc(title)}</h2><p>${esc(description)}</p><div class="actions">${actions}</div></div>`; }
 
 async function load() {
-  const previousDetail=$('.maintenance-detail');
+  const previousDetail=$('.maintenance-detail:not(.change-detail)');
   maintenanceDrawerScroll=previousDetail ? {selection:previousDetail.dataset.selection,format:previousDetail.dataset.format,top:previousDetail.scrollTop} : undefined;
   const sequence = ++renderSequence; readRoute();
   if (previousDetail && !S.maintenanceSelection) focusMaintenanceAfterRender=true;
@@ -192,13 +201,15 @@ async function rules(sequence) {
   if (proposal) {
     const detail = await api(`/api/proposals/${proposal.id}`); if (sequence !== renderSequence) return '';
     inspector = `<div class="row between"><h2>待审提案</h2>${badge(proposal.status)}</div><h3>${esc(proposal.title)}</h3><dl class="meta"><dt>范围</dt><dd>${scopeBadge(proposal.scope)}</dd><dt>来源</dt><dd>${esc(proposal.source)}</dd></dl><hr><span class="label">差异摘要</span><div class="mini-diff">${detail.changes.filter(c => c.added || c.removed).slice(0,4).map(c => `<div class="${c.added ? 'diff-add':'diff-remove'}">${c.added ? '+':'−'} ${esc(c.value.slice(0,180))}</div>`).join('')}</div><div class="actions">${button('审核差异','open-proposal',attr('id',proposal.id),'primary')}${button('稍后处理','later')}</div><p class="muted small">批准具体差异后，才会写入约束。</p>`;
-  } else inspector = `<h2>当前约束</h2><p class="muted small">${id === 'global' ? '全局偏好独立保存，项目按需引用。':'正式内容保存在原始文件中。'}</p><dl class="meta"><dt>范围</dt><dd>${scopeBadge(id === 'global' ? 'global':'project')}</dd><dt>文件</dt><dd class="mono">${esc(S.file)}</dd></dl><hr><p class="muted small">约束变更通过提案审核。维护日志与历史决定不自动变成有效指令。</p>`;
+  } else inspector = `<h2>当前约束</h2><p class="muted small">${id === 'global' ? '全局偏好独立保存，项目按需引用。':'正式内容保存在原始文件中。'}</p><dl class="meta"><dt>范围</dt><dd>${scopeBadge(id === 'global' ? 'global':'project')}</dd><dt>文件</dt><dd class="mono">${esc(S.file)}</dd></dl><hr><p class="muted small">可以修改并记录，也可先提案讨论。维护日志与历史决定不自动变成有效指令。</p>`;
   const logs = (await api(`/api/projects/${id}/journal`)).slice(0,2); if (sequence !== renderSequence) return '';
   const decisions = catalog.docs.filter(d => d.role === 'decision' && d.status === 'implemented').slice(0,2);
   const selected = documents.find(doc => doc.file === S.file);
   const lineage = selected?.superseded ? `<p class="notice warning">此说明已被替代，不作为当前有效约束。${selected.supersededBy ? ' '+button('查看替代文档','document',`${attr('file',selected.supersededBy)} ${attr('project',id)}`,'text small') : ''}</p>` : '';
-  const content = !S.document.exists ? empty('还没有这份约束','点击上方创建入口提案，审核前不会写入文件。','','file-plus') : S.raw ? `<pre>${esc(S.document.content)}</pre>` : markdown(S.document.content,S.file,id);
-  return `<div class="workspace"><aside class="file-rail"><div class="file-heading">${id === 'global' ? '全局约束' : '约束文件'}<span class="file-count">${documents.length}</span></div><nav class="file-list file-tree" aria-label="约束目录">${fileButtons || '<p class="muted small">尚无文档</p>'}</nav></aside><article class="reader"><div class="doc-toolbar"><span class="file-name">${icon('file-text')} ${esc(S.file)}</span>${button('阅读','read-mode',attr('mode','read'),S.raw ? '' : 'primary')}${button('原文','read-mode',attr('mode','raw'),S.raw ? 'primary' : '')}${button(icon('pencil-simple')+' '+(S.document.exists ? '修改当前文件':'创建入口提案'),'new-proposal','','text')}</div>${catalog.warnings.map(w => `<p class="notice warning">${esc(w.message)}</p>`).join('')}${lineage}${content}<section class="related-log"><h2>相关维护</h2>${logs.length ? `<div class="mini-timeline">${logs.map((entry,index) => `<button data-action="log-preview" data-index="${index}" data-project="${esc(id)}">${esc(entry.title.replace(/^\d{4}-\d{2}-\d{2}\s*[·—-]?\s*/,''))}</button>`).join('')}</div>` : '<p class="muted small">尚无维护记录。</p>'}${button('查看维护路径 '+icon('arrow-up-right'),'tab',attr('view','journal'),'text small')}</section><div class="source-footer">原始文件 · ${esc(catalog.project.root)}/${esc(S.file)}</div></article><aside class="inspector">${inspector}${decisions.length ? `<hr><h3>相关决定</h3>${decisions.map(d => button(esc(d.title),'document',`${attr('file',d.file)} ${attr('project',id)}`,'text doc-link')).join('')}`:''}</aside></div>`;
+  const content = !S.document.exists ? empty('还没有这份约束','可以创建并记录，也可以先提出建议。','','file-plus') : S.raw ? `<pre>${esc(S.document.content)}</pre>` : markdown(S.document.content,S.file,id);
+  const history=S.data.proposals.filter(p=>p.projectId===id && p.file===S.file);
+  const changeHistory=`<section class="related-log"><h2>约束迭代 · ${history.length}</h2>${history.slice(0,4).map(p=>`<p>${button(esc(p.title),'open-proposal',attr('id',p.id),'text small')} ${categoryBadge(p)} ${badge(p.status)} <span class="muted small">${esc(localDate(p.updatedAt))}</span></p>`).join('') || '<p class="muted small">通过“修改并记录”保存时，会留下前后差异和修改来由。</p>'}${button('查看全部变更','tab',attr('view','proposals'),'text small')}</section>`;
+  return `<div class="workspace"><aside class="file-rail"><div class="file-heading">${id === 'global' ? '全局约束' : '约束文件'}<span class="file-count">${documents.length}</span></div><nav class="file-list file-tree" aria-label="约束目录">${fileButtons || '<p class="muted small">尚无文档</p>'}</nav></aside><article class="reader"><div class="doc-toolbar"><span class="file-name">${icon('file-text')} ${esc(S.file)}</span>${button('阅读','read-mode',attr('mode','read'),S.raw ? '' : 'primary')}${button('原文','read-mode',attr('mode','raw'),S.raw ? 'primary' : '')}${button(icon('pencil-simple')+' 修改并记录','new-change','','primary')}${button(S.document.exists ? '提出修改建议':'创建入口提案','new-proposal','','text')}</div>${catalog.warnings.map(w => `<p class="notice warning">${esc(w.message)}</p>`).join('')}${lineage}${content}${changeHistory}<section class="related-log"><h2>相关维护</h2>${logs.length ? `<div class="mini-timeline">${logs.map((entry,index) => `<button data-action="log-preview" data-index="${index}" data-project="${esc(id)}">${esc(entry.title.replace(/^\d{4}-\d{2}-\d{2}\s*[·—-]?\s*/,''))}</button>`).join('')}</div>` : '<p class="muted small">尚无维护记录。</p>'}${button('查看维护路径 '+icon('arrow-up-right'),'tab',attr('view','journal'),'text small')}</section><div class="source-footer">原始文件 · ${esc(catalog.project.root)}/${esc(S.file)}</div></article><aside class="inspector">${inspector}${decisions.length ? `<hr><h3>相关决定</h3>${decisions.map(d => button(esc(d.title),'document',`${attr('file',d.file)} ${attr('project',id)}`,'text doc-link')).join('')}`:''}</aside></div>`;
 }
 
 function renderDiff(detail) {
@@ -207,24 +218,33 @@ function renderDiff(detail) {
     const lines = change.value.replace(/\n$/,'').split('\n');
     return lines.map(text => `<div class="diff-line ${change.added ? 'diff-add' : change.removed ? 'diff-remove':''}"><span class="line-num">${added ? ++right : ++left}</span><span>${esc(text) || ' '}</span></div>`).join('');
   }).join('');
-  return `<div class="diff-grid"><div class="diff-column"><div class="diff-heading">当前内容（提案基线）</div><div class="diff-body">${column(false) || '<div class="diff-line muted">文件尚不存在</div>'}</div></div><div class="diff-column"><div class="diff-heading">建议内容（第 ${detail.revision} 版）</div><div class="diff-body">${column(true)}</div></div></div>`;
+  return `<div class="diff-grid"><div class="diff-column"><div class="diff-heading">${detail.mode==='direct' ? '修改前':'当前内容（提案基线）'}</div><div class="diff-body">${column(false) || '<div class="diff-line muted">文件尚不存在</div>'}</div></div><div class="diff-column"><div class="diff-heading">${detail.mode==='direct' ? '修改后' : `建议内容（第 ${detail.revision} 版）`}</div><div class="diff-body">${column(true)}</div></div></div>`;
 }
 async function proposals(sequence) {
   const all = S.data.proposals.filter(p => p.projectId === S.projectId);
   const filtered = all.filter(p => S.proposalFilter === 'all' || S.proposalFilter === 'pending' ? S.proposalFilter === 'all' || ['pending','conflict'].includes(p.status) : p.status === S.proposalFilter);
-  if (!filtered.some(p => p.id === S.proposal)) S.proposal = filtered[0]?.id ?? '';
-  const filters = [['pending','待审'],['applied','已写入'],['rejected','已拒绝'],['all','全部']].map(([id,label]) => `<button class="segment ${S.proposalFilter === id ? 'active':''}" data-action="proposal-filter" data-filter="${id}">${label}</button>`).join('');
+  if (!all.some(p => p.id === S.proposal)) S.proposal = '';
+  const visibleItems=filtered.filter(p=>!S.changeQuery || [p.title,p.reason,p.source,p.file].join(' ').toLowerCase().includes(S.changeQuery.toLowerCase()));
+  const filters = [['all','全部'],['recorded','已记录'],['pending','待审'],['applied','已写入'],['rejected','已拒绝']].map(([id,label]) => `<button class="segment ${S.proposalFilter === id ? 'active':''}" data-action="proposal-filter" data-filter="${id}">${label}</button>`).join('');
   let content;
-  if (!S.proposal) content = empty(S.proposalFilter === 'pending' ? '暂无待审提案' : '这里还没有记录','不需要为了留档而创建新规则；有值得保留的修改建议时，再提交审核。',button('新建提案','new-proposal','','primary')+button('查看已处理记录','proposal-filter',attr('filter','all')),'file-text');
+  if (!S.proposal) content = '';
   else {
     const detail = await api(`/api/proposals/${S.proposal}`); if (sequence !== renderSequence) return ''; S.proposalDetail = detail;
     const changed = detail.currentError || detail.currentContent !== detail.baseContent;
     const conflict = !detail.applicationPending && (detail.status === 'conflict' || (detail.status === 'pending' && changed));
-    const notice = detail.applicationPending ? '<div class="notice warning">本次应用曾中断，文件可能已写入，维护记录尚待补齐。请完成记录；工作台会先核对文件，不重复覆盖。</div>' : conflict ? `<div class="notice warning">${icon('warning')} 原文或来源已变化，尚未应用这份提案。请重新核对差异。${detail.currentError ? ' '+esc(detail.currentError):''}</div><div class="conflict-grid"><div><div class="label">提案基线</div><pre>${esc(detail.baseContent ?? '文件原先不存在')}</pre></div><div><div class="label">当前原文</div><pre>${esc(detail.currentContent ?? '文件当前不存在')}</pre></div><div><div class="label">原建议</div><pre>${esc(detail.content)}</pre></div></div>` : detail.status === 'applied' ? '<div class="notice success">已写入约束，维护记录已保存。</div>' : detail.status === 'rejected' ? `<div class="notice">已拒绝：${esc(detail.rejectionReason)}</div>` : detail.status === 'superseded' ? `<div class="notice">${esc(detail.resolution ?? '这个提案已有更新版本。')}</div>` : '';
-    const actions = detail.applicationPending ? button('完成维护记录','retry-apply',attr('id',detail.id),'primary') : ['pending','conflict'].includes(detail.status) ? `${detail.status === 'pending' ? button('编辑提案','edit-proposal',attr('id',detail.id)) : ''}${button('拒绝','reject-proposal',attr('id',detail.id))}${conflict ? button('基于当前原文重新生成','rebase-proposal',attr('id',detail.id),'primary') : button('批准并写入','approve-proposal',attr('id',detail.id),'primary')}` : detail.status === 'applied' ? button('查看维护记录','tab',attr('view','journal'),'primary') : detail.replacedBy ? button('查看新提案','open-proposal',attr('id',detail.replacedBy),'primary') : '';
-    content = `<div class="proposal-workspace"><aside class="proposal-list" aria-label="提案列表">${filtered.map(p => `<button class="proposal-card ${p.id === S.proposal ? 'active':''}" data-action="open-proposal" data-id="${esc(p.id)}"><strong>${esc(p.title)}</strong><div class="row wrap">${badge(p.status)}<small>${esc(p.createdAt.slice(0,10))}</small></div><div class="path-line">${esc(p.file)}</div></button>`).join('')}</aside><section class="proposal-detail"><div class="row between"><h2>${esc(detail.title)}</h2>${badge(detail.status)}</div><div class="proposal-meta">${esc(scopeNames[detail.scope])} · ${esc(detail.file)} · 第 ${detail.revision} 版</div>${notice}${!conflict ? renderDiff(detail):''}<div class="reason-section"><h3>理由</h3>${esc(detail.reason)}</div><div class="reason-section"><h3>来源摘要</h3>${esc(detail.source)}</div>${detail.alternatives ? `<div class="reason-section"><h3>放弃的备选</h3>${esc(detail.alternatives)}</div>`:''}${detail.tradeoffs ? `<div class="reason-section"><h3>收益与代价</h3>${esc(detail.tradeoffs)}</div>`:''}<div class="proposal-footer"><div class="version-note">原文版本 ${esc(detail.baseHash?.slice(0,10) ?? '不存在')} · 提案版本 ${esc(detail.contentHash.slice(0,10))}</div><div class="actions">${actions}</div></div></section></div>`;
+    const notice = detail.applicationPending ? '<div class="notice warning">本次应用曾中断，文件可能已写入，维护记录尚待补齐。请完成记录；工作台会先核对文件，不重复覆盖。</div>' : conflict ? `<div class="notice warning">${icon('warning')} 原文或来源已变化，尚未应用这份提案。请重新核对差异。${detail.currentError ? ' '+esc(detail.currentError):''}</div><div class="conflict-grid"><div><div class="label">提案基线</div><pre>${esc(detail.baseContent ?? '文件原先不存在')}</pre></div><div><div class="label">当前原文</div><pre>${esc(detail.currentContent ?? '文件当前不存在')}</pre></div><div><div class="label">原建议</div><pre>${esc(detail.content)}</pre></div></div>` : detail.status === 'recorded' ? '<div class="notice success">已保存本次修改，前后版本与修改来由已留档。</div>' : detail.status === 'applied' ? '<div class="notice success">已写入约束，维护记录已保存。</div>' : detail.status === 'rejected' ? `<div class="notice">已拒绝：${esc(detail.rejectionReason)}</div>` : detail.status === 'superseded' ? `<div class="notice">${esc(detail.resolution ?? '这个提案已有更新版本。')}</div>` : '';
+    const actions = detail.mode==='direct' ? (detail.status==='recording' || detail.applicationPending ? button('完成本次记录','retry-change',attr('id',detail.id),'primary') : detail.status==='conflict' ? button('基于当前文件重新修改','new-change','','primary') : (detail.target===S.catalog.project.root+'/'+detail.file ? button('查看当前约束','change-current',attr('file',detail.file),'primary') : '')) : detail.applicationPending ? button('完成维护记录','retry-apply',attr('id',detail.id),'primary') : ['pending','conflict'].includes(detail.status) ? `${detail.status === 'pending' ? button('编辑提案','edit-proposal',attr('id',detail.id)) : ''}${button('拒绝','reject-proposal',attr('id',detail.id))}${conflict ? button('基于当前原文重新生成','rebase-proposal',attr('id',detail.id),'primary') : button('批准并写入','approve-proposal',attr('id',detail.id),'primary')}` : detail.status === 'applied' ? button('查看维护记录','tab',attr('view','journal'),'primary') : detail.replacedBy ? button('查看新提案','open-proposal',attr('id',detail.replacedBy),'primary') : '';
+    content = `<div class="maintenance-backdrop" data-action="change-close" aria-hidden="true"></div><aside class="maintenance-detail change-detail" role="dialog" aria-modal="true" aria-labelledby="change-detail-title" tabindex="-1"><div class="decision-drawer-bar"><strong>${detail.mode==='direct' ? '约束迭代记录':'修改提案'}</strong>${button(icon('x'),'change-close','aria-label="关闭变更详情"','icon ghost')}</div><section class="proposal-detail decision-drawer-body"><div class="row between"><h2 id="change-detail-title">${esc(detail.title)}</h2>${badge(detail.status)}</div><div class="proposal-meta">${categoryBadge(detail)} ${esc(scopeNames[detail.scope])} · ${esc(detail.file)} · 第 ${detail.revision} 版<div class="path-line">${esc(detail.target)}</div></div>${notice}${!conflict ? renderDiff(detail):''}<div class="reason-section"><h3>理由</h3>${esc(detail.reason)}</div><div class="reason-section"><h3>来源摘要</h3>${esc(detail.source)}</div>${detail.alternatives ? `<div class="reason-section"><h3>放弃的备选</h3>${esc(detail.alternatives)}</div>`:''}${detail.tradeoffs ? `<div class="reason-section"><h3>收益与代价</h3>${esc(detail.tradeoffs)}</div>`:''}<div class="proposal-footer"><div class="version-note">原文版本 ${esc(detail.baseHash?.slice(0,10) ?? '不存在')} · ${detail.mode==='direct' ? '记录版本':'提案版本'} ${esc(detail.contentHash.slice(0,10))}</div><div class="actions">${actions}</div></div></section></aside>`;
   }
-  return `<div class="page proposals-page"><h1 class="sr-only">提案审核</h1><div class="filter-bar proposal-toolbar"><div class="segments" aria-label="提案状态">${filters}</div><span class="toolbar-count">${filtered.length} 条</span>${button(icon('plus')+' 新建提案','new-proposal','','primary')}</div>${content}</div>`;
+  let month='';
+  const stream=visibleItems.map(p=>{
+    const date=localDate(p.createdAt); const nextMonth=date.slice(0,7);
+    const label=S.changeView==='timeline' && month!==nextMonth ? `<h3 class="month-heading">${esc(nextMonth)}</h3>` : ''; month=nextMonth;
+    return label+`<button class="proposal-card change-card" data-action="open-proposal" data-id="${esc(p.id)}"><div class="row between"><time>${esc(date)}</time>${categoryBadge(p)}${badge(p.status)}</div><strong>${esc(p.title)}</strong><p>${esc(p.reason)}</p><div class="path-line">${esc(p.file)}</div><span class="muted small">${p.mode==='direct' ? '直接修改 · 已保留前后版本':'提案 · 按具体版本审核'}</span></button>`;
+  }).join('');
+  const toolbar=`<div class="filter-bar proposal-toolbar"><div class="segments" aria-label="变更状态">${filters}</div><span class="toolbar-count">${visibleItems.length} 条</span>${button('修改并记录','new-change','','primary')}${button(icon('plus')+' 新建提案','new-proposal','','text small')}</div>`;
+  const controls=`<div class="change-controls maintenance-filters"><nav class="segments" aria-label="变更记录视图">${[['timeline','迭代时间线'],['list','变更清单']].map(([view,label])=>button(label,'change-view',attr('view',view),S.changeView===view ? 'active':'')).join('')}</nav><span class="muted small">每次修改保留差异、来由与来源</span><form id="change-search" class="maintenance-search"><label class="sr-only" for="change-query">搜索变更记录</label><input id="change-query" name="query" value="${esc(S.changeQuery)}" placeholder="搜索修改、文件或来由…" maxlength="200"><button class="btn icon" type="submit" aria-label="搜索变更记录">${icon('magnifying-glass')}</button></form></div>`;
+  return `<div class="page proposals-page decision-board-view"><h1 class="sr-only">变更记录</h1>${toolbar}${controls}<section class="change-stream decision-panel ${S.changeView}">${stream || empty(S.proposalFilter==='pending' ? '暂无待审提案':'暂无变更记录','直接修改或提交提案后，前后版本和修改来由会保留在这里。',button('修改并记录','new-change','','primary'))}</section>${content}</div>`;
 }
 
 async function journal(sequence) {
@@ -304,24 +324,29 @@ async function removeProject(id) {
   }});
 }
 
-async function proposalEditor(id = '') {
+async function proposalEditor(id = '', direct = false) {
   if (!S.projectId) { registerProject(); return; }
   const existing = id ? await api(`/api/proposals/${id}`) : null;
   const projectId = existing?.projectId ?? (S.view === 'rules' ? sourceId() : S.projectId);
   const catalog = projectId === S.projectId && S.catalog ? S.catalog : await api(`/api/projects/${projectId}`);
-  const file = existing?.file ?? (S.view === 'rules' ? S.file : catalog.project.ruleFiles[0]);
+  const file = existing?.file ?? (S.view === 'rules' ? S.file : direct && S.proposal ? S.proposalDetail.file : catalog.project.ruleFiles[0]);
   const original = existing ? null : await api(`/api/projects/${projectId}/document?file=${encodeURIComponent(file)}`);
-  const body = `<p>${scopeBadge(projectId === 'global' ? 'global' : catalog.project.ruleFiles.includes(file) ? 'project':'module')} ${badge('pending')}</p>`+field('修改标题','title',existing?.title ?? '',{required:true,readonly:!!existing,placeholder:'一句话说明要改变什么'})+field('目标文件','file',file,{required:true,readonly:!!existing,help:'修改目标路径时，请同时核对完整建议内容。'})+field('来源','source',existing?.source ?? '',{required:true,readonly:!!existing,placeholder:'用户原话摘要、问题或可复核引用'})+field('修改理由','reason',existing?.reason ?? '',{textarea:true,required:true,rows:2})+field('建议的完整内容','content',existing?.content ?? original.content,{textarea:true,rows:12,cls:'editor'})+`<p class="notice">保存仅更新待审候选，不改原文件。编辑后需重新核对最终差异。</p>`+formActions(existing ? '保存并查看差异':'保存待审提案');
-  showDialog(existing ? '编辑待审提案':'新建提案',body,{wide:true,submit:async values => {
-    const result = existing ? await api(`/api/proposals/${id}/revise`,{content:values.content,reason:values.reason,contentHash:existing.contentHash}) : await api('/api/proposals',{...values,projectId});
-    closeDialog(); toast('已保存待审提案，尚未写入约束'); S.proposalFilter = 'pending'; route('proposals',{projectId,scope:projectId === 'global' ? 'global':'project',proposal:result.id});
+  const operationId=crypto.randomUUID();
+  const body = `<p>${scopeBadge(projectId === 'global' ? 'global' : catalog.project.ruleFiles.includes(file) ? 'project':'module')} ${badge('pending')}</p>`+categoryField('change-category',existing?.category ?? '')+field('修改标题','title',existing?.title ?? '',{required:true,readonly:!!existing,placeholder:'一句话说明要改变什么'})+field('目标文件','file',file,{required:true,readonly:!!existing,help:'修改目标路径时，请同时核对完整建议内容。'})+field('来源','source',existing?.source ?? '',{required:true,readonly:!!existing,placeholder:'用户原话摘要、问题或可复核引用'})+field('修改理由','reason',existing?.reason ?? '',{textarea:true,required:true,rows:2})+field('建议的完整内容','content',existing?.content ?? original.content,{textarea:true,rows:12,cls:'editor'})+`<p class="notice">保存仅更新待审候选，不改原文件。编辑后需重新核对最终差异。</p>`+formActions(existing ? '保存并查看差异':'保存待审提案');
+  const directBody=direct ? body.replace(badge('pending'),'<span class="pill">直接修改</span>').replace('建议的完整内容','修改后的完整内容').replace('保存仅更新待审候选，不改原文件。编辑后需重新核对最终差异。','保存会修改文件，并保留本次前后版本、来由和来源。原文有变化时停止，不覆盖外部修改。').replace('保存待审提案','保存并记录') : body;
+  showDialog(direct ? '修改并记录' : existing ? '编辑待审提案':'新建提案',directBody,{wide:true,submit:async values => {
+    if (direct && values.file!==file) throw Error('请先打开目标文件后再修改，不能把当前正文写到其他文件。');
+    if (!categoryNames[values.category]) { $('#change-category .dropdown-trigger').focus(); throw Error('请选择迭代标签'); }
+    const result = direct ? await api('/api/changes',{...values,projectId,baseHash:original.hash,operationId}) : existing ? await api(`/api/proposals/${id}/revise`,{content:values.content,reason:values.reason,category:values.category,contentHash:existing.contentHash}) : await api('/api/proposals',{...values,projectId});
+    closeDialog(); toast(direct ? '已修改并留下迭代记录':'已保存待审提案，尚未写入约束'); S.proposalFilter = direct ? 'all':'pending'; route('proposals',{projectId,scope:projectId === 'global' ? 'global':'project',proposal:result.id});
   }});
 }
 async function approve(id) {
   const detail = await api(`/api/proposals/${id}`);
-  showDialog('批准并写入约束',`<p class="muted">仅应用你刚查看的这份差异。</p><dl class="meta"><dt>文件</dt><dd class="mono">${esc(detail.file)}</dd><dt>范围</dt><dd>${scopeBadge(detail.scope)}</dd><dt>版本</dt><dd>第 ${detail.revision} 版 · ${esc(detail.contentHash.slice(0,10))}</dd></dl><div class="mini-diff">${detail.changes.filter(change => change.added || change.removed).map(change => `<div class="${change.added ? 'diff-add':'diff-remove'}">${esc(change.value)}</div>`).join('')}</div><p class="notice">写入前再次核对原文；有变化则停止，不覆盖当前内容。完成后留下一条维护记录。</p>`+formActions('批准并写入'),{submit:async () => {
+  showDialog('批准并写入约束',(detail.category ? `<p>迭代标签：${categoryBadge(detail)}</p>` : categoryField('change-category'))+`<p class="muted">仅应用你刚查看的这份差异。</p><dl class="meta"><dt>文件</dt><dd class="mono">${esc(detail.file)}</dd><dt>范围</dt><dd>${scopeBadge(detail.scope)}</dd><dt>版本</dt><dd>第 ${detail.revision} 版 · ${esc(detail.contentHash.slice(0,10))}</dd></dl><div class="mini-diff">${detail.changes.filter(change => change.added || change.removed).map(change => `<div class="${change.added ? 'diff-add':'diff-remove'}">${esc(change.value)}</div>`).join('')}</div><p class="notice">写入前再次核对原文；有变化则停止，不覆盖当前内容。完成后留下一条维护记录。</p>`+formActions('批准并写入'),{submit:async values => {
     try {
-      await api(`/api/proposals/${id}/apply`,{baseHash:detail.baseHash,contentHash:detail.contentHash}); closeDialog();
+      const category=detail.category || values.category; if (!categoryNames[category]) throw Error('请选择迭代标签');
+      await api(`/api/proposals/${id}/apply`,{baseHash:detail.baseHash,contentHash:detail.contentHash,category}); closeDialog();
       toast('约束已写入，维护记录已保存'); S.message = {type:'success',text:`已写入 ${detail.file}。这次修改的维护记录已保存。`};
       route('rules',{projectId:detail.projectId,scope:detail.scope,file:detail.file,proposal:id});
     } catch(error) {
@@ -333,12 +358,14 @@ async function approve(id) {
 async function reject(id) {
   const detail = await api(`/api/proposals/${id}`);
   showDialog('拒绝提案',`<p><strong>${esc(detail.title)}</strong></p><p class="mono small muted">${esc(detail.file)}</p>`+field('拒绝原因','reason','',{textarea:true,required:true,placeholder:'为后续查阅保留判断依据，避免反复提出同一建议。'})+`<p class="notice">拒绝不会修改约束文件，原因将随提案保留。</p>`+formActions('确认拒绝'),{submit:async values => {
-    await api(`/api/proposals/${id}/reject`,values); closeDialog(); toast('已拒绝提案，未修改约束'); S.proposalFilter = 'rejected'; await load();
+    await api(`/api/proposals/${id}/reject`,values); closeDialog(); toast('已拒绝提案，未修改约束'); route('proposals',{proposalFilter:'rejected'});
   }});
 }
 async function rebase(id) {
-  showDialog('基于当前原文重新生成',`<p class="muted">保留原提案记录，用当前文件作为新基线。生成后仍需查看差异并审核；不会自动合并或批准。</p>`+formActions('生成新的待审提案'),{submit:async () => {
-    const result = await api(`/api/proposals/${id}/rebase`,{}); closeDialog(); S.message = null;
+  const detail=await api(`/api/proposals/${id}`);
+  showDialog('基于当前原文重新生成',categoryField('change-category',detail.category ?? '')+`<p class="muted">保留原提案记录，用当前文件作为新基线。生成后仍需查看差异并审核；不会自动合并或批准。</p>`+formActions('生成新的待审提案'),{submit:async values => {
+    if (!categoryNames[values.category]) throw Error('请选择迭代标签');
+    const result = await api(`/api/proposals/${id}/rebase`,{category:values.category}); closeDialog(); S.message = null;
     toast(result.noChanges ? '当前文件已包含全部建议，无剩余差异':'新提案已生成，请重新审核');
     S.proposalFilter = result.noChanges ? 'all':'pending'; route('proposals',{proposal:result.id});
   }});
@@ -347,9 +374,10 @@ async function rebase(id) {
 function addJournal() {
   const decisions = S.maintenanceData?.notes ?? [];
   const decisionFields = S.projectId === 'global' ? '' : `<details class="record-decisions"><summary>关联已有决策（可选）</summary>${decisions.length ? decisions.map(note => `<label class="decision-checkbox"><input type="checkbox" name="decisionFiles" value="${esc(note.file)}"><span>${esc(note.title)} ${badge(note.status)}</span></label>`).join('') : '<p class="muted small">项目暂没有决策笔记。</p>'}</details>`;
-  const body = field('标题','title','',{required:true})+field('背景','background','',{textarea:true,required:true,rows:2})+field('实际结果','result','',{textarea:true,required:true,rows:2})+field('验证或缺失验证','verification','',{textarea:true,rows:2,help:'写清实际执行的检查；计划或未经验证的判断不要写成已完成。'})+field('后续事项','next','',{textarea:true,rows:2})+`<label class="field"><span>类别（可选）</span></label>${dropdown('record-category','迭代类别',[{value:'',label:'未分类'},...Object.entries(categoryNames).map(([value,label])=>({value,label}))],'')}<input type="hidden" name="category" value="">`+decisionFields+field('关联文件','topic','',{placeholder:'例如：AGENTS.md'})+field('明确关联的 Markdown 文件','relatedFiles','',{textarea:true,rows:2,help:'每行一个已登记文件的项目相对路径；上方关联文件仍可填写自由说明。'})+`<details><summary class="muted small">补充备选方案与代价（可选）</summary>${field('放弃的备选','alternatives','',{textarea:true,rows:2})}${field('收益与代价','tradeoffs','',{textarea:true,rows:2})}</details><p class="notice">维护记录描述事实，不会新增或批准约束，不改变决策实施状态。</p>`+formActions('保存维护记录');
+  const body = field('标题','title','',{required:true})+field('背景','background','',{textarea:true,required:true,rows:2})+field('实际结果','result','',{textarea:true,required:true,rows:2})+field('验证或缺失验证','verification','',{textarea:true,rows:2,help:'写清实际执行的检查；计划或未经验证的判断不要写成已完成。'})+field('后续事项','next','',{textarea:true,rows:2})+categoryField('record-category')+decisionFields+field('关联文件','topic','',{placeholder:'例如：AGENTS.md'})+field('明确关联的 Markdown 文件','relatedFiles','',{textarea:true,rows:2,help:'每行一个已登记文件的项目相对路径；上方关联文件仍可填写自由说明。'})+`<details><summary class="muted small">补充备选方案与代价（可选）</summary>${field('放弃的备选','alternatives','',{textarea:true,rows:2})}${field('收益与代价','tradeoffs','',{textarea:true,rows:2})}</details><p class="notice">维护记录描述事实，不会新增或批准约束，不改变决策实施状态。</p>`+formActions('保存维护记录');
   const operationId = crypto.randomUUID(); const projectId = S.projectId;
   showDialog('记录迭代',body,{wide:true,submit:async (values,form) => {
+    if (!categoryNames[values.category]) { $('#record-category .dropdown-trigger').focus(); throw Error('请选择迭代标签'); }
     const payload = {...values,operationId,decisionFiles:new FormData(form).getAll('decisionFiles'),relatedFiles:values.relatedFiles.split(/\r?\n/).map(value=>value.trim()).filter(Boolean)};
     const result = await api(`/api/projects/${projectId}/journal`,payload); closeDialog(); toast(`已记录到 ${result.file}`);
     route('journal',{projectId,maintenanceSelection:'entry:'+result.key,maintenanceFormat:'read'});
@@ -415,7 +443,7 @@ async function action(target) {
   if (name === 'dropdown-option') {
     const id = target.closest('.custom-select').id; const value = target.dataset.value;
     closeDropdowns(true);
-    if (id === 'record-category') { const control = target.closest('.custom-select'); control.querySelector('.dropdown-trigger span').textContent = target.querySelector('.option-label').textContent; control.querySelectorAll('[role=option]').forEach(option=>option.setAttribute('aria-selected',String(option===target))); $('#dialog input[name=category]').value=value; return; }
+    if (id === 'record-category' || id === 'change-category') { const control = target.closest('.custom-select'); control.querySelector('.dropdown-trigger span').textContent = target.querySelector('.option-label').textContent; control.querySelectorAll('[role=option]').forEach(option=>option.setAttribute('aria-selected',String(option===target))); $('#dialog input[name=category]').value=value; return; }
     const filterFields = {'month-filter':'month','maintenance-category':'maintenanceCategory','maintenance-status':'noteStatus','maintenance-sort':'maintenanceSort'};
     if (filterFields[id]) { focusSelectAfterRender=id; return route('journal',{[filterFields[id]]:value}); }
     if (value === '__register') return registerProject();
@@ -430,7 +458,7 @@ async function action(target) {
   if (name === 'register') return registerProject();
   if (name === 'inspect-project') return inspectProject();
   if (name === 'project') { S.message = null; return route('rules',{projectId:target.dataset.id,file:'',proposal:''}); }
-  if (name === 'tab') { S.message = null; return route(target.dataset.view); }
+  if (name === 'tab') { S.message = null; return route(target.dataset.view,{proposal:''}); }
   if (name === 'connect') return route('connect');
   if (name === 'skill-mode') { S.skillRaw = target.dataset.mode === 'raw'; return load(); }
   if (name === 'global') { if (!S.data.global) return globalSettings(); return route('rules',{projectId:'global',file:''}); }
@@ -445,9 +473,14 @@ async function action(target) {
   if (name === 'settings') return settings();
   if (name === 'remove-project') return removeProject(target.dataset.id);
   if (name === 'new-proposal') return proposalEditor();
+  if (name === 'new-change') return proposalEditor('',true);
+  if (name === 'change-close') { lastChangeFocus=S.proposal; restoreChangeFocus=true; return route('proposals',{proposal:''}); }
+  if (name === 'change-view') return route('proposals',{changeView:target.dataset.view,proposal:''});
+  if (name === 'change-current') return route('rules',{file:target.dataset.file,proposal:''});
+  if (name === 'retry-change') { await api(`/api/changes/${target.dataset.id}/retry`,{}); toast('修改记录已补齐'); return load(); }
   if (name === 'edit-proposal') return proposalEditor(target.dataset.id);
-  if (name === 'open-proposal') { const p = S.data.proposals.find(item => item.id === target.dataset.id); S.proposalFilter = p && ['pending','conflict'].includes(p.status) ? 'pending':'all'; S.message = null; return route('proposals',{projectId:p?.projectId ?? S.projectId,proposal:target.dataset.id}); }
-  if (name === 'proposal-filter') { S.proposalFilter = target.dataset.filter; return load(); }
+  if (name === 'open-proposal') { const p = S.data.proposals.find(item => item.id === target.dataset.id); S.message = null; return route('proposals',{projectId:p?.projectId ?? S.projectId,proposal:target.dataset.id}); }
+  if (name === 'proposal-filter') return route('proposals',{proposalFilter:target.dataset.filter,proposal:''});
   if (name === 'approve-proposal') return approve(target.dataset.id);
   if (name === 'retry-apply') { const p = await api(`/api/proposals/${target.dataset.id}`); await api(`/api/proposals/${p.id}/apply`,{baseHash:p.baseHash,contentHash:p.contentHash}); toast('应用记录已完成'); return load(); }
   if (name === 'reject-proposal') return reject(target.dataset.id);
@@ -481,6 +514,8 @@ document.addEventListener('keydown',event=>{
   else if (!event.shiftKey && (document.activeElement===elements.at(-1) || document.activeElement===detail)) { event.preventDefault();elements[0].focus(); }
 });
 document.addEventListener('submit',event=>{ if (event.target.id !== 'maintenance-search') return; event.preventDefault(); route('journal',{maintenanceQuery:new FormData(event.target).get('query').trim().slice(0,200),maintenanceSelection:''}); });
+document.addEventListener('submit',event=>{ if (event.target.id!=='change-search') return; event.preventDefault(); route('proposals',{changeQuery:new FormData(event.target).get('query').trim().slice(0,200),proposal:''}); });
+document.addEventListener('keydown',event=>{ if (event.key==='Escape' && !$('#dialog').open && S.view==='proposals' && S.proposal) { event.preventDefault(); action({dataset:{action:'change-close'}}); } });
 document.addEventListener('keydown',event=>{ if (event.key==='Escape' && !$('#dialog').open && S.view==='journal' && S.maintenanceSelection && !event.target.closest('.custom-select')) { event.preventDefault(); focusMaintenanceAfterRender=true; route('journal',{maintenanceSelection:''}); } });
 document.addEventListener('click',async event => {
   const target = event.target.closest('[data-action]');

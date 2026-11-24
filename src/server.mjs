@@ -47,7 +47,7 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     }
     if (req.method === 'GET' && pathname === '/api/state') {
       store.load();
-      return send(res, 200, { warnings: store.recoveryWarnings, projects: store.registry.projects, global: store.registry.global, proposals: store.proposals().map(({ content, baseContent, ...p }) => p) });
+      return send(res, 200, { warnings: store.recoveryWarnings, projects: store.registry.projects, global: store.registry.global, proposals: store.proposals().map(({ content, baseContent, request, ...p }) => p) });
     }
     if (demo && req.method !== 'GET' && (pathname === '/api/projects' || pathname === '/api/global') && (input.root || input.file)) {
       const candidate = path.resolve(input.root ?? input.file); const boundary = path.join(store.dataDir,'demo-projects');
@@ -56,6 +56,13 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     if (pathname === '/api/projects/inspect' && req.method === 'POST') return send(res,200,store.inspect(input));
     if (pathname === '/api/projects' && req.method === 'POST') return send(res, 201, store.register(input));
     if (pathname === '/api/global' && req.method === 'POST') { store.setGlobal(input.file); return send(res, 200, { ok: true }); }
+    if (pathname === '/api/changes' && req.method === 'POST') return send(res,201,store.writeChange(input));
+    const changeRetry=pathname.match(/^\/api\/changes\/([\w-]+)\/retry$/);
+    if (changeRetry && req.method === 'POST') {
+      const change=store.proposal(changeRetry[1]);
+      if (change.mode!=='direct') throw new Fault('不是直接修改记录');
+      return send(res,200,store.writeChange(change.request));
+    }
     const projectMatch = pathname.match(/^\/api\/projects\/([^/]+)(?:\/(document|journal|maintenance|context|search))?$/);
     if (projectMatch) {
       const [, id, operation] = projectMatch;
@@ -78,7 +85,7 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
         if (operation === 'apply') return send(res, 200, store.apply(id, input));
         if (operation === 'reject') return send(res, 200, store.reject(id, input.reason));
         if (operation === 'revise') return send(res, 200, store.revise(id, input));
-        if (operation === 'rebase') return send(res, 201, store.rebase(id));
+        if (operation === 'rebase') return send(res, 201, store.rebase(id,input));
       }
     }
     if (req.method === 'GET' && pathname.startsWith('/icons/')) {

@@ -19,7 +19,7 @@ test('registration and inspection do not change project files',t => {
 test('custom rule and journal mappings are classified correctly',t => {
   const f = fixture(t); f.store.configure(f.project.id,{ruleFiles:['instructions.md'],ruleRoots:['rules'],journalDir:'docs/logs'});
   f.write('instructions.md','# Custom'); f.write('rules/ui.md','# UI');
-  f.store.record(f.project.id,{title:'Change',background:'Why',result:'Done'});
+  f.store.record(f.project.id,{title:'Change',category:'testing',background:'Why',result:'Done'});
   const docs = f.store.catalog(f.project.id).docs;
   assert.equal(docs.find(d => d.file === 'instructions.md').role,'rule');
   assert.ok(docs.some(d => d.file.startsWith('docs/logs/') && d.role === 'journal'));
@@ -127,10 +127,10 @@ test('pending work prevents unregistering a project; settled work does not',t =>
 });
 test('record payload cannot redirect the journal into a rule or arbitrary global file',t => {
   const f = fixture(t); const rule = f.write('AGENTS.md','Original rule');
-  f.store.record(f.project.id,{title:'Record',background:'Why',result:'Done',journalFile:rule});
+  f.store.record(f.project.id,{title:'Record',category:'testing',background:'Why',result:'Done',journalFile:rule});
   assert.equal(fs.readFileSync(rule,'utf8'),'Original rule');
   const global = path.join(f.root,'global.md'); fs.writeFileSync(global,'Original global'); f.store.setGlobal(global);
-  f.store.record('global',{title:'Record',background:'Why',result:'Done',journalFile:global});
+  f.store.record('global',{title:'Record',category:'testing',background:'Why',result:'Done',journalFile:global});
   assert.equal(fs.readFileSync(global,'utf8'),'Original global');
 });
 test('an actual process exit leaves a recoverable lock and approved write',t => {
