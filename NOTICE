@@ -14,5 +14,10 @@ https://github.com/EveryInc/compound-engineering-plugin
 https://github.com/affaan-m/ECC
 https://github.com/EmiyaredA/write-notes-like-deepseek
 
+The decision-note workflow and independently implemented notes CLI use the
+path, lifecycle, heading and manifest conventions reviewed at write-notes
+commit 8f3b404cf9fd8102f96561f390219877abf094a8. No upstream scripts or
+templates are vendored. See skills/agent-workbench/references/note-sources.md.
+
 Other runtime dependencies retain their notices in node_modules:
 @phosphor-icons/web, diff, marked and DOMPurify.

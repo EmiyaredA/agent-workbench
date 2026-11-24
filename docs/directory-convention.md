@@ -39,6 +39,8 @@
 
 本仓库自己当前已有 docs/design 等文档入口，保留现有 AGENTS.md，未把模板自动安装进本仓库或其他真实项目。
 
+决策笔记的三种正文模板位于 Skill 的 `assets/notes/`，写作、状态移动和约束审核边界见 [决策参考](../skills/agent-workbench/references/decision-notes.md)。`notes --action verify` 校验标准目录及归档清单；`archive` 只读生成计划，`apply` 显式执行并支持回执重试。归档清单位于 `.agents/notes/archived/manifest.json`，工作台本机的中断回执位于数据目录 `note-archives/`，不另存一套正式笔记。
+
 ## 上游代码依据
 
 - mini-trellis 0f37e0f2 的[入口模板](https://github.com/Tiger-zzZ/mini-trellis/blob/0f37e0f2115da85e7bdcdbaebeea038a8080bae8/packages/cli/src/templates/markdown/agents.md)明确使用 .trellis/spec，并先读 index.md；[读取说明](https://github.com/Tiger-zzZ/mini-trellis/blob/0f37e0f2115da85e7bdcdbaebeea038a8080bae8/packages/cli/src/templates/markdown/spec/guides/mini-memory.md.txt)区分规范、研究和日志。工作台采用“固定目录、索引先行”的思路，以自己的 .agent-workbench/rules 作为默认路径，继续使用 core 的替代关系与查询原语；core 的 discoverDocs 范围更广，因此不用于常规约束读取。

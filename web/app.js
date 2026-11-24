@@ -49,9 +49,9 @@ function openDropdown(control, position) {
 }
 
 const S = {session:null,data:null,projectId:'',view:'rules',file:'',proposal:'',raw:false,skillRaw:false,proposalFilter:'pending',logMode:'journal',month:'',noteStatus:'all',searchKind:'all',lastProject:'',message:null};
-const maintenanceDefaults = {maintenanceView:'baseline',maintenanceSelection:'',month:'',noteStatus:'all',maintenanceCategory:'',maintenanceKind:'iteration',maintenanceQuery:'',maintenanceSort:'newest'};
+const maintenanceDefaults = {maintenanceView:'baseline',maintenanceSelection:'',maintenanceFormat:'read',month:'',noteStatus:'all',maintenanceCategory:'',maintenanceQuery:'',maintenanceSort:'newest'};
 Object.assign(S,maintenanceDefaults);
-let lastMaintenanceFocus; let focusMaintenanceAfterRender=false;
+let lastMaintenanceFocus; let focusMaintenanceAfterRender=false; let maintenanceOriginScroll; let maintenanceAnchor=''; let maintenanceDrawerScroll;
 let renderSequence = 0; let lastFocus; let toastTimeout;
 const collapsedFolders = new Set();
 const folderKey = folder => JSON.stringify([S.projectId,folder]);
@@ -101,7 +101,6 @@ function readRoute() {
   if (values.get('project') && values.get('project') !== previous.split('|')[0]) Object.assign(S,maintenanceDefaults);
   for (const [key,value] of Object.entries(maintenanceDefaults)) S[key] = values.has(key) ? values.get(key) : value;
   if (!['baseline','timeline','pitfalls','list'].includes(S.maintenanceView)) S.maintenanceView='baseline';
-  if (!['iteration','decision'].includes(S.maintenanceKind)) S.maintenanceKind='iteration';
   if (!['rules','proposals','journal','connect'].includes(S.view)) S.view = 'rules';
   if (previous !== S.projectId+'|'+S.file) revealFile(S.file);
 }
@@ -116,11 +115,11 @@ function keepSelectedFileVisible() {
   else if (item.bottom > bounds.bottom) tree.scrollTop += item.bottom - bounds.bottom;
 }
 function updateMaintenanceLayout() {
-  const modal = S.view==='journal' && !!S.maintenanceSelection && !!document.querySelector('.maintenance-detail') && matchMedia('(max-width:1000px)').matches;
-  document.querySelectorAll('.sidebar,.header,.maintenance-nav,.maintenance-filters,.maintenance-content').forEach(node=>node.inert=modal);
+  const modal = S.view==='journal' && !!S.maintenanceSelection && !!document.querySelector('.maintenance-detail');
+  document.querySelectorAll('.sidebar,.header,.maintenance-nav,.maintenance-filters,.maintenance-content,.demo-bar,.maintenance-warnings').forEach(node=>node.inert=modal);
   const detail=document.querySelector('.maintenance-detail');
   if (detail) { if (modal) { detail.setAttribute('role','dialog'); detail.setAttribute('aria-modal','true'); } else { detail.removeAttribute('role'); detail.removeAttribute('aria-modal'); } }
-  document.body.style.overflow=modal ? 'hidden':'';
+  document.body.classList.toggle('maintenance-drawer-open',modal);
 }
 window.addEventListener('resize',updateMaintenanceLayout);
 function shell(content) {
@@ -135,14 +134,24 @@ function shell(content) {
   }
   keepSelectedFileVisible();
   updateMaintenanceLayout();
-  if (S.view === 'journal' && S.maintenanceSelection) $('.maintenance-detail')?.focus({preventScroll:true});
-  if (focusMaintenanceAfterRender) { const candidates=[...document.querySelectorAll('[data-action=maintenance-open]')]; candidates.find(node=>node.dataset.kind===lastMaintenanceFocus?.kind && node.dataset.key===lastMaintenanceFocus?.key)?.focus({preventScroll:true}); focusMaintenanceAfterRender=false; }
+  if (S.view === 'journal' && S.maintenanceSelection) {
+    const detail=$('.maintenance-detail');
+    if (detail) {
+      detail.scrollTop=maintenanceDrawerScroll?.selection===S.maintenanceSelection && maintenanceDrawerScroll?.format===S.maintenanceFormat ? maintenanceDrawerScroll.top : 0;
+      detail.focus({preventScroll:true});
+      if (maintenanceAnchor) { scrollMaintenanceAnchor(maintenanceAnchor); maintenanceAnchor=''; }
+    }
+  }
+  if (focusMaintenanceAfterRender) { const candidates=[...document.querySelectorAll('[data-action=maintenance-open]')]; candidates.find(node=>node.dataset.kind===lastMaintenanceFocus?.kind && node.dataset.key===lastMaintenanceFocus?.key)?.focus({preventScroll:true}); focusMaintenanceAfterRender=false; if(maintenanceOriginScroll)window.scrollTo(maintenanceOriginScroll.x,maintenanceOriginScroll.y); maintenanceOriginScroll=undefined; }
   if (focusSelectAfterRender) { document.getElementById(focusSelectAfterRender)?.querySelector('.dropdown-trigger')?.focus(); focusSelectAfterRender = ''; }
 }
 function empty(title, description, actions = '', glyph = 'files') { return `<div class="empty">${icon(glyph)}<h2>${esc(title)}</h2><p>${esc(description)}</p><div class="actions">${actions}</div></div>`; }
 
 async function load() {
+  const previousDetail=$('.maintenance-detail');
+  maintenanceDrawerScroll=previousDetail ? {selection:previousDetail.dataset.selection,format:previousDetail.dataset.format,top:previousDetail.scrollTop} : undefined;
   const sequence = ++renderSequence; readRoute();
+  if (previousDetail && !S.maintenanceSelection) focusMaintenanceAfterRender=true;
   try {
     const data = await api('/api/state'); if (sequence !== renderSequence) return; S.data = data;
     if (S.projectId !== 'global' && !S.data.projects.some(p => p.id === S.projectId)) S.projectId = S.data.projects[0]?.id ?? '';
@@ -183,13 +192,13 @@ async function rules(sequence) {
   if (proposal) {
     const detail = await api(`/api/proposals/${proposal.id}`); if (sequence !== renderSequence) return '';
     inspector = `<div class="row between"><h2>待审提案</h2>${badge(proposal.status)}</div><h3>${esc(proposal.title)}</h3><dl class="meta"><dt>范围</dt><dd>${scopeBadge(proposal.scope)}</dd><dt>来源</dt><dd>${esc(proposal.source)}</dd></dl><hr><span class="label">差异摘要</span><div class="mini-diff">${detail.changes.filter(c => c.added || c.removed).slice(0,4).map(c => `<div class="${c.added ? 'diff-add':'diff-remove'}">${c.added ? '+':'−'} ${esc(c.value.slice(0,180))}</div>`).join('')}</div><div class="actions">${button('审核差异','open-proposal',attr('id',proposal.id),'primary')}${button('稍后处理','later')}</div><p class="muted small">批准具体差异后，才会写入约束。</p>`;
-  } else inspector = `<h2>当前约束</h2><p class="muted small">${id === 'global' ? '全局偏好独立保存，项目按需引用。':'正式内容保存在原始文件中。'}</p><dl class="meta"><dt>范围</dt><dd>${scopeBadge(id === 'global' ? 'global':'project')}</dd><dt>文件</dt><dd class="mono">${esc(S.file)}</dd></dl>${button(icon('pencil-simple')+' 提出修改','new-proposal','','primary')}<hr><p class="muted small">约束变更通过提案审核。维护日志与历史决定不自动变成有效指令。</p>`;
+  } else inspector = `<h2>当前约束</h2><p class="muted small">${id === 'global' ? '全局偏好独立保存，项目按需引用。':'正式内容保存在原始文件中。'}</p><dl class="meta"><dt>范围</dt><dd>${scopeBadge(id === 'global' ? 'global':'project')}</dd><dt>文件</dt><dd class="mono">${esc(S.file)}</dd></dl><hr><p class="muted small">约束变更通过提案审核。维护日志与历史决定不自动变成有效指令。</p>`;
   const logs = (await api(`/api/projects/${id}/journal`)).slice(0,2); if (sequence !== renderSequence) return '';
   const decisions = catalog.docs.filter(d => d.role === 'decision' && d.status === 'implemented').slice(0,2);
   const selected = documents.find(doc => doc.file === S.file);
   const lineage = selected?.superseded ? `<p class="notice warning">此说明已被替代，不作为当前有效约束。${selected.supersededBy ? ' '+button('查看替代文档','document',`${attr('file',selected.supersededBy)} ${attr('project',id)}`,'text small') : ''}</p>` : '';
-  const content = !S.document.exists ? empty('还没有这份约束','可以先通过提案创建入口，审核前不会写入文件。',button('创建入口提案','new-proposal','','primary'),'file-plus') : S.raw ? `<pre>${esc(S.document.content)}</pre>` : markdown(S.document.content,S.file,id);
-  return `<div class="workspace"><aside class="file-rail"><div class="file-heading">${id === 'global' ? '全局约束' : '约束文件'}<span class="file-count">${documents.length}</span></div><nav class="file-list file-tree" aria-label="约束目录">${fileButtons || '<p class="muted small">尚无文档</p>'}</nav>${button(icon('plus')+' 新建约束提案','new-proposal','','text small')}</aside><article class="reader"><div class="doc-toolbar"><span class="file-name">${icon('file-text')} ${esc(S.file)}</span>${button('阅读','read-mode',attr('mode','read'),S.raw ? '' : 'primary')}${button('原文','read-mode',attr('mode','raw'),S.raw ? 'primary' : '')}${button(icon('pencil-simple')+' 提出修改','new-proposal','','text')}</div>${catalog.warnings.map(w => `<p class="notice warning">${esc(w.message)}</p>`).join('')}${lineage}${content}<section class="related-log"><h2>相关维护</h2>${logs.length ? `<div class="mini-timeline">${logs.map((entry,index) => `<button data-action="log-preview" data-index="${index}" data-project="${esc(id)}">${esc(entry.title.replace(/^\d{4}-\d{2}-\d{2}\s*[·—-]?\s*/,''))}</button>`).join('')}</div>` : '<p class="muted small">尚无维护记录。</p>'}${button('查看维护路径 '+icon('arrow-up-right'),'tab',attr('view','journal'),'text small')}</section><div class="source-footer">原始文件 · ${esc(catalog.project.root)}/${esc(S.file)}</div></article><aside class="inspector">${inspector}${decisions.length ? `<hr><h3>相关决定</h3>${decisions.map(d => button(esc(d.title),'document',`${attr('file',d.file)} ${attr('project',id)}`,'text doc-link')).join('')}`:''}</aside></div>`;
+  const content = !S.document.exists ? empty('还没有这份约束','点击上方创建入口提案，审核前不会写入文件。','','file-plus') : S.raw ? `<pre>${esc(S.document.content)}</pre>` : markdown(S.document.content,S.file,id);
+  return `<div class="workspace"><aside class="file-rail"><div class="file-heading">${id === 'global' ? '全局约束' : '约束文件'}<span class="file-count">${documents.length}</span></div><nav class="file-list file-tree" aria-label="约束目录">${fileButtons || '<p class="muted small">尚无文档</p>'}</nav></aside><article class="reader"><div class="doc-toolbar"><span class="file-name">${icon('file-text')} ${esc(S.file)}</span>${button('阅读','read-mode',attr('mode','read'),S.raw ? '' : 'primary')}${button('原文','read-mode',attr('mode','raw'),S.raw ? 'primary' : '')}${button(icon('pencil-simple')+' '+(S.document.exists ? '修改当前文件':'创建入口提案'),'new-proposal','','text')}</div>${catalog.warnings.map(w => `<p class="notice warning">${esc(w.message)}</p>`).join('')}${lineage}${content}<section class="related-log"><h2>相关维护</h2>${logs.length ? `<div class="mini-timeline">${logs.map((entry,index) => `<button data-action="log-preview" data-index="${index}" data-project="${esc(id)}">${esc(entry.title.replace(/^\d{4}-\d{2}-\d{2}\s*[·—-]?\s*/,''))}</button>`).join('')}</div>` : '<p class="muted small">尚无维护记录。</p>'}${button('查看维护路径 '+icon('arrow-up-right'),'tab',attr('view','journal'),'text small')}</section><div class="source-footer">原始文件 · ${esc(catalog.project.root)}/${esc(S.file)}</div></article><aside class="inspector">${inspector}${decisions.length ? `<hr><h3>相关决定</h3>${decisions.map(d => button(esc(d.title),'document',`${attr('file',d.file)} ${attr('project',id)}`,'text doc-link')).join('')}`:''}</aside></div>`;
 }
 
 function renderDiff(detail) {
@@ -221,17 +230,22 @@ async function proposals(sequence) {
 async function journal(sequence) {
   const data = await api(`/api/projects/${S.projectId}/maintenance`);
   if (sequence !== renderSequence) return ''; S.maintenanceData = data; S.entries = data.entries;
-  const selected = data.notes.find(note => 'note:'+note.file === S.maintenanceSelection);
+  const selected = data.notes.find(note => 'note:'+note.file === S.maintenanceSelection) ?? S.catalog.docs.find(doc=>'document:'+doc.file===S.maintenanceSelection);
   S.maintenanceDocument = selected ? await api(`/api/projects/${S.projectId}/document?file=${encodeURIComponent(selected.file)}`) : null;
   if (sequence !== renderSequence) return '';
-  return renderMaintenance(data,S,{esc,icon,button,badge,dropdown,markdown,empty});
+  return renderMaintenance(data,S,{esc,icon,button,badge,dropdown,markdown,empty,lexer:marked.lexer});
 }
 
 async function connection(sequence) {
   const skill = await api('/api/skill');
   if (sequence !== renderSequence) return '';
   const body = skill.content.replace(/^---\r?\n[^]*?\r?\n---(?:\r?\n|$)/,'');
-  return `<div class="page skill-page"><div class="doc-toolbar"><span class="file-name" title="${esc(skill.path)}">${icon('file-text')} SKILL.md</span>${button('阅读','skill-mode',attr('mode','read'),S.skillRaw ? '' : 'primary')}${button('原文','skill-mode',attr('mode','raw'),S.skillRaw ? 'primary' : '')}${button(icon('copy')+' 复制原文','copy',attr('text',skill.content),'small')}${button(icon('copy')+' 复制路径','copy',attr('text',skill.path),'text small')}</div><article class="skill-content">${S.skillRaw ? `<pre>${esc(skill.content)}</pre>` : markdown(body)}</article></div>`;
+  return `<div class="page skill-page"><div class="doc-toolbar"><span class="file-name" title="${esc(skill.path)}">${icon('file-text')} SKILL.md</span>${button('阅读','skill-mode',attr('mode','read'),S.skillRaw ? '' : 'primary')}${button('原文','skill-mode',attr('mode','raw'),S.skillRaw ? 'primary' : '')}${button(icon('copy')+' 复制原文','copy',attr('text',skill.content),'small')}${button(icon('copy')+' 复制路径','copy',attr('text',skill.path),'text small')}</div><article class="skill-content">${S.skillRaw ? `<pre>${esc(skill.content)}</pre>` : markdown(body,skill.file,'__skill')}</article></div>`;
+}
+
+async function skillDetail(file) {
+  const resource=await api('/api/skill?file='+encodeURIComponent(file));
+  showDialog(file.split('/').pop(),`<div class="code-copy"><code>${esc(resource.path)}</code>${button('复制原文','copy',attr('text',resource.content),'small')}</div>${markdown(resource.content,resource.file,'__skill')}`,{drawer:true});
 }
 
 function closeDialog() { $('#dialog').close(); lastFocus?.focus?.(); }
@@ -338,13 +352,14 @@ function addJournal() {
   showDialog('记录迭代',body,{wide:true,submit:async (values,form) => {
     const payload = {...values,operationId,decisionFiles:new FormData(form).getAll('decisionFiles'),relatedFiles:values.relatedFiles.split(/\r?\n/).map(value=>value.trim()).filter(Boolean)};
     const result = await api(`/api/projects/${projectId}/journal`,payload); closeDialog(); toast(`已记录到 ${result.file}`);
-    route('journal',{projectId,maintenanceView:'timeline',maintenanceKind:'iteration',month:'',maintenanceQuery:'',maintenanceCategory:'',maintenanceSelection:'entry:'+result.key});
+    route('journal',{projectId,maintenanceSelection:'entry:'+result.key,maintenanceFormat:'read'});
   }});
 }
 
 async function documentDetail(projectId,file) {
   const catalog = await api(`/api/projects/${projectId}`); const doc = catalog.docs.find(item => item.file === file);
   const result = await api(`/api/projects/${projectId}/document?file=${encodeURIComponent(file)}`);
+  if (S.view==='journal' && S.maintenanceSelection && projectId===S.projectId) return openMaintenance(doc?.role==='decision' ? 'note':'document',file);
   const backlinks = catalog.docs.filter(item => item.file !== file && (item.title === file || item.file === result.supersededBy));
   showDialog(doc?.role === 'decision' ? '工程决策详情':'文档详情',`${doc ? `<div class="row wrap">${badge(doc.status)}${doc.category ? `<span class="pill">${esc(categoryNames[doc.category] ?? doc.category)}</span>`:''}</div>`:''}<div class="code-copy"><code>${esc(file)}</code>${button('复制路径','copy',attr('text',file),'small')}</div>${markdown(result.content,file,projectId,doc?.role === 'decision')}${backlinks.length ? '<h3>关联文档</h3>'+backlinks.map(item => button(esc(item.title),'document',`${attr('file',item.file)} ${attr('project',projectId)}`,'text doc-link')).join(''):''}`,{drawer:true});
 }
@@ -380,6 +395,16 @@ async function searchDialog() {
   query.focus();
 }
 
+function openMaintenance(kind,key) {
+  if (!S.maintenanceSelection) { lastMaintenanceFocus={kind,key};maintenanceOriginScroll={x:scrollX,y:scrollY}; }
+  return route('journal',{maintenanceSelection:kind+':'+key,maintenanceFormat:'read'});
+}
+function scrollMaintenanceAnchor(anchor) {
+  const normalize=value=>value.trim().toLowerCase().replace(/[^\p{L}\p{N} _-]/gu,'').replace(/\s+/g,'-');
+  const detail=$('.maintenance-detail');if(!detail)return;
+  const target=[...detail.querySelectorAll('[data-source-heading],h1,h2,h3,h4,h5,h6')].find(node=>normalize(node.dataset.sourceHeading || node.textContent)===normalize(anchor));
+  if(target)target.scrollIntoView({block:'start'});else toast('当前文档未找到这个段落');
+}
 async function action(target) {
   const { action: name } = target.dataset;
   if (name === 'dropdown-toggle') {
@@ -391,7 +416,7 @@ async function action(target) {
     const id = target.closest('.custom-select').id; const value = target.dataset.value;
     closeDropdowns(true);
     if (id === 'record-category') { const control = target.closest('.custom-select'); control.querySelector('.dropdown-trigger span').textContent = target.querySelector('.option-label').textContent; control.querySelectorAll('[role=option]').forEach(option=>option.setAttribute('aria-selected',String(option===target))); $('#dialog input[name=category]').value=value; return; }
-    const filterFields = {'month-filter':'month','maintenance-category':'maintenanceCategory','maintenance-kind':'maintenanceKind','maintenance-status':'noteStatus','maintenance-sort':'maintenanceSort'};
+    const filterFields = {'month-filter':'month','maintenance-category':'maintenanceCategory','maintenance-status':'noteStatus','maintenance-sort':'maintenanceSort'};
     if (filterFields[id]) { focusSelectAfterRender=id; return route('journal',{[filterFields[id]]:value}); }
     if (value === '__register') return registerProject();
     if (value === '__global' && !S.data.global) return globalSettings();
@@ -427,11 +452,11 @@ async function action(target) {
   if (name === 'retry-apply') { const p = await api(`/api/proposals/${target.dataset.id}`); await api(`/api/proposals/${p.id}/apply`,{baseHash:p.baseHash,contentHash:p.contentHash}); toast('应用记录已完成'); return load(); }
   if (name === 'reject-proposal') return reject(target.dataset.id);
   if (name === 'rebase-proposal') return rebase(target.dataset.id);
-  if (name === 'maintenance-view') return route('journal',{maintenanceView:target.dataset.view,maintenanceSelection:'',month:'',noteStatus:'all'});
-  if (name === 'maintenance-open') { lastMaintenanceFocus = {kind:target.dataset.kind,key:target.dataset.key}; return route('journal',{maintenanceSelection:target.dataset.kind+':'+target.dataset.key,...(target.dataset.kind==='entry' ? {maintenanceView:'timeline',maintenanceKind:'iteration',month:'',maintenanceCategory:'',maintenanceQuery:''} : {})}); }
-  if (name === 'maintenance-close') { focusMaintenanceAfterRender=true; return route('journal',{maintenanceSelection:''}); }
+  if (name === 'maintenance-view') return route('journal',{maintenanceView:target.dataset.view,maintenanceSelection:''});
+  if (name === 'maintenance-open') return openMaintenance(target.dataset.kind,target.dataset.key);
+  if (name === 'maintenance-close' || name === 'maintenance-dismiss') { focusMaintenanceAfterRender=true; return route('journal',{maintenanceSelection:''}); }
   if (name === 'maintenance-reset') return route('journal',{...maintenanceDefaults,maintenanceView:S.maintenanceView});
-  if (name === 'maintenance-raw') { const entry=S.entries.find(entry=>entry.key===target.dataset.entry); const doc=entry ? {content:entry.content} : await api(`/api/projects/${S.projectId}/document?file=${encodeURIComponent(target.dataset.file)}`); return showDialog('原始 Markdown',`<pre>${esc(doc.content)}</pre>`,{drawer:true}); }
+  if (name === 'maintenance-raw') return route('journal',{maintenanceFormat:S.maintenanceFormat==='raw' ? 'read':'raw'});
   if (name === 'add-journal') return addJournal();
   if (name === 'log-mode') return route('journal',{maintenanceView:target.dataset.mode==='decision' ? 'list':'timeline'});
   if (name === 'note-status') { S.noteStatus = target.dataset.status; return load(); }
@@ -463,11 +488,18 @@ document.addEventListener('click',async event => {
   const link = event.target.closest('.markdown a');
   if (!link) return;
   const href = link.getAttribute('href') ?? ''; if (/^https?:\/\//.test(href)) { link.target = '_blank'; link.rel = 'noopener noreferrer'; return; }
+  if (href.startsWith('#') && link.closest('.maintenance-detail')) { event.preventDefault(); try {scrollMaintenanceAnchor(decodeURIComponent(href.slice(1)));}catch{toast('段落链接格式无效',true);} return; }
   if (/^[a-z]+:/i.test(href) || href.startsWith('#')) return;
   event.preventDefault();
   const container = link.closest('.markdown');
   const file = decodeURIComponent(new URL(href,`http://workbench/${container.dataset.file}`).pathname.slice(1));
-  try { await documentDetail(container.dataset.project || S.projectId,file); } catch(error) { toast(error.message,true); }
+  try {
+    if (container.dataset.project === '__skill') return await skillDetail(file);
+    const anchor=new URL(href,'http://workbench/'+container.dataset.file).hash.slice(1);
+    if(link.closest('.maintenance-detail') && file===container.dataset.file && anchor) return scrollMaintenanceAnchor(decodeURIComponent(anchor));
+    if(link.closest('.maintenance-detail') && anchor) maintenanceAnchor=decodeURIComponent(anchor);
+    await documentDetail(container.dataset.project || S.projectId,file);
+  } catch(error) { maintenanceAnchor='';toast(error.message,true); }
 });
 document.addEventListener('pointerdown',event => { if (!event.target.closest('.custom-select')) closeDropdowns(); });
 document.addEventListener('keydown',event => {
@@ -484,7 +516,7 @@ document.addEventListener('keydown',event => {
   else if (open && event.key === 'Tab') closeDropdowns(true);
 });
 document.addEventListener('keydown',event => {
-  if (event.key === '/' && !event.target.closest('.custom-select') && !$('#dialog').open && !event.target.matches('input,textarea,select')) { event.preventDefault(); searchDialog(); }
+  if (event.key === '/' && !S.maintenanceSelection && !event.target.closest('.custom-select') && !$('#dialog').open && !event.target.matches('input,textarea,select')) { event.preventDefault(); searchDialog(); }
 });
 $('#dialog').addEventListener('cancel',() => setTimeout(() => lastFocus?.focus?.(),0));
 window.addEventListener('hashchange',load);

@@ -20,6 +20,9 @@ test('serves UI and all local runtime assets without external resources',async t
   const skill = await fetch(f.base+'/api/skill').then(r => r.json());
   assert.equal(skill.content,fs.readFileSync(new URL('../skills/agent-workbench/SKILL.md',import.meta.url),'utf8'));
   assert.equal(skill.file,'skills/agent-workbench/SKILL.md');
+  const reference=await fetch(f.base+'/api/skill?file=skills%2Fagent-workbench%2Freferences%2Fdecision-notes.md').then(r=>r.json());
+  assert.equal(reference.content,fs.readFileSync(new URL('../skills/agent-workbench/references/decision-notes.md',import.meta.url),'utf8'));
+  for (const file of ['../../AGENTS.md','/etc/passwd','README.md','skills/agent-workbench/scripts/workbench.mjs']) assert.equal((await fetch(f.base+'/api/skill?file='+encodeURIComponent(file))).status,404);
   assert.equal((await fetch(f.base+'/unknown')).status,404);
 });
 test('mutations require same-origin UI nonce and invalid JSON is rejected',async t => {

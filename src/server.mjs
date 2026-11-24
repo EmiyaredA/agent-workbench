@@ -33,7 +33,9 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     const pathname = url.pathname;
     if (req.method === 'GET' && pathname === '/api/session') return send(res, 200, { nonce, demo, dataDir: store.dataDir, root, version: '0.1.0', layout: projectLayout });
     if (req.method === 'GET' && pathname === '/api/skill') {
-      const file = 'skills/agent-workbench/SKILL.md';
+      const allowed = ['SKILL.md','references/decision-notes.md','references/note-operations.md','references/note-sources.md','assets/notes/proposed.md','assets/notes/implemented.md','assets/notes/rejected.md'].map(file=>'skills/agent-workbench/'+file);
+      const file = url.searchParams.get('file') ?? allowed[0];
+      if (!allowed.includes(file)) throw new Fault('Skill 资源未开放',404);
       return send(res, 200, { file, path: path.join(root,file), content: fs.readFileSync(path.join(root,file),'utf8') });
     }
     let input = {};

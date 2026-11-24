@@ -1,11 +1,13 @@
 ---
 name: agent-workbench
-description: 通过本机 Agent Workbench 按需读取已登记项目的约束和维护背景，并将对话中的新偏好提交为待审提案；用于跨 Agent 开发交接与项目约束查询。
+description: 通过本机 Agent Workbench 读取已登记项目的约束、提交约束提案，并维护工程决策笔记的写作、状态、校验与归档；用于项目约束查询、重要技术取舍和开发交接，跳过普通机械改动。
 ---
 
 # Agent Workbench
 
 工作台管理文件来源与审核队列，正式约束仍保存在项目 Markdown 中。
+
+项目与用户的已有约定优先。决策笔记保存工程来由，不能借写笔记、状态流转或归档直接新增、修改、删除有效约束；约束仍走下文提案审核。用户已授权的工程工作继续执行，不照搬上游对每一步重新确认的流程。
 
 从任意工作目录运行本 Skill 的 `scripts/workbench.mjs`。仓库内使用会自动定位工作台；若 Skill 被复制安装到其他位置，设置 `AGENT_WORKBENCH_ROOT` 指向工作台仓库。`AGENT_WORKBENCH_DATA` 或 `--data` 应与看板使用同一数据目录，默认是工作台的 `.runtime/workbench`。Node.js 24+，工作台先执行 `npm ci`。
 
@@ -45,4 +47,23 @@ node <skill目录>/scripts/workbench.mjs propose --project <项目ID或目录> -
 
 为一次记录生成稳定 `operationId`，响应丢失或超时后原样重试；同一标识不同内容会被拒绝。下一次真实迭代使用新标识。记录事实不会改变决策实施状态，不会批准约束。外部直接改约束尚无自动送审或最后已审快照，优先走候选审核。
 
-所有命令输出 JSON；非零退出或返回错误时，不声称读取、提案或记录已成功。该 Skill 没有批准命令，也不授予对其他项目的修改权限。
+## 工程决策笔记
+
+重要行为、架构、跨文件契约、工具流程、测试策略或持久化／网络格式发生变化，且理由值得后续维护者保留时，维护对应决策。纯排版、无行为变化的样式和补丁不新建笔记；有现成决定时优先同步那一篇的事实。不为凑备选方案编造历史，不要求每次记录迭代都新建决策。
+
+1. 用 `maintenance --query` 定位相关决定，再 `read` 正文；必要时在已登记项目的 `.agents/notes/` 下用 `rg --hidden --glob '!archived/**'` 按模块检索。新增前处理命中的重叠、冲突和过时方案，不全量加载历史。
+2. 写作和状态变化时读 [决策写作与流转](references/decision-notes.md)，按 [模板](assets/notes/proposed.md) 起草。仅在首次需要时创建对应目录。计划写在 proposed；已有实现才转 implemented；否决保留真实原因。决定翻转新开并互链，不覆盖旧篇的核心理由。
+3. 写完运行下列校验，再检查理由、真实备选、收益／代价和验证缺口。脚本检查结构和链接，不代替语义判断或约束人审。
+4. 仅在需要封存已落地决定时读 [校验与归档](references/note-operations.md)。先生成含完整前后文本的计划，核对适用范围、接管内容与链接，再在已有任务授权范围执行；没有治理授权时先交用户审阅。部分替代、仍持有当前边界的决定保留活跃。
+
+```sh
+node <skill目录>/scripts/workbench.mjs notes --project <项目ID或目录> --action verify
+node <skill目录>/scripts/workbench.mjs notes --project <项目ID或目录> --action archive --file .agents/notes/implemented/architecture/YYYY-MM-DD-topic.md --successor .agents/notes/implemented/architecture/YYYY-MM-DD-successor.md > <临时计划.json>
+node <skill目录>/scripts/workbench.mjs notes --project <项目ID或目录> --action apply --input <临时计划.json>
+```
+
+`archive` 只读生成计划，`apply` 仅执行笔记归档，不是约束批准命令。沿用相同 `--data`。完成后修复入站链接、再校验，并用 `record` 关联实际决策路径；只写事实摘要，不复制笔记正文。看板仍只读展示决策，不提供编辑或归档按钮。
+
+参考 write-notes-like-deepseek 的固定版本与取舍见 [来源说明](references/note-sources.md)。工具随工作台分发，不依赖上游本机路径或 tsx。
+
+所有命令输出 JSON；非零退出或返回错误时，不声称读取、提案、记录或归档已成功。该 Skill 没有约束批准命令，也不授予对其他项目的修改权限。

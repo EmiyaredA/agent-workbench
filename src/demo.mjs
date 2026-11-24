@@ -3,12 +3,22 @@ import path from 'node:path';
 import { atomic } from './store.mjs';
 import { demoProjects, demoGlobalRules } from './demo-data.mjs';
 
-export const demoDirectory = 'demo-v3';
+export const demoDirectory = 'demo-v4';
 
 export function seedDemo(store) {
   const marker = path.join(store.dataDir, 'demo-seeded');
   if (fs.existsSync(marker)) return;
   if (store.registry.projects.some(p => !p.demo)) throw Error('演示数据只能初始化到隔离的空工作区');
+  const noteFile = note => `.agents/notes/${note.status}/${note.category}/${note.date}-${note.slug}.md`;
+  // Resolve only explicitly authored relationships; invalid fixture references
+  // fail before seeding any files rather than silently linking unrelated notes.
+  for (const profile of demoProjects) {
+    const slugs=new Set(profile.decisions.map(note=>note.slug));
+    if(slugs.size!==profile.decisions.length)throw Error('重复的示例决策标识：'+profile.name);
+    for(const item of [...profile.decisions,...profile.events])for(const slug of item.links ?? item.decisions ?? []) {
+      if(!slugs.has(slug))throw Error(`示例关联决策不存在：${profile.name}/${slug}`);
+    }
+  }
   const root = path.join(store.dataDir, 'demo-projects');
   const projects = new Map();
   for (const profile of demoProjects) {
@@ -17,20 +27,25 @@ export function seedDemo(store) {
     const index = profile.rules.map(rule => `| ${rule.when} | [${rule.title}](${rule.file}.md) |`).join('\n');
     atomic(path.join(directory,'.agent-workbench/rules/index.md'),`# 约束索引\n\n${profile.description}\n\n| 何时读取 | 文档 |\n| --- | --- |\n${index}\n\n相关约束通过链接引用同一份正文；只读当前任务需要的文件。\n`);
     for (const rule of profile.rules) atomic(path.join(directory,'.agent-workbench/rules',rule.file+'.md'),rule.content);
+    const notes=new Map(profile.decisions.map(note=>[note.slug,note]));
     const months = new Map();
     for (const event of profile.events) {
       const month = event.date.slice(0,7);
-      const related = profile.decisions.filter(note=>note.status === 'implemented').slice(0,2);
-      const links = related.map(note=>`[${note.title}](../../.agents/notes/${note.status}/${note.category}/${note.date}-${note.slug}.md)`).join(' · ');
-      const metadata = JSON.stringify({version:1,category:event.category ?? 'process'});
-      const section = `## ${event.date} · ${event.title}\n\n<!-- awb-record:${metadata} -->\n\n- **背景**：${event.background}\n- **结果**：${event.result}\n- **验证**：演示情节，不代表真实项目验收。\n- **后续**：${event.next}\n- **关联决策**：${links}\n\n`;
-      months.set(month,(months.get(month) ?? '# 示例维护记录\n\n')+section);
+      const related = (event.decisions ?? []).map(slug=>notes.get(slug));
+      const links = related.map(note=>`[${note.title}](../../${noteFile(note)})`).join(' · ');
+      const files=(event.files ?? []).map(file=>`[${file}](../../${file})`).join(' · ');
+      const metadata = JSON.stringify({version:1,category:event.category,decisionFiles:related.map(noteFile),relatedFiles:event.files ?? []});
+      const section = `## ${event.date} · ${event.title}\n\n<!-- awb-record:${metadata} -->\n\n- **背景**：${event.background}\n- **结果**：${event.result}\n- **验证**：${event.verification}\n- **后续**：${event.next}\n${links ? '- **关联决策**：'+links+'\n' : ''}${files ? '- **关联文档**：'+files+'\n' : ''}\n`;
+      months.set(month,(months.get(month) ?? '# 示例维护记录\n\n> 以下为虚构迭代与验收场景，用于演示关联阅读，不代表已执行的真实项目验证。\n\n')+section);
     }
     for (const [month,content] of months) atomic(path.join(directory,'docs/maintenance',month+'.md'),content);
     for (const note of profile.decisions) {
       const rejected = note.status === 'rejected';
       const proposed = rejected || note.status === 'proposed';
-      const content = `# Agent Note: ${note.title}\n\nStatus: ${note.status === 'archived' ? 'implemented' : note.status}${rejected ? ' — '+note.choice : ''}\n\n${note.supersededBy ? 'superseded_by: '+note.supersededBy+'\n\n' : ''}${note.status === 'archived' ? 'Archived: 2026-11-24\n\n' : ''}## Problem\n\n${note.problem}\n\n## ${proposed ? 'Proposal' : 'Decision'}\n\n${note.choice}\n\n## Alternatives considered\n\n${note.alternative}\n\n## ${proposed ? 'Risks' : 'Consequences'}\n\n${note.consequence}\n\n## 关联与验证\n\n[项目入口](../../../../AGENTS.md) · [约束索引](../../../../.agent-workbench/rules/index.md)\n\n这是示例决策，不代表真实项目已经完成相应验收。\n`;
+      const alternatives=note.alternatives.map(item=>`### ${item.title}\n\n${item.reason}`).join('\n\n');
+      const related=(note.links ?? []).map(slug=>notes.get(slug)).map(target=>`- [${target.title}](${path.posix.relative(path.posix.dirname(noteFile(note)),noteFile(target))})`).join('\n');
+      const files=(note.files ?? []).map(file=>`- [${file}](../../../../${file})`).join('\n');
+      const content = `# Agent Note: ${note.title}\n\nStatus: ${note.status === 'archived' ? 'implemented' : note.status}${rejected ? ' — '+note.rejectionReason : ''}\n\n${note.supersededBy ? 'superseded_by: '+note.supersededBy+'\n\n' : ''}${note.status === 'archived' ? 'Archived: 2026-11-24\n\n' : ''}## Problem\n\n${note.problem}\n\n## ${proposed ? 'Proposal' : 'Decision'}\n\n${note.choice}\n\n## Alternatives considered\n\n${alternatives}\n\n## ${proposed ? 'Risks' : 'Consequences'}\n\n${note.consequence}\n\n${related ? '## 相关决定\n\n'+related+'\n\n' : ''}${files ? '## 关联文档\n\n'+files+'\n\n' : ''}## 示例范围\n\n这是虚构项目的决策样本；生命周期与取舍用于演示阅读，不构成真实实施或测试证据。\n`;
       atomic(path.join(directory,'.agents/notes',note.status,note.category,`${note.date}-${note.slug}.md`),content);
     }
     const project = store.registry.projects.find(p => p.root === directory) ?? store.register({name:profile.name,root:directory,demo:true});
@@ -61,5 +76,5 @@ export function seedDemo(store) {
   if (!store.registry.global) store.setGlobal(globalFile);
   store.propose({projectId:'global',file:'AGENTS.md',title:'保留反馈里的条件和例外',reason:'避免提炼后把局部要求写成绝对规则。',source:'隔离演示：用户纠正有明确的适用条件。',content:demoGlobalRules+'\n- 提炼偏好时保留原话中的条件、否定和例外。\n'});
   fs.mkdirSync(path.join(root,'new-project'),{recursive:true});
-  atomic(marker,'Rich fictional demo v3; real project files are never seeded.\n');
+  atomic(marker,'Decision-centered fictional demo v4; real project files are never seeded.\n');
 }

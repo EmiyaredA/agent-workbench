@@ -20,6 +20,28 @@ export function sections(content) {
 export function excerpt(content, limit = 180) {
   return String(content ?? '').replace(/<!--[^]*?-->/g,'').replace(/\[([^\]]+)\]\([^)]+\)/g,'$1').replace(/[#*`>]/g,'').replace(/\s+/g,' ').trim().slice(0,limit);
 }
+export function alternativeItems(content) {
+  const items = []; let heading = ''; let reason = '';
+  const add = (raw, explicitTitle = '') => {
+    const text = excerpt(raw,1600); if (!text && !explicitTitle) return;
+    const colon = text.search(/[：:]/);
+    const split = !explicitTitle && colon > 0 && colon < 80 && !/^[a-z][a-z\d+.-]*:\/\//i.test(text);
+    items.push({title:explicitTitle || (split ? text.slice(0,colon).trim() : excerpt(text,80)),
+      reason:split ? text.slice(colon+1).trim() : text});
+  };
+  const flush = () => { if (heading) add(reason,heading); heading=''; reason=''; };
+  for (const token of marked.lexer(content)) {
+    if (token.type === 'heading' && token.depth >= 3) { flush(); heading=excerpt(token.text,160); }
+    else if (heading) { if (token.type !== 'code' && token.type !== 'html') reason += token.raw; }
+    else if (token.type === 'list') for (const item of token.items) {
+      const text=item.tokens.filter(token=>!['code','html'].includes(token.type)).map(token=>token.raw).join(''); add(text);
+    }
+    else if (token.type === 'paragraph') add(token.raw);
+  }
+  flush();
+  return items;
+}
+
 export function markdownLinks(content, file) {
   const links = new Set();
   marked.walkTokens(marked.lexer(content), token => {
@@ -85,6 +107,7 @@ export function maintenance(store,id) {
     }
     const status = doc.status === 'archived' || /^Archived:\s*\d{4}-\d{2}-\d{2}\b/mi.test(header) ? 'archived' : doc.status;
     return {...doc,status,superseded,...(supersededBy ? {supersededBy,fault:undefined} : {}),sections:Object.fromEntries(Object.entries(parts).map(([key,value]) => [key,excerpt(value,360)])),
+      alternatives:alternativeItems(parts.alternatives),rejectionReason:excerpt(header.match(/^Status:\s*rejected\s*[—–-]\s*(.+)$/mi)?.[1] ?? '',800),
       summary:excerpt(parts.decision || parts.problem),links:markdownLinks(body,doc.file),inbound:[],entryKeys:[]};
   });
   const journals = id === 'global' ? store.journal(id) : docs.filter(doc=>doc.role==='journal' && content.has(doc.file)).flatMap(doc=>journalBlocks(doc,content.get(doc.file)));

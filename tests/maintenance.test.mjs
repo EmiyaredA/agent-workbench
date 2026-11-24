@@ -87,3 +87,13 @@ test('archive marks and invalid replacement targets remain explicit without gues
   assert.equal(data.notes.find(n=>n.title==='代码示例').superseded,false);
   assert.ok(data.warnings.some(w=>w.message.includes('../outside.md')));
 });
+
+test('alternatives stay separate with authored reasons and no invented adoption state',t=>{
+  const f=fixture(t);
+  f.write(file,note('取舍方案').replace('数据库增加维护成本。','- **数据库**：增加部署成本。\n- **常驻服务**：增加进程管理。\n\n### 独立索引\n\n会产生第二份状态。\n\n```md\n### 假备选\n不要读取代码示例\n```\n\n### 文件直读\n\n维护最少，但查询能力有限。'));
+  const data=f.store.maintenance(f.project.id);const alternatives=data.notes[0].alternatives;
+  assert.deepEqual(alternatives.map(item=>item.title),['数据库','常驻服务','独立索引','文件直读']);
+  assert.equal(alternatives[0].reason,'增加部署成本。');assert.equal(alternatives[2].reason,'会产生第二份状态。');
+  f.write('.agents/notes/rejected/feature/2026-11-24-rejected.md',note('已否决方案','rejected — 额外进程超出实际需求。'));
+  assert.equal(f.store.maintenance(f.project.id).notes.find(n=>n.title==='已否决方案').rejectionReason,'额外进程超出实际需求。');
+});

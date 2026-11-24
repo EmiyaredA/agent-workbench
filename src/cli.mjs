@@ -3,12 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Workbench } from './store.mjs';
+import { verifyNotes, planArchive, applyArchive } from './notes.mjs';
 
 const args = process.argv.slice(2); const command = args[0];
 const option = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i + 1]; };
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 try {
-  if (!['projects', 'context', 'read', 'journal', 'maintenance', 'propose', 'record'].includes(command)) throw Error('用法：node src/cli.mjs projects | context --project <id> [--query <词>] | read --project <id> --file <相对路径> | journal --project <id> | maintenance --project <id> [--query <词>] | propose --input <JSON文件> | record --input <JSON文件> [--data <数据目录>]。没有批准命令。');
+  if (!['projects', 'context', 'read', 'journal', 'maintenance', 'propose', 'record', 'notes'].includes(command)) throw Error('用法：node src/cli.mjs projects | context --project <id> [--query <词>] | read --project <id> --file <相对路径> | journal --project <id> | maintenance --project <id> [--query <词>] | propose --input <JSON文件> | record --input <JSON文件> | notes --action verify|archive|apply [--input <归档计划JSON>] [--data <数据目录>]。没有约束批准命令。');
   const store = new Workbench(option('--data', process.env.AGENT_WORKBENCH_DATA ?? path.join(root, '.runtime/workbench')));
   const projectArg = option('--project');
   const requested = path.resolve(projectArg ?? '.');
@@ -30,5 +31,12 @@ try {
   if (command === 'journal') { const query = option('--query','').toLowerCase(); result = store.journal(project).filter(entry => `${entry.title} ${entry.content}`.toLowerCase().includes(query)); }
   if (command === 'propose') { const input = JSON.parse(fs.readFileSync(option('--input'), 'utf8')); result = store.propose({...input,projectId:input.projectId ?? project}); }
   if (command === 'record') { const input = JSON.parse(fs.readFileSync(option('--input'), 'utf8')); result = store.record(input.projectId ?? project, input); }
+  if (command === 'notes') {
+    const action=option('--action','verify');
+    if (action === 'verify') { result=verifyNotes(store,project,{baseRef:option('--base-ref','HEAD')}); if (!result.ok) process.exitCode=1; }
+    else if (action === 'archive') result=planArchive(store,project,{file:option('--file'),successor:option('--successor')});
+    else if (action === 'apply') result=applyArchive(store,project,JSON.parse(fs.readFileSync(option('--input'),'utf8')));
+    else throw Error('notes --action 只支持 verify、archive（只读生成计划）、apply（执行归档计划）');
+  }
   console.log(JSON.stringify(result, null, 2));
 } catch (error) { console.error(JSON.stringify({ error: error.message })); process.exitCode = 1; }

@@ -6,7 +6,7 @@
 
 | 请求 | 行为 |
 | --- | --- |
-| `GET /api/skill` | 固定读取仓库内 SKILL.md 原文与路径；只读，不接受任意文件路径 |
+| `GET /api/skill` | 默认读取仓库 Skill；`file` 仅接受该 Skill 主文、三份参考和三份模板的固定白名单路径，返回原文与绝对路径；只读，不接受任意文件路径 |
 | `GET /api/session` | 本机 UI 会话、数据目录与运行模式 |
 | `GET /api/state` | 已登记项目、全局来源、提案摘要、恢复提示；只读 |
 | `POST /api/projects/inspect` | 输入 `root`，检查已存在目录与已发现的来源，不登记、不写项目 |
@@ -34,11 +34,21 @@
 
 维护记录必需 `title`、`background`、`result`，可补 `verification`、`next`、`topic`、`alternatives`、`tradeoffs`。写入配置维护目录下的当月 Markdown；`journalFile` 等未知输入不能改变目标位置。
 
-只读 CLI 不需要启动服务；与看板共用数据目录。写入共用存储层的跨进程互斥，进程中断后由服务启动恢复；GET 与 CLI 读取不触发恢复。锁与回执不是对其他同用户文件程序的系统沙箱。
+只读 CLI 不需要启动服务；与看板共用数据目录。写入共用存储层的跨进程互斥，约束写入中断后由服务启动恢复；GET 与 CLI 读取不触发恢复。锁与回执不是对其他同用户文件程序的系统沙箱。
+
+## 决策笔记 CLI（无新增 HTTP 写接口）
+
+`notes --project <ID或目录> --action verify|archive|apply` 与 Skill wrapper 共用已登记项目解析，不接受 global；可指定相同的 `--data`。
+
+- `verify [--base-ref <提交>]`：只读校验路径、状态、章节、相对 Markdown 链接、归档封印及 Git 历史清单。返回 `{ok,notes,errors,warnings}`，校验失败退出码1。无 Git 明确降级为当前磁盘哈希核对。
+- `archive --file <项目相对路径> [--successor <项目相对路径>]`：只读生成 JSON 计划，包含 `version/projectId/root/file/target/successor/date/changes/inbound/warnings`；changes 为完整 before／after 文本，未创建或删除用 null 表达。仅支持 implemented，接管者也必须为另一篇 implemented。不覆盖目标或重置封印。
+- `apply --input <计划JSON>`：重新核对精确计划后执行归档，不是约束批准。拒绝写入已登记规则。返回 `{ok,operationId,replayed,inbound}`；原文或计划变化即失败。中断意图与完成回执保存在数据目录 `note-archives/`，需用同一计划和数据目录显式重试，不由 GET 或服务启动顺带恢复。外部修改不覆盖，完整回执重放不再次写文件。
+
+写作与状态流转仍由 Agent 文件操作完成；校验不证明取舍的语义真实性。归档后仍需修复旧入站链接、再次 verify 并 record 事实。实现和使用见 [决策流程](../skills/agent-workbench/references/decision-notes.md) 与 [归档参考](../skills/agent-workbench/references/note-operations.md)。
 
 ## 维护记录与交接
 
-`maintenance --project <ID或目录> [--query <关键词>]` 与 HTTP 查询共用解析，返回摘要及来源，完整决策正文用 `read` 展开。`notes` 包括 `file/title/status/category/date/summary/sections/links/inbound/entryKeys`；`entries` 保留原文并补 `key/date/category/background/result/verification/next/links`。章节摘要最长360字，完整原文不受摘要截断影响。日期未标注时不推测；笔记日期表示首次提出，不表示实施时间。
+`maintenance --project <ID或目录> [--query <关键词>]` 与 HTTP 查询共用解析，返回摘要及来源，完整决策正文用 `read` 展开。`notes` 包括 `file/title/status/category/date/summary/sections/alternatives/rejectionReason/links/inbound/entryKeys`；`entries` 保留原文并补 `key/date/category/background/result/verification/next/links`。章节摘要最长360字，完整原文不受摘要截断影响。日期未标注时不推测；笔记日期表示首次提出，不表示实施时间。
 
 日志追加兼容旧字段，新增可选：
 
@@ -55,3 +65,5 @@
 返回 `{file,key,replayed}`。同项目、相同标识与相同内容重试返回原记录；同标识不同内容返回409。标识与内容摘要随日志保留，跨进程与跨月文件可核对；调用方不提供标识时仍每次产生新记录。改变维护来源映射后不承诺在旧来源之外查找旧标识；扫描不完整时阻止带标识的写入，避免误判不存在。
 
 新日志保留可直接阅读的相对 Markdown 链接，类别和重试信息放在版本化注释中。读取旧日志无需迁移；不按相似标题或同名文件推测关联。决策替代字段 `superseded_by` 使用项目相对路径，目标须为已发现的另一篇决策；无效或缺失时给出提示。归档目录或 `Archived: YYYY-MM-DD` 标记独立于 `Status: implemented` 识别；看板不创建或校验归档封存清单。
+
+避坑卡片使用 `alternatives: [{title,reason}]`，从原文备选章节的列表、三级标题或段落中逐条解析，保留作者写明的名称与理由；`rejectionReason` 来自明确的 Status 否决说明。标题与理由分别保留最多160／1600字的展示内容（无独立标题时取80字摘要）；完整原文仍可通过文档接口读取。没有说明的原因不自动补写，也不按“有备选”推定方案已采纳。此为只读派生字段，不改写原笔记或引入第二份内容。

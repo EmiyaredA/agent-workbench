@@ -130,24 +130,31 @@ try {
 
   await openTab('journal'); await visible(page.getByRole('heading',{name:'维护路径',exact:true})); await page.locator('[data-action=add-journal]').click();
   for (const [name,value] of Object.entries({title:'浏览器验收记录',background:'验证完整闭环',result:'记录保存在自定义维护目录',verification:'实际运行本地浏览器',next:'后续按真实项目维护',topic:'AGENTS.md'})) await fill(name,value);
-  await capture('13-create-journal-entry'); await submit(); await waitFormClosed(); await visible(page.getByRole('heading',{name:'浏览器验收记录',exact:true})); await capture('12-maintenance-timeline');
+  await capture('13-create-journal-entry'); await submit(); await waitFormClosed(); await visible(page.locator('.maintenance-detail h1').getByText('浏览器验收记录',{exact:true})); await page.locator('[data-action=maintenance-close]').click(); await page.locator('.maintenance-detail').waitFor({state:'hidden'}); await page.locator('[data-action=maintenance-open][data-kind=history]').click(); await visible(page.locator('.maintenance-history').getByRole('button',{name:'浏览器验收记录',exact:true})); await capture('12-maintenance-history'); await page.locator('[data-action=maintenance-close]').click(); await page.locator('.maintenance-detail').waitFor({state:'hidden'});
   assert.equal(store.journal(projectId).length,2); await page.locator('#month-filter .dropdown-trigger').click(); await visible(page.locator('#month-filter [role=listbox]'));
   assert.equal(await page.locator('select').count(),0); await capture('custom-month-dropdown');
   await page.keyboard.press('Escape'); assert.equal(await page.locator('#month-filter .dropdown-trigger').getAttribute('aria-expanded'),'false');
   await page.locator('#month-filter .dropdown-trigger').click(); await page.locator('.header h1').click(); assert.equal(await page.locator('#month-filter .dropdown-trigger').getAttribute('aria-expanded'),'false');
-  await page.locator('#month-filter .dropdown-trigger').press('ArrowDown'); await page.keyboard.press('End'); await page.keyboard.press('Enter'); await visible(page.getByRole('heading',{name:'浏览器验收记录',exact:true})); check('add and filter maintenance entries using configured directory');
+  await page.locator('#month-filter .dropdown-trigger').press('ArrowDown'); await page.keyboard.press('End'); await page.keyboard.press('Enter'); await page.locator('[data-action=maintenance-reset]').click(); check('add maintenance entries to configured directory and read separate journal history');
   await page.locator('[data-action=maintenance-view][data-view=list]').click();
   await page.locator('#maintenance-status .dropdown-trigger').click(); await page.locator('#maintenance-status [data-value=rejected]').click();
   await visible(page.getByRole('button',{name:'常驻观察服务',exact:true}));
   await page.locator('#maintenance-status .dropdown-trigger').click(); await page.locator('#maintenance-status [data-value=implemented]').click();
   await visible(page.getByRole('button',{name:'文件作为正式来源',exact:true})); await page.getByRole('button',{name:'文件作为正式来源',exact:true}).click();
   await visible(page.locator('.maintenance-detail h1').getByText('文件作为正式来源',{exact:true})); await capture('14-decision-detail');
-  await page.locator('.maintenance-detail').getByRole('link',{name:'项目 AGENTS.md'}).click(); await visible(dialog().getByRole('heading',{name:'项目约束',exact:true})); await close(); check('decision status filters, detail inspector and relative Markdown links');
+  await page.locator('.maintenance-detail [data-action=document][data-file="AGENTS.md"]').click(); await visible(page.locator('.maintenance-detail').getByRole('heading',{name:'项目约束',exact:true})); assert.equal(await page.locator('#dialog[open]').count(),0); await page.locator('[data-action=maintenance-close]').click(); check('decision filters, in-page drawer and relative Markdown links');
 
   await page.locator('[data-action=connect]').click(); await visible(page.locator('.skill-content h1').getByText('Agent Workbench',{exact:true})); await capture('15-skill-connection');
   await page.getByRole('button',{name:'复制原文',exact:true}).click(); assert.equal(await page.evaluate(() => navigator.clipboard.readText()),fs.readFileSync('skills/agent-workbench/SKILL.md','utf8'));
   await page.locator('[data-action=skill-mode][data-mode=raw]').click(); await visible(page.locator('.skill-content > pre')); assert.equal(await page.locator('.skill-content > pre').textContent(),fs.readFileSync('skills/agent-workbench/SKILL.md','utf8'));
   await page.locator('[data-action=skill-mode][data-mode=read]').click(); await visible(page.locator('.skill-content h1')); check('Skill Markdown reading, exact raw view and copy');
+  await page.locator('.skill-content').getByRole('link',{name:'决策写作与流转',exact:true}).click();
+  await visible(page.locator('#dialog h1').getByText('决策写作与状态流转',{exact:true}));
+  await page.locator('#dialog').getByRole('link',{name:'已落地',exact:true}).click();
+  await visible(page.locator('#dialog h2').getByText('Consequences',{exact:true}));
+  await capture('skill-decision-template');
+  await close();
+  check('Skill decision reference and nested template open without project document access');
   await openTab('proposals'); await page.locator('[data-action=proposal-filter][data-filter=pending]').click(); await visible(page.getByRole('heading',{name:'暂无待审提案',exact:true})); await capture('16-empty-proposals'); check('empty queue after settling proposals');
 
   atomic(path.join(projectRoot,'.agent-workbench/rules/untrusted.md'),'# Untrusted\n\n<img src="https://example.invalid/x" onerror="window.__injected=true"><a href="javascript:window.__injected=true">Bad</a><div id="app" data-action="approve-proposal">fake</div>');

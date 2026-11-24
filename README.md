@@ -21,7 +21,7 @@ npm start
 npm run demo -- --port 4174
 ```
 
-打开 [演示工作台](http://127.0.0.1:4174)。示例与正式数据隔离；演示模式只接受演示目录。登记表单会给出一个已准备好的空示例目录。内置工作台、作品站和 API 服务三个不同项目，包含22份约束、11条待审／写入／拒绝／冲突提案、跨三个月的维护记录和13份决策笔记。示例版本保存在 `.runtime/demo-v3/`，旧演示目录原样保留。
+打开 [演示工作台](http://127.0.0.1:4174)。示例与正式数据隔离；演示模式只接受演示目录。登记表单会给出一个已准备好的空示例目录。内置工作台、作品站和 API 服务三个不同项目，包含22份约束、11条待审／写入／拒绝／冲突提案、跨三个月的25条维护记录和27份决策笔记。示例版本保存在 `.runtime/demo-v4/`，旧演示目录原样保留。
 
 可用 `--port`、`--data` 或 `AGENT_WORKBENCH_DATA` 指定端口和数据位置：
 
@@ -37,14 +37,14 @@ npm start -- --port 4180 --data /absolute/path/to/workbench-data
 | 约束阅读 | 项目入口与补充约束按实际目录树展示，可展开／折叠；全局偏好独立进入，支持阅读／原文切换 |
 | 提案审核 | 新建、编辑、并排 diff、批准、拒绝；原文变化则停止写入并重新提案 |
 | 维护路径 | 审核后留日志；可手动记录背景、实际结果、验证、后续和取舍 |
-| 工程决策 | 架构基线、演进时间线、避坑智库、决策清单共用 `.agents/notes`；侧栏展开原文、备选与关联迭代 |
+| 工程决策 | 四视图共用 `.agents/notes`；Skill 指导写作与状态流转，CLI 校验格式、链接和封印，并按精确计划归档；看板只读展示 |
 | 查找与交接 | 搜索当前项目的文档与提案；Skill／CLI 按需读取规则和维护背景 |
 
-新建文件也要通过提案。批准绑定原文和候选的具体版本；重复批准不会重复追加维护记录。中断恢复核对当前文件，保留之后的外部编辑。只读 HTTP 与 CLI 查询不会顺带执行恢复写入。
+新建约束文件也要通过提案。批准绑定原文和候选的具体版本；重复批准不会重复追加维护记录。中断恢复核对当前文件，保留之后的外部编辑。只读 HTTP 与 CLI 查询不会顺带执行恢复写入。工程决策笔记保存事实与取舍；写笔记或改变实施状态不会批准约束。
 
 约束提案的“已写入”和工程笔记的“已落地”是两种状态。历史记录、被否决的方案和待审候选不会自动成为有效指令。Markdown 中的原始 HTML 以文本呈现，图片显示为链接，不自动加载外部资源。
 
-维护记录默认打开架构基线；时间线区分实际迭代与决策首次提出，避坑智库同时展示否决方案和真实备选。记录迭代可选择类别、关联已有决策与文件；重试复用同一操作标识，不重复追加。决策正文与状态仍由 Agent 维护，看板不提供决策编辑或归档操作。
+维护记录默认打开架构基线。四个标签是同一批决策笔记的不同视图：基线突出当前决定与主题，时间线按笔记日期排列，避坑提取这些笔记中的备选／否决理由，清单列出全部决策。月份、类别、状态与关键词共用，切换视图保留筛选。实际迭代从“迭代日志”入口或决策关联进入，不混入决策时间线。方案稿、否决和历史状态分别标注。记录迭代可选择类别、关联已有决策与文件；重试复用同一操作标识，不重复追加。详情中的决策、文档与迭代链接在同一个抽屉切换，支持浏览器前后退和阅读／原文切换。决策正文与状态仍由 Agent 维护，看板不提供决策编辑或归档操作。
 
 项目内只保留约束、提案和维护记录；项目从左侧切换。月份筛选与窄屏项目切换使用统一自定义菜单，支持键盘选择。
 
@@ -53,8 +53,8 @@ npm start -- --port 4180 --data /absolute/path/to/workbench-data
 - 项目默认来源：根 `AGENTS.md`、`.agent-workbench/rules/` 与 `docs/maintenance/`；模块先读 `index.md`。新项目只需登记目录，旧布局在兼容设置中保留。完整规则见 [目录约定](docs/directory-convention.md)。
 - 保留现有目录；同时可读取 `.trellis/workspace/` 的既有日志。新记录追加到配置的维护目录，不修改上游 journal 索引。
 - 全局偏好登记一个已有 Markdown 文件，不自动修改任何 Agent 配置。
-- 演示 v3 补充六类决定、替代关系与明确关联，保留旧 demo／demo-v2 目录和其中的用户编辑，不迁移真实项目。
-- 本机状态默认在 `.runtime/workbench/`，演示在 `.runtime/demo-v3/`；来源映射、候选、回执与锁均不提交 Git。
+- 演示 v4 为三项目补充具体取舍、明确的主题关联和验收场景，保留旧 demo／demo-v2／demo-v3 目录和其中的用户编辑，不迁移真实项目。
+- 本机状态默认在 `.runtime/workbench/`，演示在 `.runtime/demo-v4/`；来源映射、候选、回执与锁均不提交 Git。
 - 工作台仅绑定 `127.0.0.1`。人审是应用流程保证，不是对同一用户下其他文件工具的系统级隔离。
 
 普通改动不强制产出新规则。随着模型能力增强，应当合并、收窄或删除不再需要的提示；这些规则变更仍经审核。
@@ -72,7 +72,17 @@ node skills/agent-workbench/scripts/workbench.mjs journal --project PROJECT_ID -
 
 `context` 返回全局／项目正文、模块根索引正文和模块文件列表；模块正文按需 `read`。普通 README、其他 docs 与研究笔记不在常规扫描范围。加载 Skill 的 code agent 根据当前对话提出候选，工作台不后台采集聊天，也不运行额外推理模型。复制安装 Skill 时，用 `AGENT_WORKBENCH_ROOT` 指向本仓库，数据目录与看板保持一致。
 
-CLI 支持 `projects / context / read / journal / maintenance / propose / record`，没有批准命令。提案输入与维护记录格式见 Skill；HTTP 接口见 [接口说明](docs/api.md)。
+CLI 支持 `projects / context / read / journal / maintenance / propose / record / notes`，没有约束批准命令。提案输入与维护记录格式见 Skill；HTTP 接口见 [接口说明](docs/api.md)。
+
+决策写作、proposed／implemented／rejected 流转与三种模板见 [Skill 决策参考](skills/agent-workbench/references/decision-notes.md)。笔记在获授权的项目中由 Agent 维护；已有约束的任何变更仍经提案审核。校验与归档命令：
+
+```sh
+node skills/agent-workbench/scripts/workbench.mjs notes --project PROJECT_ID --action verify
+node skills/agent-workbench/scripts/workbench.mjs notes --project PROJECT_ID --action archive --file .agents/notes/implemented/architecture/YYYY-MM-DD-old.md --successor .agents/notes/implemented/architecture/YYYY-MM-DD-new.md > /tmp/note-archive-plan.json
+node skills/agent-workbench/scripts/workbench.mjs notes --project PROJECT_ID --action apply --input /tmp/note-archive-plan.json
+```
+
+`archive` 只读生成完整前后文本计划；核对后 `apply` 才写入归档副本、SHA-256 清单和接管篇链接，最后移除原路径。中断后以相同计划与数据目录重试，遇到外部新编辑停止；不改写封存正文或覆盖旧封印。旧入站链接需另行修复后再次校验，日志与规则的链接也会核对。无 Git 时只能校验当前哈希，不能证明历史只增不改。具体范围与历史缺封印的处理见 [校验与归档](skills/agent-workbench/references/note-operations.md)。工具随工作台分发，不依赖上游项目路径或新增运行包。
 
 ## 验证与构建
 
@@ -87,7 +97,7 @@ npm run test:ui
 
 `build` 输出 `dist/`，包含运行源码、静态页面、Skill 与许可；没有前端编译链。在分发目录运行 `npm ci --omit=dev --ignore-scripts` 后即可 `npm start`。开发验收命令在源码仓库运行。
 
-当前本机验收：43 项 Node／HTTP／CLI 测试、32 项浏览器检查通过。浏览器覆盖 17 张设计稿的主要操作和状态；截图、对照图与机器报告保存在忽略的 `.local/ui-acceptance/`。四视图专项另有13张截图和报告，位于 `.local/maintenance-ui/`。CI 配置运行检查、测试、构建及两组浏览器验收，上传隔离示例的验收截图。
+当前本机验收：54 项 Node／HTTP／CLI 测试、36 项浏览器检查通过。浏览器覆盖 17 张设计稿的主要操作和状态及 Skill 参考／模板阅读；截图、对照图与机器报告保存在忽略的 `.local/ui-acceptance/`。四视图专项另有14张截图和报告，位于 `.local/maintenance-ui/`。CI 配置运行检查、测试、构建及两组浏览器验收，上传隔离示例的验收截图。
 
 ## 设计依据与边界
 
@@ -96,6 +106,6 @@ npm run test:ui
 
 外部工具直接编辑约束时，当前还没有最后已审快照或自动送审；`context` 读取磁盘现状。已有候选仍会在批准前核对版本并阻止覆盖外部新编辑。
 
-首版未实现工程笔记的归档写入、原始聊天历史导入、跨设备同步或后台自动提炼。提炼质量取决于加载 Skill 的宿主 Agent，尚未进行真实对话准确率评估。文件查看按单文件 1 MB 与扫描上限工作，结果不完整时给出提示。
+看板未提供工程笔记编辑／归档按钮；Skill／CLI 已提供决策流程与归档写入。未实现原始聊天历史导入、跨设备同步或后台自动提炼。提炼质量取决于加载 Skill 的宿主 Agent，尚未进行真实对话准确率评估。文件查看按单文件 1 MB 与扫描上限工作，结果不完整时给出提示。
 
 使用 AGPL-3.0，保留上游依赖的许可与归属，见 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。
