@@ -48,6 +48,12 @@ try {
     assert.equal(response.status,200,route);
     assert.ok((await response.arrayBuffer()).byteLength,route);
   }
+  const templates=await fetch(base+'/api/templates').then(r=>r.json());assert.equal(templates.find(item=>item.id==='modular').files.length,6);
+  for(const file of ['references/maintenance-records.md','assets/maintenance/record.xml','assets/constraints/change.xml','assets/constraints/propose.xml']){
+    const relative='skills/agent-workbench/'+file;
+    const response=await fetch(base+'/api/skill?file='+encodeURIComponent(relative));assert.equal(response.status,200);
+    assert.equal((await response.json()).content,fs.readFileSync(path.join(root,relative),'utf8'));
+  }
   const projectRoot = path.join(temp,'project');
   fs.mkdirSync(projectRoot);
   fs.writeFileSync(path.join(projectRoot,'AGENTS.md'),'# Before\n');
@@ -61,6 +67,11 @@ try {
     assert.equal(output.status,0,output.stderr);
     assert.equal(JSON.parse(output.stdout).rules[0].content,'# Before\n');
   }
+  const recordInput=path.join(temp,'record.xml');
+  fs.writeFileSync(recordInput,'<record><title>Offline XML</title><category>testing</category><background>Check packaged input</background><result><![CDATA[Read <XML> & preserved text]]></result><relatedFiles><file>AGENTS.md</file></relatedFiles><operationId>offline-xml</operationId></record>');
+  const recorded=spawnSync(process.execPath,[path.join(root,'skills/agent-workbench/scripts/workbench.mjs'),'record','--project',project.id,'--data',data,'--input',recordInput],{cwd:os.tmpdir(),env:{...env,AGENT_WORKBENCH_ROOT:root},encoding:'utf8'});
+  assert.equal(recorded.status,0,recorded.stderr);assert.equal(JSON.parse(recorded.stdout).replayed,false);
+  assert.equal(fs.readFileSync(path.join(projectRoot,'AGENTS.md'),'utf8'),'# Before\n');
   assert.equal(stderr,'');
   console.log('Packaged offline startup passed: no npm, local assets, licenses, registration, proposal diff, CLI and Skill.');
 } finally {

@@ -1,0 +1,11 @@
+<change>
+  <file>AGENTS.md</file>
+  <title></title>
+  <reason></reason>
+  <source></source>
+  <category></category>
+  <content><![CDATA[]]></content>
+  <!-- 已有文件填写 read 返回的 hash；新文件保留空标签。 -->
+  <baseHash></baseHash>
+  <operationId></operationId>
+</change>

@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { marked } from 'marked';
+import { noteFormatErrors } from './note-format.mjs';
 
 export const categories = ['architecture','feature','bug-fix','simplification','process','testing'];
 const aliases = {
@@ -72,6 +73,17 @@ export function journalBlocks(doc, text) {
       date:content.match(/^##\s+(\d{4}-\d{2}-\d{2})\b/)?.[1] ?? (blocks.length ? '' : doc.date ?? ''),content};
   });
 }
+export function journalFields(content) {
+  const fields = {};
+  const labels = {category:'标签',background:'背景',result:'结果',alternatives:'放弃的备选',tradeoffs:'收益与代价',verification:'验证',next:'后续',topic:'相关文件'};
+  for (const token of marked.lexer(content)) if (token.type === 'list') for (const item of token.items) {
+    for (const [key,label] of Object.entries(labels)) {
+      const prefix = `**${label}**`;
+      if (item.text.startsWith(prefix)) fields[key] = item.text.slice(prefix.length).replace(/^[：:]\s*/,'').trim();
+    }
+  }
+  return fields;
+}
 export function maintenance(store,id) {
   const catalog = store.catalog(id); const {project,docs} = catalog; const warnings = [...catalog.warnings];
   const known = new Map(docs.map(doc => [doc.file,doc]));
@@ -87,6 +99,9 @@ export function maintenance(store,id) {
   }
   const notes = docs.filter(doc => doc.role === 'decision' && content.has(doc.file)).map(doc => {
     const body = content.get(doc.file); const parts = sections(body);
+    const errors=noteFormatErrors(doc.file,body,categories);
+    warnings.push(...errors.map(message=>({message})));
+    const validation={scope:'format',ok:errors.length===0,errors};
     // Note headers follow the H1 in write-notes; core lineage only accepts its own preamble.
     const preamble = body.slice(0,8192).split(/\r?\n/).slice(0,40); const marks = []; let fence = false;
     for (const line of preamble) {
@@ -106,20 +121,13 @@ export function maintenance(store,id) {
       } catch { warnings.push({message:`${doc.file}: 替代文件未找到、自指或不在登记范围：${replacement}`}); }
     }
     const status = doc.status === 'archived' || /^Archived:\s*\d{4}-\d{2}-\d{2}\b/mi.test(header) ? 'archived' : doc.status;
-    return {...doc,status,superseded,...(supersededBy ? {supersededBy,fault:undefined} : {}),sections:Object.fromEntries(Object.entries(parts).map(([key,value]) => [key,excerpt(value,360)])),
+    return {...doc,status,superseded,validation,...(supersededBy ? {supersededBy,fault:undefined} : {}),sections:Object.fromEntries(Object.entries(parts).map(([key,value]) => [key,excerpt(value,360)])),
       alternatives:alternativeItems(parts.alternatives),rejectionReason:excerpt(header.match(/^Status:\s*rejected\s*[—–-]\s*(.+)$/mi)?.[1] ?? '',800),
       summary:excerpt(parts.decision || parts.problem),links:markdownLinks(body,doc.file),inbound:[],entryKeys:[]};
   });
-  const journals = id === 'global' ? store.journal(id) : docs.filter(doc=>doc.role==='journal' && content.has(doc.file)).flatMap(doc=>journalBlocks(doc,content.get(doc.file)));
+  const journals = docs.filter(doc=>doc.role==='journal' && content.has(doc.file)).flatMap(doc=>journalBlocks(doc,content.get(doc.file)));
   const entries = journals.map(entry => {
-    const meta = journalMetadata(entry.content); const fields = {};
-    const labels = {background:'背景',result:'结果',verification:'验证',next:'后续',topic:'相关文件'};
-    for (const token of marked.lexer(entry.content)) if (token.type === 'list') for (const item of token.items) {
-      for (const [key,label] of Object.entries(labels)) {
-        const prefix = `**${label}**`;
-        if (item.text.startsWith(prefix)) fields[key] = item.text.slice(prefix.length).replace(/^[：:]\s*/,'').trim();
-      }
-    }
+    const meta = journalMetadata(entry.content); const fields = journalFields(entry.content);
     const explicit = [...(Array.isArray(meta.decisionFiles) ? meta.decisionFiles : []),...(Array.isArray(meta.relatedFiles) ? meta.relatedFiles : [])].filter(file => typeof file === 'string');
     const links = [...new Set([...markdownLinks(entry.content,entry.file),...explicit,...(known.has(fields.topic) ? [fields.topic] : [])])];
     return {...entry,...fields,title:entry.title.replace(/^\d{4}-\d{2}-\d{2}\s*[·—-]?\s*/,''),category:categories.includes(meta.category) ? meta.category : '',links};

@@ -28,7 +28,12 @@ test('serves UI and all local runtime assets without external resources',async t
   assert.equal(skill.file,'skills/agent-workbench/SKILL.md');
   const reference=await fetch(f.base+'/api/skill?file=skills%2Fagent-workbench%2Freferences%2Fdecision-notes.md').then(r=>r.json());
   assert.equal(reference.content,fs.readFileSync(new URL('../skills/agent-workbench/references/decision-notes.md',import.meta.url),'utf8'));
-  for (const file of ['../../AGENTS.md','/etc/passwd','README.md','skills/agent-workbench/scripts/workbench.mjs']) assert.equal((await fetch(f.base+'/api/skill?file='+encodeURIComponent(file))).status,404);
+  for(const file of ['references/maintenance-records.md','assets/maintenance/record.xml','assets/constraints/change.xml','assets/constraints/propose.xml']){
+    const relative='skills/agent-workbench/'+file;
+    const resource=await fetch(f.base+'/api/skill?file='+encodeURIComponent(relative)).then(r=>r.json());
+    assert.equal(resource.content,fs.readFileSync(relative,'utf8'));assert.equal(resource.file,relative);
+  }
+  for (const file of ['../../AGENTS.md','/etc/passwd','README.md','skills/agent-workbench/scripts/workbench.mjs','skills/agent-workbench/references/note-sources.md','docs/research/note-sources.md']) assert.equal((await fetch(f.base+'/api/skill?file='+encodeURIComponent(file))).status,404);
   assert.equal((await fetch(f.base+'/unknown')).status,404);
 });
 test('mutations require same-origin UI nonce and invalid JSON is rejected',async t => {
@@ -73,4 +78,18 @@ test('GET requests do not recover or write interrupted transactions',async t => 
   assert.throws(() => f.store.apply(p.id,p));
   assert.equal((await fetch(f.base+'/api/state')).status,200);
   assert.equal(f.store.proposal(p.id).status,'pending'); assert.equal(f.store.journal(f.project.id).length,0);
+});
+
+test('whole constraint set APIs preview read-only and save the exact reviewed tree',async t=>{
+  const f=await service(t); assert.equal((await fetch(f.base+'/rule-modules.js')).status,200);
+  const templates=await fetch(f.base+'/api/templates').then(r=>r.json());assert.equal(templates.length,2);
+  const snapshot=await fetch(f.base+`/api/projects/${f.project.id}/constraints`).then(r=>r.json());
+  const input={...templates[0],projectId:f.project.id,baseHash:snapshot.baseHash};
+  assert.equal((await f.request('/api/templates',{...input,name:'Personal'})).status,201);
+  assert.equal((await f.request('/api/constraints/preview',input,'POST',{'X-Workbench-Nonce':'bad'})).status,403);
+  const preview=await f.request('/api/constraints/preview',input).then(r=>r.json());assert.equal(preview.fileChanges.length,2);assert.deepEqual(fs.readdirSync(f.projectRoot),[]);
+  const response=await f.request('/api/constraints',{...input,reviewHash:preview.contentHash,operationId:'http-set'});assert.equal(response.status,201);
+  const p=await response.json();assert.equal(p.status,'applied');
+  const state=await fetch(f.base+'/api/state').then(r=>r.json());assert.equal(state.proposals[0].files,undefined);assert.equal(state.proposals[0].affectedFiles.length,2);
+  const detail=await fetch(f.base+'/api/proposals/'+p.id).then(r=>r.json());assert.equal(detail.fileChanges.length,2);
 });

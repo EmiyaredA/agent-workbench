@@ -33,11 +33,12 @@ const check = name => { checks.push(name); console.log('PASS',name); };
 const dialog = () => page.locator('#dialog');
 const fill = (name,value) => dialog().locator(`[name="${name}"]`).fill(value);
 const submit = () => dialog().locator('button[type=submit]').click();
-const chooseTag=async(id,value)=>{ await dialog().locator(`#${id} .dropdown-trigger`).click(); await dialog().locator(`#${id} [data-value="${value}"]`).click(); };
 const close = async () => { await dialog().locator('[data-action=close]').first().click(); await dialog().waitFor({state:'hidden'}); };
 const closeChange = async () => { if (await page.locator('.change-detail').count()) { await page.locator('.change-detail [data-action=change-close]').click(); await page.locator('.change-detail').waitFor({state:'hidden'}); } };
 const openTab = async view => { await closeChange(); await page.locator(`.tabs [data-view=${view}]`).click(); await page.waitForTimeout(150); };
 const waitFormClosed = async () => dialog().waitFor({state:'hidden',timeout:15000});
+const noAuthoring = async () => assert.equal(await page.locator('[data-action=new-change],[data-action=new-proposal],[data-action=edit-proposal],[data-action=add-journal]').count(),0);
+
 
 try {
   browser = await chromium.launch({headless:true,...(executablePath ? {executablePath}:{})});
@@ -57,6 +58,7 @@ try {
   await fill('root',projectRoot); await dialog().locator('[data-action=inspect-project]').click();
   await page.waitForFunction(() => document.querySelector('#inspect-message')?.textContent.includes('可读取'));
   await capture('01-register-project'); await submit(); await waitFormClosed();
+  await visible(page.locator('.workspace'));
   await visible(page.locator('.reader h1')); check('register existing project without changing its files');
   assert.equal(fs.readFileSync(path.join(projectRoot,'AGENTS.md'),'utf8'),original);
   const projectId = store.registry.projects[0].id;
@@ -86,6 +88,11 @@ try {
   assert.equal(await page.locator('.header h1').textContent(),'全局偏好');
   assert.equal(await page.locator('.projects .project-button.active').count(),0);
   assert.equal(await page.locator('[data-action=scope]').count(),0);
+  assert.deepEqual(await page.locator('.tabs [data-action=tab]').allTextContents(),['全局约束','变更记录']);
+  assert.equal(await page.locator('[data-action=tab][data-view=journal]').count(),0);
+  assert.equal(await page.locator('.inspector').getByText('相关维护',{exact:true}).count(),0);
+  await page.locator('[data-action=search]').click();await visible(dialog().getByRole('heading',{name:'搜索全局偏好',exact:true}));
+  assert.equal(await page.locator('[data-action=search-kind][data-kind=journal]').count(),0);await close();
   await capture('global-preferences');
   await page.locator(`.projects [data-id="${projectId}"]`).click(); await visible(page.locator('.file-button[data-file="AGENTS.md"]'));
   assert.equal(await page.locator('[data-action=scope]').count(),0);
@@ -112,15 +119,16 @@ try {
   await page.evaluate(id => { location.hash = new URLSearchParams({project:id,view:'rules',scope:'global'}).toString(); },projectId);
   await visible(page.locator('.reader h1').getByText('项目约束',{exact:true})); assert.equal(await page.locator('[data-action=scope]').count(),0); await visible(page.locator('.file-button[data-file=".agent-workbench/rules/frontend.md"]'));
 
-  await page.locator('.doc-toolbar [data-action=new-proposal]').click(); await fill('title','保留用户已有修改'); await fill('reason','避免覆盖尚未提交的工作。'); await fill('source','用户明确纠正：先保留我的修改。');
-  await fill('content',original.replace('- 修改前确认目标文件。','- 保留用户已有修改。\n- 遇到冲突先展示差异。'));
-  await chooseTag('change-category','process');
-  await capture('05-create-proposal'); await submit(); await waitFormClosed(); await visible(page.getByRole('heading',{name:'保留用户已有修改',exact:true}));
-  const p = store.proposals().find(item => item.title === '保留用户已有修改');
-  assert.equal(fs.readFileSync(path.join(projectRoot,'AGENTS.md'),'utf8'),original); check('create proposal without applying it');
-  await page.locator('[data-action=edit-proposal]').click(); await fill('content',p.content+'\n- 仅修改本次任务涉及的文件。\n'); await capture('06-edit-proposal');
-  await submit(); await waitFormClosed(); await visible(page.getByRole('heading',{name:'保留用户已有修改',exact:true}));
-  assert.equal(store.proposal(p.id).revision,2); await capture('07-review-diff'); check('edit pending proposal and review real diff');
+  await noAuthoring();
+  assert.deepEqual(await page.locator('.doc-toolbar button').allTextContents(),['预览','Markdown','整体编辑']);
+  const p = store.propose({projectId,file:'AGENTS.md',title:'保留用户已有修改',reason:'避免覆盖尚未提交的工作。',source:'Agent fixture',category:'process',content:original.replace('- 修改前确认目标文件。','- 保留用户已有修改。\n- 遇到冲突先展示差异。')});
+  await openTab('proposals'); await page.locator(`.proposal-card[data-id="${p.id}"]`).click();
+  await visible(page.getByRole('heading',{name:'保留用户已有修改',exact:true}));
+  await noAuthoring(); assert.equal(fs.readFileSync(path.join(projectRoot,'AGENTS.md'),'utf8'),original);
+  check('board reads Agent proposals without document authoring controls');
+  store.revise(p.id,{contentHash:p.contentHash,content:p.content+'\n- 仅修改本次任务涉及的文件。\n',reason:p.reason});
+  await page.reload(); await visible(page.getByRole('heading',{name:'保留用户已有修改',exact:true}));
+  assert.equal(store.proposal(p.id).revision,2); await capture('07-review-diff'); check('Agent-revised proposal exposes current diff without an editor');
 
   await openTab('rules'); await visible(page.locator('.reader h1')); await page.waitForFunction(() => !document.querySelector('#toast')?.classList.contains('show')); await capture('main');
   assert.equal(await page.locator('.reader .related-log').count(),0); assert.equal(await page.locator('.inspector .related-log').count(),2); await capture('document-sidebar');
@@ -146,15 +154,20 @@ try {
   assert.ok(fs.readFileSync(path.join(projectRoot,'AGENTS.md'),'utf8').includes('用户后续编辑')); check('conflict blocks write; rebase remains pending and preserves external edits');
   await page.locator('[data-action=reject-proposal]').click(); await fill('reason','冲突验收完成，不应用候选。'); await submit(); await waitFormClosed();
 
-  await openTab('journal'); await visible(page.getByRole('heading',{name:'维护路径',exact:true})); await page.locator('[data-action=add-journal]').click();
-  for (const [name,value] of Object.entries({title:'浏览器验收记录',background:'验证完整闭环',result:'记录保存在自定义维护目录',verification:'实际运行本地浏览器',next:'后续按真实项目维护',topic:'AGENTS.md'})) await fill(name,value);
-  await chooseTag('record-category','testing');
-  await capture('13-create-journal-entry'); await submit(); await waitFormClosed(); await visible(page.locator('.maintenance-detail h1').getByText('浏览器验收记录',{exact:true})); await page.locator('[data-action=maintenance-close]').click(); await page.locator('.maintenance-detail').waitFor({state:'hidden'}); await page.locator('[data-action=maintenance-open][data-kind=history]').click(); await visible(page.locator('.maintenance-history').getByRole('button',{name:'浏览器验收记录',exact:true})); await capture('12-maintenance-history'); await page.locator('[data-action=maintenance-close]').click(); await page.locator('.maintenance-detail').waitFor({state:'hidden'});
+  store.record(projectId,{title:'浏览器验收记录',category:'testing',background:'验证看板阅读',result:'记录保存在标准维护目录',verification:'隔离浏览器检查',next:'后续按真实项目维护',topic:'AGENTS.md',operationId:'board-journal-fixture'});
+  await openTab('journal'); await visible(page.getByRole('heading',{name:'维护路径',exact:true})); await noAuthoring();
+  await page.locator('[data-action=maintenance-open][data-kind=history]').click();
+  await visible(page.locator('.maintenance-history').getByRole('button',{name:'浏览器验收记录',exact:true}));
+  await capture('12-maintenance-history');
+  await page.locator('.maintenance-history').getByRole('button',{name:'浏览器验收记录',exact:true}).click();
+  await visible(page.locator('.maintenance-detail h1').getByText('浏览器验收记录',{exact:true}));
+  await noAuthoring(); await capture('13-read-journal-entry');
+  await page.locator('[data-action=maintenance-close]').click(); await page.locator('.maintenance-detail').waitFor({state:'hidden'});
   assert.equal(store.journal(projectId).length,2); await page.locator('#month-filter .dropdown-trigger').click(); await visible(page.locator('#month-filter [role=listbox]'));
   assert.equal(await page.locator('select').count(),0); await capture('custom-month-dropdown');
   await page.keyboard.press('Escape'); assert.equal(await page.locator('#month-filter .dropdown-trigger').getAttribute('aria-expanded'),'false');
   await page.locator('#month-filter .dropdown-trigger').click(); await page.locator('.header h1').click(); assert.equal(await page.locator('#month-filter .dropdown-trigger').getAttribute('aria-expanded'),'false');
-  await page.locator('#month-filter .dropdown-trigger').press('ArrowDown'); await page.keyboard.press('End'); await page.keyboard.press('Enter'); await page.locator('[data-action=maintenance-reset]').click(); check('add maintenance entries to standard directory and read separate journal history');
+  await page.locator('#month-filter .dropdown-trigger').press('ArrowDown'); await page.keyboard.press('End'); await page.keyboard.press('Enter'); await page.locator('[data-action=maintenance-reset]').click(); check('read Agent maintenance entries and journal history without a record form');
   await page.locator('[data-action=maintenance-view][data-view=list]').click();
   await page.locator('#maintenance-status .dropdown-trigger').click(); await page.locator('#maintenance-status [data-value=rejected]').click();
   await visible(page.getByRole('button',{name:'常驻观察服务',exact:true}));
@@ -174,19 +187,25 @@ try {
   await capture('skill-decision-template');
   await close();
   check('Skill decision reference and nested template open without project document access');
-  await openTab('proposals'); await page.locator('[data-action=proposal-filter][data-filter=pending]').click(); await visible(page.getByRole('heading',{name:'暂无待审提案',exact:true})); await capture('16-empty-proposals'); check('empty queue after settling proposals');
+  await page.locator('.skill-content').getByRole('link',{name:'维护记录写作与更新',exact:true}).click();
+  await visible(page.locator('#dialog h1').getByText('维护记录写作与更新',{exact:true}));await capture('skill-maintenance-guide');
+  await page.locator('#dialog').getByRole('link',{name:'维护记录输入模板',exact:true}).click();
+  await visible(page.locator('#dialog .skill-source'));const maintenanceTemplate=fs.readFileSync('skills/agent-workbench/assets/maintenance/record.xml','utf8');
+  assert.equal(await page.locator('#dialog .skill-source').textContent(),maintenanceTemplate);
+  await page.locator('#dialog').getByRole('button',{name:'复制原文',exact:true}).click();assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),maintenanceTemplate);
+  await capture('skill-maintenance-template');await close();
+  check('Skill maintenance guide opens its XML template and copies exact input without writing project files');
+
+  await openTab('proposals'); await page.locator('[data-action=proposal-filter][data-filter=pending]').click(); await visible(page.getByRole('heading',{name:'暂无待审提案',exact:true})); await noAuthoring(); await capture('16-empty-proposals'); check('empty queue has no authoring shortcuts');
   await page.locator('[data-action=global]').click(); await visible(page.locator('.reader h1'));
   const beforeGlobal=fs.readFileSync(globalFile,'utf8');
-  await page.locator('.doc-toolbar [data-action=new-change]').click();
-  await fill('title','补充全局迭代留档习惯'); await fill('reason','每次修改保留来由，后续可追溯'); await fill('source','隔离浏览器验收任务');
-  await fill('content',beforeGlobal+'\n- 重要修改记录实际结果。\n');
-  await submit(); await visible(dialog().getByText('请选择迭代标签',{exact:true}));
-  assert.equal(fs.readFileSync(globalFile,'utf8'),beforeGlobal); assert.equal(store.proposals().some(p=>p.title==='补充全局迭代留档习惯'),false);
-  await chooseTag('change-category','process'); await submit(); await waitFormClosed();
+  await noAuthoring();
+  const globalChange=store.writeChange({projectId:'global',file:path.basename(globalFile),title:'补充全局迭代留档习惯',reason:'每次修改保留来由，后续可追溯',source:'Agent fixture',category:'process',content:beforeGlobal+'\n- 重要修改记录实际结果。\n',baseHash:store.document('global',path.basename(globalFile)).hash,operationId:'board-global-fixture'});
+  await openTab('proposals'); await noAuthoring();
+  await page.locator(`.change-card[data-id="${globalChange.id}"]`).click();
   await visible(page.locator('.change-detail').getByRole('heading',{name:'补充全局迭代留档习惯',exact:true}));
-  const globalChange=store.proposals().find(item=>item.title==='补充全局迭代留档习惯');
   assert.equal(globalChange.status,'recorded'); assert.equal(globalChange.baseContent,beforeGlobal); assert.equal(store.journal('global').length,1);
-  assert.equal(globalChange.category,'process'); assert.equal(store.maintenance('global').entries[0].category,'process');
+  assert.equal(globalChange.category,'process'); assert.throws(()=>store.maintenance('global'),/维护记录仅用于项目/);
   await visible(page.locator('.change-detail .proposal-meta').getByText('流程',{exact:true}));
   assert.equal(await page.locator('.change-detail [data-action=approve-proposal]').count(),0);
   const verifyChangeBadges=async()=>{
@@ -194,7 +213,34 @@ try {
     assert.equal(boxes.length,2); assert.ok(Math.abs(boxes[0].top-boxes[1].top)<1,'change badges are not aligned');
     assert.ok(boxes[1].left-boxes[0].right>=4 && boxes[1].left-boxes[0].right<=8,'change badges are spread apart');
   };
-  await capture('global-iteration-detail'); await closeChange(); await verifyChangeBadges(); await capture('global-iteration-timeline');
+  await capture('global-iteration-detail'); await closeChange(); await verifyChangeBadges();
+  await visible(page.locator('.change-stream.list'));
+  await visible(page.locator('[data-action=change-view][data-view=list].active'));
+  const viewGroup=page.getByRole('group',{name:'变更记录视图',exact:true});
+  assert.equal(await viewGroup.locator('[aria-pressed=true]').count(),1);
+  assert.equal(await viewGroup.locator('button .ph').count(),2);
+  const viewColors=await viewGroup.locator('button').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));
+  assert.notEqual(viewColors[0],viewColors[1],'selected view must be visually distinct');
+  await capture('global-iteration-default-list');
+  await page.locator('[data-action=change-view][data-view=timeline]').focus();
+  await page.keyboard.press('Enter');
+  await visible(page.locator('.change-stream.timeline .month-heading'));
+  assert.equal(await page.locator('[data-action=change-view][data-view=timeline]').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.evaluate(()=>document.activeElement?.dataset.view),'timeline');
+  await capture('global-iteration-timeline');
+  await visible(page.locator('.change-timeline-entry .change-timeline-date'));
+  assert.equal(await page.locator('.change-timeline-node').count(),await page.locator('.change-card').count());
+  const rail=await page.locator('.change-stream.timeline').evaluate(node=>getComputedStyle(node,'::before').backgroundColor);
+  assert.notEqual(rail,'rgba(0, 0, 0, 0)','timeline axis must be visible');
+  for (const width of [390,320]) {
+    await page.setViewportSize({width,height:844});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`timeline overflows at ${width}`);
+    const date=await page.locator('.change-timeline-date').boundingBox();
+    const card=await page.locator('.change-card').first().boundingBox();
+    assert.ok(date.y<card.y,'mobile timeline date must precede its card');
+    await capture(`change-timeline-${width}`);
+  }
+  await page.setViewportSize({width:1440,height:1024});
   await page.locator('[data-action=proposal-filter][data-filter=all]').click();
   await page.locator('#change-query').fill('补充全局'); await page.locator('#change-query').press('Enter');
   await visible(page.locator(`.change-card[data-id="${globalChange.id}"]`)); await page.locator('[data-action=change-view][data-view=list]').click();
@@ -207,6 +253,8 @@ try {
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false); await capture('global-iteration-mobile'); await closeChange();
   await page.setViewportSize({width:1440,height:1024});
   await page.locator(`.projects [data-id="${projectId}"]`).click(); await visible(page.locator('.reader h1'));
+  await openTab('proposals'); await visible(page.locator('.change-stream.list'));
+  await openTab('rules'); await visible(page.locator('.reader h1'));
   check('direct global iterations retain before/after history, searchable views, drawer navigation and mobile layout');
 
   atomic(path.join(projectRoot,'.agent-workbench/rules/untrusted.md'),'# Untrusted\n\n<img src="https://example.invalid/x" onerror="window.__injected=true"><a href="javascript:window.__injected=true">Bad</a><div id="app" data-action="approve-proposal">fake</div>');

@@ -4,7 +4,7 @@
 
 **2026-11-25 · v0.1 · 8 张实际运行截图。** 使用当前应用、隔离演示项目与全新浏览器配置拍摄。截图中的项目、约束和历史为虚构样本。
 
-## 阅读与修改
+## 阅读与审核
 
 <table>
   <tr>
@@ -66,3 +66,11 @@ node scripts/capture-readme.mjs
 - 截图时检查页面无横向溢出、无浏览器运行错误；功能验收另见 `npm run test:ui`。
 
 工程决策笔记与四视图的组织方式参考 [write-notes-like-deepseek](https://github.com/czm15053/write-notes-like-deepseek)，感谢原作者的公开分享。历史静态设计稿单独保留在 [交互预览目录](../ui/interaction-previews/README.md)。
+
+## 整套项目约束
+
+本轮实际页面截图：约束按文件阅读，支持整体编辑和保存为个人模板。通过 `node scripts/verify-rule-modules-ui.mjs` 使用隔离项目生成，完整的差异、模板复用与手机截图位于 `.local/constraint-set-previews/`。
+
+![整套编辑：目录结构、文件正文、当前文件预览](constraint-set-editor.png)
+
+![按文件阅读：文件目录与当前正文](constraint-set-reading.png)

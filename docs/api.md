@@ -6,7 +6,7 @@
 
 | 请求 | 行为 |
 | --- | --- |
-| `GET /api/skill` | 默认读取仓库 Skill；`file` 仅接受该 Skill 主文、三份参考和三份模板的固定白名单路径，返回原文与绝对路径；只读，不接受任意文件路径 |
+| `GET /api/skill` | 默认读取仓库 Skill；`file` 仅接受该 Skill 主文、维护／决策参考及其输入模板的固定白名单路径，返回原文与绝对路径；只读，不接受任意文件路径 |
 | `GET /api/session` | 本机 UI 会话、数据目录与运行模式 |
 | `GET /api/state` | 已登记项目、全局来源、提案摘要、恢复提示；只读 |
 | `POST /api/projects/inspect` | 输入 `root`，检查已存在目录与已发现的来源，不登记、不写项目 |
@@ -20,9 +20,9 @@
 | `GET /api/projects/:id/document?file=…` | 读取已发现文档或登记入口，返回内容、存在状态和 hash |
 | `GET /api/projects/:id/context?query=…` | rules 为全局／项目正文，indexes 为模块根索引正文，modules 为文件索引；不返回候选 |
 | `GET /api/projects/:id/search?q=…&kind=…` | 当前项目检索；kind 为 all/document/proposal/journal，最多30条，带来源与截断提示 |
-| `GET /api/projects/:id/maintenance` | 只读解析决策摘要、迭代和明确引用；返回 `notes`、`entries`、`warnings`，不写索引或变更状态 |
-| `GET /api/projects/:id/journal` | 解析配置目录和已有 mini-trellis workspace 中的日志 |
-| `POST /api/projects/:id/journal` | 追加事实记录，不能指定任意落盘目标 |
+| `GET /api/projects/:id/maintenance` | 仅项目：只读解析决策摘要、迭代和明确引用；返回 `notes`、`entries`、`warnings`，不写索引或变更状态 |
+| `GET /api/projects/:id/journal` | 读取固定 docs/maintenance/ 下的日志；global 兼容读取既有变更留档，不提供维护页面 |
+| `POST /api/projects/:id/journal` | 仅项目：追加事实记录，不能指定任意落盘目标 |
 | `POST /api/proposals` | 创建候选，不改目标文件 |
 | `GET /api/proposals/:id` | 候选、基线、当前原文及真实差异 |
 | `POST /api/proposals/:id/revise` | 输入 `content`、`contentHash`，可补 `reason`、`category`（旧提案缺标签时须补齐）；编辑后需重新审核 |
@@ -34,6 +34,8 @@
 
 项目 ID 来自登记结果或 CLI `projects`；全局来源的 ID 为 `global`。提案状态为 pending、applied、rejected、conflict、superseded；工程笔记的 implemented 等生命周期独立呈现。差异查询中的 `applicationPending` 表示批准写入曾中断：此时候选冻结，可重试补齐记录，不能编辑、拒绝或重提。
 
+全局偏好仅有全局约束与变更记录；maintenance 查询及 journal 的独立记录写入对 global 返回400。约束修改仍通过原有变更流程留档，既有全局历史文件不删除。
+
 `referenceFiles` 是可选的只读 Markdown 相对路径数组，最多50项，可在项目目录设置中维护。用于打开索引引用的既有契约和背景文档，不扫描其所在目录，不加入 `context` 的活动规则或模块，也不能作为 change／propose 的目标。它不能与约束来源重叠，仍受项目边界、符号链接和单文件大小限制。
 
 候选必需：`projectId`、目标相对路径 `file`、`title`、`reason`、`source` 、必填标签 `category` 和完整新文本 `content`。可补 `alternatives`、`tradeoffs`。候选正文最多500 KB（按 UTF-8 字节），不会因保存而生效。
@@ -44,7 +46,9 @@
 
 ## 决策笔记 CLI（无新增 HTTP 写接口）
 
-约束直接修改的 CLI 为 `change --project <项目ID或global> --input <JSON文件>`。它要求刚读取的 baseHash 与稳定 operationId（1–64位），与直接修改 HTTP 接口使用同一存储方法。状态为 recording／recorded；失败冲突仍为 conflict。记录与原提案复用 proposals 文件和 diff 查询，但带 mode:direct，日志使用“直接修改并记录”，不能称为“已审核”。GET /api/state 不返回请求正文和版本正文，详情按 ID 单独读取。完整请求原样重试返回同一记录；同 operationId 不同输入拒绝。此前的提案批准入口保持原行为。
+约束直接修改的 CLI 为 `change --project <项目ID或global> --input <XML文件>`。它要求刚读取的 baseHash 与稳定 operationId（1–64位），与直接修改 HTTP 接口使用同一存储方法。状态为 recording／recorded；失败冲突仍为 conflict。记录与原提案复用 proposals 文件和 diff 查询，但带 mode:direct，日志使用“直接修改并记录”，不能称为“已审核”。GET /api/state 不返回请求正文和版本正文，详情按 ID 单独读取。完整请求原样重试返回同一记录；同 operationId 不同输入拒绝。此前的提案批准入口保持原行为。
+
+CLI 的 change／propose／record 支持 XML 输入：根标签为命令名，字段为直接子标签，content 等正文可用 CDATA，decisionFiles／relatedFiles 内以 file 子标签表示列表。空 baseHash 表示新文件的 null；已有文件须填写 read 返回的 hash。仅接受对应命令的已知字段，不接受重复字段、属性、DTD 或外部实体；解析失败不执行写入。原 JSON 输入保持兼容，HTTP 请求与 CLI 输出仍为 JSON。归档 apply 继续读取 archive 自动生成的计划 JSON。
 
 `notes --project <ID或目录> --action verify|archive|apply` 与 Skill wrapper 共用已登记项目解析，不接受 global；可指定相同的 `--data`。
 
@@ -75,3 +79,25 @@
 新日志保留可直接阅读的相对 Markdown 链接，类别和重试信息放在版本化注释中。读取旧日志无需迁移；不按相似标题或同名文件推测关联。决策替代字段 `superseded_by` 使用项目相对路径，目标须为已发现的另一篇决策；无效或缺失时给出提示。归档目录或 `Archived: YYYY-MM-DD` 标记独立于 `Status: implemented` 识别；看板不创建或校验归档封存清单。
 
 避坑卡片使用 `alternatives: [{title,reason}]`，从原文备选章节的列表、三级标题或段落中逐条解析，保留作者写明的名称与理由；`rejectionReason` 来自明确的 Status 否决说明。标题与理由分别保留最多160／1600字的展示内容（无独立标题时取80字摘要）；完整原文仍可通过文档接口读取。没有说明的原因不自动补写，也不按“有备选”推定方案已采纳。此为只读派生字段，不改写原笔记或引入第二份内容。
+
+## 整套项目约束
+
+- `GET /api/projects/:id/constraints`：整套文件 `files[{file,content,hash}]` 与 `baseHash`，只读。global 使用独立文件，不支持此接口。
+- `GET /api/templates`：内置与个人整套项目约束模板，不包含维护历史或 Skill 资源。`POST /api/templates` 输入 `name`、可选 `description`、`files[{file,content}]`，只保存模板副本。
+- `POST /api/constraints/preview`：输入 projectId、读取时的 baseHash、整套 files 和可选 reason；返回所有变化文件的精确 `fileChanges` 与 `contentHash`，不保存候选或写入项目。
+- `POST /api/constraints`：在同一输入上增加 `reviewHash`（预览返回的 contentHash）和稳定 `operationId`。再次核对整套版本与差异后保存，返回 applied 的多文件记录。相同标识与原请求可重试；不同内容拒绝。修改按 process 类别统一留档。
+
+files 为完整目标集合，省略已有模块表示移除；必须保留根 AGENTS.md 与 `.agent-workbench/rules/index.md`，其余文件限于固定模块目录。最多 100 文件、正文总计 500 KB。个人模板最多 100 份，目录由文件路径派生。
+
+多文件记录包含各文件基线、候选和 hash，详情统一展示；`GET /api/state` 仅返回 `affectedFiles`，不重复携带正文。写入回执用于逐文件恢复与日志去重，外部编辑不覆盖。部分写入与冲突在记录中保留，须按具体文件核对；不将多个文件声明为文件系统原子事务。
+
+不再提供文件／目录用途元数据或单独的 Agent 文档视图，`document` 与 CLI `read` 返回磁盘正文。旧个人模板加载时只取文件路径与正文；整套编辑剥离索引中旧的 `awb:structure` 生成区段，保留其余正文，清理须随具体差异确认后写入。保存不会生成注释表或恢复已删除的注释区段。
+
+Skill 资源白名单提供维护记录指引及 `assets/maintenance/record.xml`、`assets/constraints/change.xml`、`assets/constraints/propose.xml`（均相对 `skills/agent-workbench/`），通过现有 `GET /api/skill?file=…` 返回原文。XML 模板供复制填写，查询本身不写入项目；记录仍使用原有 journal／CLI record 接口。
+
+
+## 运行时内容校验
+
+新增日志在落盘前检查单行标题（不超过500字）、记录标识、字段与元数据的解析一致性，以及旧日志追加后仍能独立解析。实际关联的决策须通过格式与活跃链接检查；引用归档须匹配磁盘封印。无效输入返回400并保留原文，重复完成请求不重复写入。约束直接修改、批准和整套保存也在改正式文件前预检对应维护记录。
+
+`maintenance.notes[].validation` 返回 `{scope:'format',ok,errors}`，格式错误同步列入 `warnings`。看板标为“格式待修”并排除架构基线，其余视图保留原文。此为结构校验，不证明业务实现、自然语言约束或 verification 字段中的事实；完整封印历史校验继续使用 notes verify 与正确的 base-ref。

@@ -150,7 +150,7 @@ test('record payload cannot redirect the journal into a rule or arbitrary global
   f.store.record(f.project.id,{title:'Record',category:'testing',background:'Why',result:'Done',journalFile:rule});
   assert.equal(fs.readFileSync(rule,'utf8'),'Original rule');
   const global = path.join(f.root,'global.md'); fs.writeFileSync(global,'Original global'); f.store.setGlobal(global);
-  f.store.record('global',{title:'Record',category:'testing',background:'Why',result:'Done',journalFile:global});
+  assert.throws(()=>f.store.record('global',{title:'Record',category:'testing',background:'Why',result:'Done',journalFile:global}),/维护记录仅用于项目/);
   assert.equal(fs.readFileSync(global,'utf8'),'Original global');
 });
 test('an actual process exit leaves a recoverable lock and approved write',t => {

@@ -68,14 +68,19 @@ node start.mjs
 
 | 你想做什么 | 从哪里开始 | 可以得到什么 |
 | --- | --- | --- |
+| 整体维护项目约束 | **约束** → 整体编辑 | 同页调整目录与正文，当前文件预览、整套差异保存和模板复用 |
 | 找到当前任务的约束 | **约束** → 文件树 | 项目入口、按需模块、预览／Markdown 切换与关联记录 |
 | 追溯一次约束修改 | **变更记录** → 时间线／清单 | 修改前后版本、类别、理由、来源与同页详情 |
-| 讨论一份修改方案 | **变更记录** → 新建提案 | 精确差异审核、拒绝原因、原文冲突提示与重新提案 |
+| 审核 Agent 提交的修改方案 | **变更记录** → 待审提案 | 精确差异审核、拒绝原因、原文冲突提示与重新提案 |
 | 理解架构与历史取舍 | **维护记录** → 四种视图 | 架构基线、演进时间线、避坑智库、决策清单 |
-| 记录实际发生的迭代 | **维护记录** → 记录迭代 | 背景、结果、验证、后续，以及决策／文件链接 |
+| 回看实际发生的迭代 | **维护记录** → 迭代日志 | 背景、结果、验证、后续，以及决策／文件链接 |
 | 给 Code Agent 交接 | **Skill 接入** / CLI | 按需读取约束、查询维护背景、记录修改、校验与归档决策 |
 
 ### 01 · 约束按目录展开，正文安静阅读
+
+约束页按文件阅读，左侧目录展示真实文件结构。“整体编辑”在一页调整目录和正文，右侧实时预览当前选中文件；通过选择目录和填写文件名新增、移动、重命名模块，也可移除模块。查看整套差异后统一保存，留下一条维护记录。模板复用的是整套项目约束，包含文件路径与正文；内置精简与模块化两套，可调整后保存为个人模板。维护记录的写法与更新流程由 Skill 提供，模板不复制维护历史。
+
+![整套项目约束编辑：左侧文件目录，中间编辑正文，右侧预览当前文件](docs/images/constraint-set-editor.png)
 
 项目入口与模块遵循真实文件树，按需展开。正文支持 **预览 / Markdown** 切换；文件路径、相关变更和维护背景集中在右侧栏，全局偏好有独立入口。
 
@@ -83,7 +88,7 @@ node start.mjs
 
 ### 02 · 每次修改，都有前后版本和来由
 
-获授权的直接修改可通过“修改并记录”或 CLI `change` 留档；需要讨论时创建待审提案。审核绑定原文与候选的具体版本，原文变化时停止写入。详情展示差异、理由与来源，修改或审核写入后同步追加维护日志。
+内容由 Agent / CLI 维护：获授权的直接修改通过 CLI `change` 留档，需要讨论时提交待审提案。看板支持整套项目约束编辑与差异确认；已有单文件变更和提案仍由 Agent / CLI 提交，日志随保存留档。审核绑定原文与候选的具体版本，原文变化时停止写入。写入前检查日志解析结构与关联决策；格式错误的决策在维护页提示，不进入架构基线。格式通过仍需核对内容与实际验证，详见[校验边界](docs/research/write-validation.md)。详情展示差异、理由与来源，修改或审核写入后同步追加维护日志。
 
 ![提案差异审核：同页抽屉并排显示原文与建议内容，保留理由、来源和版本信息](docs/images/review.jpg)
 
@@ -133,7 +138,7 @@ node skills/agent-workbench/scripts/workbench.mjs read --project PROJECT_ID --fi
 node skills/agent-workbench/scripts/workbench.mjs journal --project PROJECT_ID --query 关键词
 ```
 
-`context` 提供全局／项目入口、模块根索引与模块文件列表；正文按任务需要再 `read`。CLI 还支持直接修改留档、维护记录、提案及决策校验／归档，没有提案批准命令。复制安装 Skill 时，用 `AGENT_WORKBENCH_ROOT` 指向本仓库。
+`context` 提供全局／项目入口、模块根索引与模块文件列表；正文按任务需要再 `read`。CLI 还支持直接修改留档、维护记录、提案及决策校验／归档，没有提案批准命令。[维护记录流程](skills/agent-workbench/references/maintenance-records.md)与[记录输入模板](skills/agent-workbench/assets/maintenance/record.xml)属于 Skill；实际日志仍保存在项目中。复制安装 Skill 时，用 `AGENT_WORKBENCH_ROOT` 指向本仓库。
 
 <details>
 <summary>查看 Skill 接入页面</summary>
@@ -203,6 +208,6 @@ npm run test:ui
 
 也感谢 [Compound Engineering](https://github.com/EveryInc/compound-engineering-plugin)、[ECC](https://github.com/affaan-m/ECC) 的文档实践启发。
 
-决策工具与页面由本项目独立实现；具体取用版本和边界见 [决策流程来源](skills/agent-workbench/references/note-sources.md) 与 [NOTICE](NOTICE)。
+决策工具与页面由本项目独立实现；具体取用版本和边界见 [决策流程来源](docs/research/note-sources.md) 与 [NOTICE](NOTICE)。
 
 本项目使用 **AGPL-3.0**，保留依赖的许可与归属。见 [LICENSE](LICENSE)。

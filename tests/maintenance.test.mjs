@@ -48,7 +48,7 @@ test('record persists portable links, stable keys and exact idempotency across r
   assert.equal(data.entries[0].verification,'单测通过'); assert.equal(data.entries[0].next,'观察');
   assert.equal(data.entries[0].links.filter(link=>link.file===file).length,1);
 });
-test('record validates links and remains backward compatible; global history has individual entries',t=>{
+test('record validates links and remains backward compatible; global preferences keep only constraint change history',t=>{
   const f=fixture(t); const input={category:'process',title:'维护',background:'原因',result:'结果'};
   for (const category of [undefined,'','unknown']) assert.throws(()=>f.store.record(f.project.id,{...input,category}),/标签|类别/);
   assert.equal(f.store.journal(f.project.id).length,0);
@@ -59,8 +59,14 @@ test('record validates links and remains backward compatible; global history has
   assert.throws(()=>f.store.record(f.project.id,{...input,category:'other'}));
   f.store.record(f.project.id,input); f.store.record(f.project.id,input); assert.equal(f.store.journal(f.project.id).length,2);
   const global=path.join(f.root,'global.md');fs.writeFileSync(global,'# Global');f.store.setGlobal(global);
-  f.store.record('global',{...input,operationId:'global-one'}); f.store.record('global',{...input,title:'另一条',operationId:'global-two'});
-  const data=f.store.maintenance('global');assert.equal(data.entries.length,2);assert.equal(data.notes.length,0);
+  assert.throws(()=>f.store.record('global',{...input,operationId:'global-one'}),/维护记录仅用于项目/);
+  assert.throws(()=>f.store.maintenance('global'),/维护记录仅用于项目/);
+  const before=f.store.document('global','global.md');
+  const change=f.store.writeChange({projectId:'global',file:'global.md',title:'更新全局约束',reason:'用户修改',source:'用户',category:'process',content:'# Updated global',baseHash:before.hash,operationId:'global-change'});
+  assert.equal(change.status,'recorded');assert.equal(change.baseContent,'# Global');assert.equal(f.store.journal('global').length,1);
+  const log=fs.readFileSync(path.join(f.data,'global-maintenance.md'),'utf8');
+  assert.throws(()=>f.store.record('global',input),/维护记录仅用于项目/);
+  assert.equal(fs.readFileSync(path.join(f.data,'global-maintenance.md'),'utf8'),log);
 });
 test('maintenance HTTP and CLI query the same read-only facts; writes retain nonce checks',async t=>{
   const f=fixture(t);f.write(file,note('文件方案'));const {server}=createApp({store:f.store});server.listen(0,'127.0.0.1');await once(server,'listening');
@@ -72,6 +78,13 @@ test('maintenance HTTP and CLI query the same read-only facts; writes retain non
   const output=spawnSync(process.execPath,['skills/agent-workbench/scripts/workbench.mjs','maintenance','--project',f.project.id,'--data',f.data,'--query','文件方案'],{encoding:'utf8'});
   assert.equal(output.status,0,output.stderr);assert.equal(JSON.parse(output.stdout).notes[0].file,file);
   assert.deepEqual(fs.readdirSync(f.data),['projects.json']);
+  const global=path.join(f.root,'global.md');fs.writeFileSync(global,'# Global');f.store.setGlobal(global);
+  const session=await fetch(base+'/api/session').then(response=>response.json());
+  assert.equal((await fetch(base+'/api/projects/global/maintenance')).status,400);
+  const denied=await fetch(base+'/api/projects/global/journal',{method:'POST',headers:{Origin:base,'X-Workbench-Nonce':session.nonce,'Content-Type':'application/json'},body:JSON.stringify({title:'Global record',category:'testing',background:'Why',result:'Done'})});
+  assert.equal(denied.status,400);assert.equal(fs.existsSync(path.join(f.data,'global-maintenance.md')),false);
+  const globalOutput=spawnSync(process.execPath,['skills/agent-workbench/scripts/workbench.mjs','maintenance','--project','global','--data',f.data],{encoding:'utf8'});
+  assert.notEqual(globalOutput.status,0);assert.match(globalOutput.stderr,/维护记录仅用于项目/);
 });
 test('same operation retried in concurrent CLI processes is recorded once',async t=>{
   const f=fixture(t);const input=path.join(f.root,'record.json');fs.writeFileSync(input,JSON.stringify({category:'testing',title:'一次操作',background:'原因',result:'完成',operationId:'concurrent-operation'}));

@@ -14,6 +14,7 @@ const assets = {
   '/': ['web/index.html', 'text/html; charset=utf-8'],
   '/maintenance.js': ['web/maintenance.js','text/javascript; charset=utf-8'],
   '/app.js': ['web/app.js', 'text/javascript; charset=utf-8'],
+  '/rule-modules.js': ['web/rule-modules.js', 'text/javascript; charset=utf-8'],
   '/style.css': ['web/style.css', 'text/css; charset=utf-8'],
   '/theme.css': ['web/theme.css', 'text/css; charset=utf-8'],
   '/assets/kurisu-avatar.png': ['web/assets/kurisu-avatar.png', 'image/png'],
@@ -39,7 +40,7 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     const pathname = url.pathname;
     if (req.method === 'GET' && pathname === '/api/session') return send(res, 200, { nonce, demo, dataDir: store.dataDir, root, version: '0.1.0', layout: projectLayout });
     if (req.method === 'GET' && pathname === '/api/skill') {
-      const allowed = ['SKILL.md','references/decision-notes.md','references/note-operations.md','references/note-sources.md','assets/notes/proposed.md','assets/notes/implemented.md','assets/notes/rejected.md'].map(file=>'skills/agent-workbench/'+file);
+      const allowed = ['SKILL.md','references/maintenance-records.md','assets/maintenance/record.xml','assets/constraints/change.xml','assets/constraints/propose.xml','references/decision-notes.md','references/note-operations.md','assets/notes/proposed.md','assets/notes/implemented.md','assets/notes/rejected.md'].map(file=>'skills/agent-workbench/'+file);
       const file = url.searchParams.get('file') ?? allowed[0];
       if (!allowed.includes(file)) throw new Fault('Skill 资源未开放',404);
       return send(res, 200, { file, path: path.join(root,file), content: fs.readFileSync(path.join(root,file),'utf8') });
@@ -53,13 +54,17 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     }
     if (req.method === 'GET' && pathname === '/api/state') {
       store.load();
-      return send(res, 200, { warnings: store.recoveryWarnings, projects: store.registry.projects, global: store.registry.global, proposals: store.proposals().map(({ content, baseContent, request, ...p }) => p) });
+      return send(res, 200, { warnings: store.recoveryWarnings, projects: store.registry.projects, global: store.registry.global, proposals: store.proposals().map(({ content, baseContent, request, files, ...p }) => ({...p,...(files ? {affectedFiles:files.map(item => item.file)} : {})})) });
     }
     if (demo && req.method !== 'GET' && (pathname === '/api/projects' || pathname === '/api/global') && (input.root || input.file)) {
       const candidate = path.resolve(input.root ?? input.file); const boundary = path.join(store.dataDir,'demo-projects');
       if (candidate !== boundary && !candidate.startsWith(boundary + path.sep)) throw new Fault('演示模式只接受示例目录；真实项目请使用默认工作区',400);
     }
     if (pathname === '/api/projects/inspect' && req.method === 'POST') return send(res,200,store.inspect(input));
+    if (pathname === '/api/templates' && req.method === 'GET') return send(res,200,store.templates());
+    if (pathname === '/api/templates' && req.method === 'POST') return send(res,201,store.saveTemplate(input));
+    if (pathname === '/api/constraints/preview' && req.method === 'POST') return send(res,200,store.previewConstraintSet(input));
+    if (pathname === '/api/constraints' && req.method === 'POST') return send(res,201,store.saveConstraintSet(input));
     if (pathname === '/api/projects' && req.method === 'POST') return send(res, 201, store.register(input));
     if (pathname === '/api/global' && req.method === 'POST') { store.setGlobal(input.file); return send(res, 200, { ok: true }); }
     if (pathname === '/api/changes' && req.method === 'POST') return send(res,201,store.writeChange(input));
@@ -69,12 +74,13 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
       if (change.mode!=='direct') throw new Fault('不是直接修改记录');
       return send(res,200,store.writeChange(change.request));
     }
-    const projectMatch = pathname.match(/^\/api\/projects\/([^/]+)(?:\/(document|journal|maintenance|context|search))?$/);
+    const projectMatch = pathname.match(/^\/api\/projects\/([^/]+)(?:\/(document|journal|maintenance|context|search|constraints))?$/);
     if (projectMatch) {
       const [, id, operation] = projectMatch;
       if (!operation && req.method === 'GET') return send(res, 200, store.catalog(id));
       if (!operation && req.method === 'PATCH') return send(res, 200, store.configure(id, input));
       if (!operation && req.method === 'DELETE') { store.remove(id); return send(res, 200, { ok: true }); }
+      if (operation === 'constraints' && req.method === 'GET') return send(res,200,store.constraintSet(id));
       if (operation === 'search' && req.method === 'GET') return send(res,200,store.search(id,url.searchParams.get('q') ?? '',url.searchParams.get('kind') ?? 'all'));
       if (operation === 'document' && req.method === 'GET') return send(res, 200, store.document(id, url.searchParams.get('file')));
       if (operation === 'maintenance' && req.method === 'GET') return send(res, 200, store.maintenance(id));

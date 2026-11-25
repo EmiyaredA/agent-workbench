@@ -27,6 +27,23 @@ fs.appendFileSync(path.join(project.root,secondNote),'\n## 相关决定\n\n[文�
 try {
   await page.goto(base+`/#project=${project.id}&view=journal`);await page.getByRole('heading',{name:'系统承重墙',exact:true}).waitFor();
   assert.equal(await page.locator('.maintenance-tabs button').count(),4);assert.ok(await page.locator('.decision-card').count()>=5);
+  const viewGroup=page.getByRole('group',{name:'维护记录视图',exact:true});
+  assert.equal(await viewGroup.locator('[aria-pressed=true]').count(),1);
+  assert.equal(await viewGroup.locator('button .ph').count(),4);
+  const viewColors=await viewGroup.locator('button').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));
+  assert.notEqual(viewColors[0],viewColors[1],'selected maintenance view must be visually distinct');
+  for (const width of [320,390,1100,1280,1440,1512]) {
+    await page.setViewportSize({width,height:982});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`view switcher overflows at ${width}`);
+    const boxes=await viewGroup.locator('button').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right};}));
+    assert.ok(boxes.every(r=>r.left>=0 && r.right<=width),`view buttons clipped at ${width}`);
+    const blocked=await page.locator('.header button').evaluateAll(nodes=>nodes.filter(node=>{
+      const r=node.getBoundingClientRect();
+      return r.width && r.height && !node.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));
+    }).map(node=>node.textContent.trim() || node.getAttribute('aria-label')));
+    assert.deepEqual(blocked,[],`header controls overlap at ${width}`);
+    await capture(`view-switcher-${width}`);
+  }
   assert.equal(await page.locator('.decision-card').filter({hasText:'早期固定路径'}).count(),0);await capture('01-baseline');checks.push('four views and active baseline exclude superseded notes');
   await page.locator('.decision-card').filter({hasText:'文件作为唯一正式来源'}).click();await page.locator('.maintenance-detail h1').waitFor();
   assert.ok((await page.locator('.maintenance-detail').innerText()).includes('关联迭代'));assert.equal((await page.locator('.maintenance-detail').innerText()).includes('awb-record:'),false);
@@ -77,30 +94,47 @@ try {
   await view('pitfalls');await page.locator('.pitfall-card').first().waitFor();assert.ok(await page.locator('.pitfall-card').count()>2);await capture('06-pitfalls');checks.push('pitfalls include alternatives as well as rejected decisions');
   await view('list');await choose('maintenance-status','archived');await page.locator('.decision-table tbody tr').first().waitFor();assert.equal(await page.locator('.decision-table tbody tr').count(),1);await capture('07-archived-list');
   await choose('maintenance-status','superseded');await page.getByRole('button',{name:'早期固定路径的读取方式',exact:true}).waitFor();
-  await click('maintenance-reset');await page.locator('#maintenance-query').fill('常驻观察');await page.locator('#maintenance-query').press('Enter');await page.getByRole('button',{name:'常驻观察服务',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelectorAll('.decision-table tbody tr').length===1);assert.equal(await page.locator('.decision-table tbody tr').count(),1);checks.push('list lifecycle filters, exact replacement and keyword query');
+  await click('maintenance-reset');await page.waitForFunction(count=>document.querySelectorAll('.decision-table tbody tr').length===count,store.maintenance(project.id).notes.length);await page.locator('#maintenance-query').fill('常驻观察');await page.locator('#maintenance-query').press('Enter');await page.getByRole('button',{name:'常驻观察服务',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelectorAll('.decision-table tbody tr').length===1);assert.equal(await page.locator('.decision-table tbody tr').count(),1);checks.push('list lifecycle filters, exact replacement and keyword query');
   await click('maintenance-reset');await choose('maintenance-category','testing');await page.getByRole('button',{name:'验证结果随迭代记录保存',exact:true}).waitFor();await click('maintenance-reset');await choose('maintenance-sort','references');checks.push('category and reference sort use shared metadata');
-  await click('add-journal');await page.locator('#dialog[open]').waitFor();
-  for (const [name,value] of Object.entries({title:'浏览器维护关联验收',background:'跨 Agent 交接需要关联决定',result:'四视图读取同一批文件',verification:'隔离浏览器完成交互',next:'观察实际使用规模',relatedFiles:'AGENTS.md'})) await page.locator(`#dialog [name=${name}]`).fill(value);
-  await choose('record-category','testing');await page.locator('.record-decisions summary').click();await page.locator('.decision-checkbox').filter({hasText:'文件作为唯一正式来源'}).locator('input').check();
-  const before=store.journal(project.id).length;let onceFailure=true;
-  await page.route('**/api/projects/*/journal',async route=>{
-    if (route.request().method()==='POST' && onceFailure) {onceFailure=false;const response=await route.fetch();assert.equal(response.status(),201);await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'模拟响应丢失：记录已落盘，请重试'})});}
-    else await route.continue();
-  });
-  await page.locator('#dialog [type=submit]').click();await page.getByText('模拟响应丢失：记录已落盘，请重试').waitFor();assert.equal(await page.locator('#dialog [name=title]').inputValue(),'浏览器维护关联验收');assert.equal(store.journal(project.id).length,before+1);await capture('08-safe-retry');
-  await page.locator('#dialog [type=submit]').click();await page.locator('#dialog').waitFor({state:'hidden'});await page.locator('.maintenance-detail').waitFor();assert.equal(store.journal(project.id).length,before+1);assert.equal(await page.locator('.maintenance-detail').getByText(/awb-record:/).count(),0);await capture('09-record-linked');checks.push('iteration category and decision link persist; lost-response retry adds one record');
+  assert.equal(await page.locator('[data-action=add-journal]').count(),0);
+  const before=store.journal(project.id).length;
+  store.record(project.id,{title:'浏览器维护关联验收',category:'testing',background:'跨 Agent 交接需要关联决定',result:'四视图读取同一批文件',verification:'隔离浏览器完成交互',next:'观察实际使用规模',relatedFiles:['AGENTS.md'],decisionFiles:[firstNote],operationId:'board-maintenance-fixture'});
+  assert.equal(store.journal(project.id).length,before+1);
+  await page.reload(); await page.locator('.maintenance-tabs').waitFor();
+  await page.locator('[data-action=maintenance-open][data-kind=history]').click();
+  await page.locator('.maintenance-history [data-kind=entry]').filter({hasText:'浏览器维护关联验收'}).click();
+  await page.locator('.maintenance-detail h1').getByText('浏览器维护关联验收',{exact:true}).waitFor();
+  assert.equal(await page.locator('.maintenance-detail').getByText(/awb-record:/).count(),0);
+  assert.equal(await page.locator('[data-action=add-journal]').count(),0);
+  await capture('09-read-linked-record');checks.push('board reads Agent-created linked iterations without manual record controls');
   await click('maintenance-close');await click('maintenance-reset');await view('timeline');
+  assert.equal(await page.locator('[data-action=maintenance-view][data-view=timeline]').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.evaluate(()=>document.activeElement?.dataset.view),'timeline');
   assert.equal(await page.locator('.iteration-row').filter({hasText:'浏览器维护关联验收'}).count(),0);
   await page.locator('[data-action=maintenance-open][data-kind=history]').click();await page.locator('.maintenance-detail h1').getByText('项目迭代日志',{exact:true}).waitFor();
   await page.locator('.maintenance-history [data-kind=entry]').filter({hasText:'浏览器维护关联验收'}).click();await page.locator('.maintenance-detail h1').getByText('浏览器维护关联验收',{exact:true}).waitFor();
   assert.equal(await page.locator('#dialog[open]').count(),0);await click('maintenance-close');checks.push('new iteration stays in journal history and relations, never becomes a decision timeline item');
+  const invalidFile='.agents/notes/implemented/architecture/2026-11-25-invalid.md';
+  const invalidText='# Agent Note: 校验失败的临时决定\n\nStatus: implemented\n\n## Problem\n\n缺少必要的决策章节。\n';fs.writeFileSync(path.join(project.root,invalidFile),invalidText);
+  await view('baseline');await page.reload();await page.getByRole('heading',{name:'系统承重墙',exact:true}).waitFor();
+  assert.equal(await page.locator('.maintenance-content [data-key="'+invalidFile+'"]').count(),0);
+  await view('list');const invalidRow=page.locator('.decision-table tbody tr').filter({hasText:'校验失败的临时决定'});await invalidRow.waitFor();assert.ok((await invalidRow.innerText()).includes('格式待修'));
+  await page.locator('.maintenance-warnings summary').click();assert.ok((await page.locator('.maintenance-warnings').innerText()).includes('缺少 decision 小节'));await capture('12-invalid-note-warning');
+  await invalidRow.getByRole('button',{name:'校验失败的临时决定',exact:true}).click();await page.locator('.maintenance-detail').getByText('格式待修',{exact:true}).waitFor();assert.equal(fs.readFileSync(path.join(project.root,invalidFile),'utf8'),invalidText);
+  await click('maintenance-close');fs.unlinkSync(path.join(project.root,invalidFile));await page.reload();await page.locator('.maintenance-tabs').waitFor();checks.push('invalid external notes stay readable with validation warnings but cannot enter the architecture baseline');
   await view('baseline');await page.locator('.decision-card').first().click();await page.locator('.maintenance-detail').waitFor();
   await page.setViewportSize({width:390,height:844});await page.locator('.maintenance-detail[aria-modal=true]').waitFor();await capture('10-mobile-detail');
   assert.equal(await page.locator('.maintenance-content').evaluate(node=>node.inert),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('.maintenance-detail').focus();await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>!!document.activeElement.closest('.maintenance-detail')),true);await page.keyboard.press('Escape');await page.locator('.maintenance-detail').waitFor({state:'hidden'});await capture('11-mobile-baseline');checks.push('mobile drawer traps focus, closes with Escape and has no viewport overflow');
   await view('timeline');await page.locator('#month-filter .dropdown-trigger').press('ArrowDown');await page.keyboard.press('End');await page.keyboard.press('Enter');assert.equal(await page.locator('#month-filter .dropdown-trigger').getAttribute('aria-expanded'),'false');assert.equal(await page.locator('select').count(),0);checks.push('custom dropdown keyboard operation and no native selects');
   await page.setViewportSize({width:1512,height:982});await page.locator('[data-action=project]').filter({hasText:'portfolio'}).click();await page.locator('.header h1').filter({hasText:'portfolio'}).waitFor();await page.locator('.tabs [data-action=tab][data-view=journal]').click();await page.locator('.maintenance-tabs').waitFor();assert.equal(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('maintenanceSelection'),'');assert.equal(await page.locator('.maintenance-detail').count(),0);checks.push('project switching clears selections and resets filters');
-  await click('global');await page.locator('.tabs [data-action=tab][data-view=journal]').click();await page.getByRole('heading',{name:'全局维护记录',exact:true}).waitFor();assert.equal(await page.locator('.maintenance-tabs').count(),0);await capture('12-global-history');checks.push('global maintenance stays separate from project decisions');
+  await click('global');await page.locator('.reader h1').waitFor();
+  assert.deepEqual(await page.locator('.tabs [data-action=tab]').evaluateAll(nodes=>nodes.map(node=>node.dataset.view)),['rules','proposals']);
+  assert.equal(await page.locator('[data-action=tab][data-view=journal]').count(),0);
+  assert.equal(await page.locator('.inspector').getByText('相关维护',{exact:true}).count(),0);
+  await page.goto(base+'/#project=global&view=journal&maintenanceSelection=history%3Aall');await page.locator('.reader h1').waitFor();
+  assert.equal(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('view'),'rules');
+  assert.equal(await page.locator('.maintenance-page').count(),0);await capture('12-global-constraints');checks.push('global preferences expose only constraints and changes; legacy maintenance links return to constraints');
   const emptyRoot=path.join(temporary,'empty-project');fs.mkdirSync(emptyRoot);const empty=store.register({name:'Empty',root:emptyRoot});
   await page.goto(base+`/#project=${empty.id}&view=journal`);await page.getByRole('heading',{name:'暂无当前架构决定',exact:true}).waitFor();await capture('13-empty');checks.push('empty projects remain usable without scaffolding creation');
   assert.deepEqual(errors,[]);checks.push('no browser runtime errors');

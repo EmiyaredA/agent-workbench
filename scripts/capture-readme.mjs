@@ -32,7 +32,7 @@ try {
   };
   const rules = { view:'rules', file:'.agent-workbench/rules/index.md' };
   await capture('rules', rules, '.reader h1');
-  await capture('changes', { view:'proposals', proposal:'' }, '.change-card');
+  await capture('changes', { view:'proposals', proposal:'', changeView:'timeline' }, '.change-card');
   const proposal = store.proposals().find(item => item.projectId === project.id && item.title === '使用系统字体减少运行依赖');
   await capture('review', { view:'proposals', proposal:proposal.id }, '.change-detail .diff-grid');
   await capture('decisions', { view:'journal', maintenanceView:'baseline' }, '.decision-card');
