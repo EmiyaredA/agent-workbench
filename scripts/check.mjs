@@ -5,7 +5,7 @@ for (const file of ['web/index.html','web/style.css','web/app.js','skills/agent-
   if (!fs.statSync(file).isFile()) throw Error('Missing required resource: '+file);
 }
 const walk = dir => fs.readdirSync(dir,{withFileTypes:true}).flatMap(item => item.isDirectory() ? walk(path.join(dir,item.name)) : [path.join(dir,item.name)]);
-const files = ['src','web','scripts','skills'].flatMap(walk).filter(file => /\.(js|mjs)$/.test(file));
+const files = ['start.mjs',...['src','web','scripts','skills'].flatMap(walk)].filter(file => /\.(js|mjs)$/.test(file));
 for (const file of files) {
   const result = spawnSync(process.execPath,['--check',file],{encoding:'utf8'});
   if (result.status !== 0) throw Error(result.stderr || 'Syntax check failed: '+file);

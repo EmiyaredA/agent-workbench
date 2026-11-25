@@ -11,9 +11,10 @@ v0.1 使用 **mini-trellis-core 0.4.2 + 一个本机 Node 进程 + 原生浏览�
 需要 Node.js 24+ 和 npm。Git 可用于管理项目版本，但看板也支持非 Git 目录。
 
 ```sh
-npm ci --ignore-scripts
 npm start
 ```
+
+源码首次启动会按 `package-lock.json` 自动安装运行依赖，需要联网，不执行安装脚本，不安装 Playwright。依赖齐备后不会再次安装，可离线启动。也可直接使用 `node start.mjs`；首次准备仍需 npm。安装失败时会给出提示，修复网络后重新运行即可。
 
 打开 [本地工作台](http://127.0.0.1:4173)。默认是真实空工作区，由你登记已有目录；登记只保存映射，不创建或改写项目文件。
 
@@ -90,17 +91,21 @@ node skills/agent-workbench/scripts/workbench.mjs notes --project PROJECT_ID --a
 ## 验证与构建
 
 ```sh
+npm ci --ignore-scripts
 npm run check
 npm test
 npm run build
+npm run test:package
 npm run test:ui
 ```
 
 `npm test` 必须找到并执行实际测试。`test:ui` 使用独立临时目录与全新浏览器配置，不读真实会话或项目数据。macOS 默认可使用已安装的 Chrome；也可设置 `AWB_CHROME`，或运行 `npx playwright install chromium` 使用测试浏览器。Playwright 仅为开发依赖。
 
-`build` 输出 `dist/`，包含运行源码、静态页面、Skill 与许可；没有前端编译链。在分发目录运行 `npm ci --omit=dev --ignore-scripts` 后即可 `npm start`。开发验收命令在源码仓库运行。
+`build` 输出 `dist/` 和 `dist/agent-workbench-0.1.0.tgz`，包含锁定版本的运行依赖、源码、静态页面、Skill 与许可，不包含开发依赖或本机数据；没有前端编译链。将压缩包复制到另一台装有 Node.js 24+ 的电脑，解压后进入 `package/` 执行 `node start.mjs`，无需安装依赖、无需 npm、无需联网。演示使用 `node start.mjs --demo --port 4174`，参数和数据目录约定与源码相同。归档文件仅由本地构建生成，目前未发布下载版本。
 
-当前本机验收：63 项 Node／HTTP／CLI 测试、38 项浏览器检查通过。浏览器覆盖 17 张设计稿的主要操作和状态及 Skill 参考／模板阅读；截图、对照图与机器报告保存在忽略的 `.local/ui-acceptance/`。四视图专项另有14张截图和报告，位于 `.local/maintenance-ui/`。CI 配置运行检查、测试、构建及两组浏览器验收，上传隔离示例的验收截图。
+`test:package` 从压缩包在独立临时目录启动服务，禁用 npm 入口并核对静态资源、项目登记、提案差异和 CLI／Skill 查询。开发验收命令在源码仓库运行；先执行 `npm ci --ignore-scripts` 安装包含 Playwright 的完整依赖。
+
+当前本机验收：65 项 Node／HTTP／CLI／启动测试和离线分发包验收通过；界面沿用此前通过的38项浏览器检查，本次启动与打包改动未重跑浏览器验收。浏览器覆盖 17 张设计稿的主要操作和状态及 Skill 参考／模板阅读；截图、对照图与机器报告保存在忽略的 `.local/ui-acceptance/`。四视图专项另有14张截图和报告，位于 `.local/maintenance-ui/`。CI 配置运行检查、测试、构建、离线包验收及两组浏览器验收，上传隔离示例的验收截图。
 
 ## 设计依据与边界
 

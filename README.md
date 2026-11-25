@@ -25,9 +25,10 @@
 需要 **Node.js 24+** 和 npm。在仓库根目录运行：
 
 ```sh
-npm ci --ignore-scripts
 npm start
 ```
+
+无需手动安装依赖：源码首次启动会按锁文件自动准备运行依赖（需要联网，不执行安装脚本），之后可离线启动。
 
 打开 [本地工作台](http://127.0.0.1:4173)，登记一个已有项目目录即可开始。默认工作区为空，登记只保存映射，不创建或改写项目文件；非 Git 目录也可使用。
 
@@ -47,6 +48,19 @@ npm start -- --port 4180 --data /absolute/path/to/workbench-data
 ```
 
 也可使用 `AGENT_WORKBENCH_DATA`。默认正式数据位于 `.runtime/workbench/`，演示位于 `.runtime/demo-v4/`；映射、候选、回执和锁均不提交 Git。服务只监听 `127.0.0.1`。
+
+</details>
+
+<details>
+<summary>离线分发版：解压即用</summary>
+
+`npm run build` 会生成内置运行依赖的 `dist/agent-workbench-0.1.0.tgz`。将它复制到装有 Node.js 24+ 的电脑，解压后进入 `package/` 目录：
+
+```sh
+node start.mjs
+```
+
+无需 npm 安装或联网。演示使用 `node start.mjs --demo --port 4174`；CLI 和 Skill 一同包含在包中。此文件由本地构建生成，目前没有发布远端下载版本。
 
 </details>
 
@@ -155,10 +169,11 @@ npm ci --ignore-scripts
 npm run check
 npm test
 npm run build
+npm run test:package
 npm run test:ui
 ```
 
-当前已通过 **63 项 Node / HTTP / CLI 测试、38 项浏览器检查**。浏览器验收使用临时目录与独立浏览器配置。`build` 输出含源码、静态页面、Skill 和许可的 `dist/`，没有前端编译链。
+开发时先安装完整依赖（包含 Playwright）；日常启动自动准备的仅为运行依赖。浏览器验收使用临时目录与独立浏览器配置。`build` 输出内置依赖、源码、静态页面、Skill 和许可的 `dist/` 及可解压分发包，没有前端编译链。`test:package` 在独立临时目录解压分发包，禁用 npm 入口后验证离线启动和资源读取。
 
 | 文档 | 内容 |
 | --- | --- |

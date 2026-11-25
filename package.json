@@ -8,10 +8,11 @@
     "node": ">=24"
   },
   "scripts": {
-    "start": "node src/server.mjs",
+    "start": "node start.mjs",
     "dev": "node --watch src/server.mjs",
-    "demo": "node src/server.mjs --demo",
+    "demo": "node start.mjs --demo",
     "test": "node scripts/test.mjs",
+    "test:package": "node scripts/verify-package.mjs",
     "check": "node scripts/check.mjs",
     "build": "node scripts/build.mjs",
     "agent": "node src/cli.mjs",
