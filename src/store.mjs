@@ -16,6 +16,7 @@ const now = () => new Date().toISOString();
 const short = (value, fallback = '', limit = 500) => String(value ?? fallback).trim().slice(0, limit);
 const line = value => short(value).replace(/[\r\n]/g, ' ');
 const validateFields = (input, keys) => { for (const key of keys) if (input[key] !== undefined && (typeof input[key] !== 'string' || input[key].length > 10_000)) throw new Fault(`${key}格式无效或过长`); };
+const projectInput = (input, keys) => { for (const key of Object.keys(input)) if (!keys.includes(key)) throw new Fault(`不支持的项目设置：${key}`); };
 const within = (root, file) => file === root || file.startsWith(root + path.sep);
 const exists = file => info(file) !== null;
 const readJSON = (file, fallback) => exists(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : fallback;
@@ -26,14 +27,18 @@ export class Workbench {
     this.registryFile = path.join(this.dataDir, 'projects.json');
     this.load(); this.recoveryWarnings = [];
   }
-  load() { this.registry = readJSON(this.registryFile, { projects: [], global: null }); }
+  load() {
+    const registry = readJSON(this.registryFile, { projects: [], global: null });
+    this.registry = { projects: registry.projects.map(({id,name,root,referenceFiles = [],createdAt,demo}) =>
+      ({id,name,root,referenceFiles,createdAt,...(demo ? {demo:true} : {})})), global:registry.global };
+  }
   saveRegistry() { atomic(this.registryFile, JSON.stringify(this.registry, null, 2)); }
   project(id) {
     if (!this.writing) this.load();
     if (id === 'global' && this.registry.global) return { ...this.registry.global, id, name: '全局偏好', scope: 'global', ruleRoots: [], ruleFiles: [this.registry.global.file] };
     const item = this.registry.projects.find(p => p.id === id);
     if (!item) throw new Fault('项目尚未登记', 404);
-    return item;
+    return { ...item, ruleFiles:projectLayout.ruleFiles, ruleRoots:projectLayout.ruleRoots, journalDir:projectLayout.journalDir };
   }
   inspect(input) {
     validateFields(input,['root','name']);
@@ -43,40 +48,32 @@ export class Workbench {
     catch { throw new Fault('目录不存在或无法读取'); }
     const duplicate = this.registry.projects.find(p => p.root === root);
     if (duplicate) throw new Fault('这个目录已经登记', 409);
-    return { root, discovered: [...projectLayout.ruleFiles,...projectLayout.ruleRoots,projectLayout.journalDir,projectLayout.decisionDir,projectLayout.legacyJournalDir,'docs/agent','.trellis/spec'].filter(file => exists(path.join(root,file))) };
+    return { root, discovered: [...projectLayout.ruleFiles,...projectLayout.ruleRoots,projectLayout.journalDir,projectLayout.decisionDir].filter(file => exists(path.join(root,file))) };
   }
   register(input) {
+    projectInput(input,['root','name','referenceFiles','demo']);
     const { root } = this.inspect(input);
     const item = { id: randomUUID(), name: short(input.name, path.basename(root), 80) || path.basename(root), root,
-      ruleRoots: [...projectLayout.ruleRoots], ruleFiles: [...projectLayout.ruleFiles], journalDir: projectLayout.journalDir, createdAt: now(), ...(input.demo ? { demo: true } : {}) };
-    this.mapping(item, input);
-    this.registry.projects.push(item); this.saveRegistry(); return item;
+      referenceFiles:[], createdAt: now(), ...(input.demo ? { demo: true } : {}) };
+    this.references(item,input.referenceFiles);
+    this.registry.projects.push(item); this.saveRegistry(); return this.project(item.id);
   }
-  mapping(project, input) {
-    const files = input.ruleFiles ?? project.ruleFiles;
-    const roots = input.ruleRoots ?? project.ruleRoots;
-    const journal = input.journalDir ?? project.journalDir;
-    const references = input.referenceFiles ?? project.referenceFiles ?? [];
-    if (!Array.isArray(files) || !files.length || files.length > 20 || !Array.isArray(roots) || roots.length > 10) throw new Fault('约束来源列表格式不正确');
+  references(project, references = project.referenceFiles) {
     if (!Array.isArray(references) || references.length>50) throw new Fault('只读参考文档列表格式不正确');
-    for (const file of files) this.safe(project,file);
     for (const file of references) {
       this.safe(project,file);
-      if (files.includes(file) || roots.some(root=>file.startsWith(root+'/'))) throw new Fault('只读参考文档不能与约束来源重叠');
+      if (this.isRule(project,file)) throw new Fault('只读参考文档不能与约束来源重叠');
     }
-    for (const root of roots) { const file = this.safe(project,root,false); if (info(file) && !info(file).isDirectory()) throw new Fault('模块来源必须是目录'); }
-    this.safe(project,journal,false);
-    const journalTarget = this.safe(project,journal,false);
-    if (info(journalTarget) && !info(journalTarget).isDirectory()) throw new Fault('维护来源必须是目录');
-    if (files.some(file => file.startsWith(journal + '/')) || roots.some(root => root === journal || root.startsWith(journal + '/') || journal.startsWith(root + '/'))) throw new Fault('维护目录不能与活动约束目录重叠');
-    project.ruleFiles = [...new Set(files)]; project.ruleRoots = [...new Set(roots)]; project.journalDir = journal; project.referenceFiles=[...new Set(references)];
+    project.referenceFiles=[...new Set(references)];
   }
   configure(id, input) {
+    projectInput(input,['name','referenceFiles']);
     const project = this.project(id);
     if (id === 'global') throw new Fault('请从全局来源设置修改');
-    this.mapping(project,input);
-    project.name = short(input.name, project.name, 80) || project.name;
-    this.saveRegistry(); return project;
+    const item = this.registry.projects.find(p => p.id === id);
+    this.references(item,input.referenceFiles);
+    item.name = short(input.name, project.name, 80) || project.name;
+    this.saveRegistry(); return this.project(id);
   }
   remove(id) {
     this.project(id);
@@ -109,7 +106,8 @@ export class Workbench {
     return file;
   }
   isRule(project, relative) {
-    return typeof relative === 'string' && (project.ruleFiles.includes(relative) || project.ruleRoots.some(root => relative.startsWith(root + '/')));
+    return typeof relative === 'string' && (project.id === 'global' ? relative === project.file :
+      projectLayout.ruleFiles.includes(relative) || projectLayout.ruleRoots.some(root => relative.startsWith(root + '/')));
   }
   target(project, relative) {
     const file = this.safe(project, relative);
@@ -144,7 +142,7 @@ export class Workbench {
     };
     for (const file of project.ruleFiles) if (exists(path.join(project.root,file))) found.add(file);
     for (const file of project.referenceFiles ?? []) if (exists(path.join(project.root,file))) found.add(file);
-    if (id !== 'global') for (const dir of [...project.ruleRoots, project.journalDir, projectLayout.legacyJournalDir, projectLayout.decisionDir]) walk(dir);
+    if (id !== 'global') for (const dir of [...project.ruleRoots, projectLayout.journalDir, projectLayout.decisionDir]) walk(dir);
     if (limited || found.size >= 1000) warnings.push({ message: '固定来源扫描达到数量或深度上限，结果可能不完整' });
     const docs = [];
     for (const file of found) {
@@ -153,7 +151,7 @@ export class Workbench {
         const title = content.match(/^#\s+(?:Agent Note[:：]\s*)?(.+)$/m)?.[1] ?? path.basename(file);
         const note = file.match(/^\.agents\/notes\/(proposed|implemented|rejected|archived)\/([^/]+)\//);
         const lineage = parseDocLineage(content, project.root, file);
-        const role = note ? 'decision' : this.isRule(project, file) ? 'rule' : file.startsWith(project.journalDir + '/') || file.startsWith('.trellis/workspace/') ? 'journal' : 'document';
+        const role = note ? 'decision' : this.isRule(project, file) ? 'rule' : file.startsWith(projectLayout.journalDir + '/') ? 'journal' : 'document';
         docs.push({ file, title, role, scope: project.scope ?? (project.ruleFiles.includes(file) ? 'project' : 'module'),
           status: note?.[1] ?? (lineage.superseded ? 'superseded' : 'current'), category: note?.[2] ?? '',
           date: path.basename(file).match(/^\d{4}-\d{2}(?:-\d{2})?/)?.[0] ?? '', ...lineage });
@@ -254,16 +252,20 @@ export class Workbench {
     const next = this.propose({...old,category:input.category ?? old.category}); old.status = 'superseded'; old.replacedBy = next.id; old.updatedAt = now(); this.saveProposal(old); return next;
   }
   journalPath(project) {
-    return project.id === 'global' ? path.join(this.dataDir, 'global-maintenance.md') : this.safe(project, `${project.journalDir}/${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' }).slice(0, 7)}.md`);
+    return project.id === 'global' ? path.join(this.dataDir, 'global-maintenance.md') : this.safe(project, `${projectLayout.journalDir}/${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' }).slice(0, 7)}.md`);
   }
   appendJournal(project, input, key = randomUUID(), file = this.journalPath(project)) {
     const marker = `<!-- awb:${key} -->`;
-    if (project.id !== 'global') this.safe(project,path.relative(project.root,file).split(path.sep).join('/'));
+    if (project.id !== 'global') {
+      const relative = path.relative(project.root,file).split(path.sep).join('/');
+      if (path.posix.dirname(relative) !== projectLayout.journalDir || !/^\d{4}-\d{2}\.md$/.test(path.posix.basename(relative))) throw new Fault('维护日志只能写入固定的 docs/maintenance/YYYY-MM.md');
+      this.safe(project,relative);
+    }
     const old = this.text(file) ?? '# 项目维护日志\n'; if (old.includes(marker)) return file;
     const metadata = input._metadata ? `<!-- awb-record:${JSON.stringify(input._metadata).replace(/</g,'\\u003c')} -->\n\n` : '';
     const section = `\n## ${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' })} · ${line(input.title)}\n\n${marker}\n\n${metadata}` +
       [['标签',input.category],['背景', input.background], ['结果', input.result], ['放弃的备选', input.alternatives], ['收益与代价', input.tradeoffs], ['验证', input.verification], ['后续', input.next], ['相关文件', input.topic]].filter(([,v]) => v).map(([label,value]) => `- **${label}**：${String(value).replace(/\n/g, '\n  ')}`).join('\n') + '\n';
-    if (Buffer.byteLength(old + section) > 1_000_000) throw new Fault('维护文件已超过 1 MB，请调整维护目录后重试');
+    if (Buffer.byteLength(old + section) > 1_000_000) throw new Fault('当月维护文件已超过 1 MB');
     const relative = project.id === 'global' ? 'global-maintenance.md' : path.relative(project.root,file).split(path.sep).join('/');
     const links = [['关联决策',input._metadata?.decisionFiles],['关联文档',input._metadata?.relatedFiles]].filter(([,files])=>files?.length).map(([label,files])=>`- **${label}**：`+files.map(target=>`[${path.posix.basename(target).replace(/[\[\]]/g,'')}](<${path.posix.relative(path.posix.dirname(relative),target).split('/').map(part=>encodeURIComponent(part).replace(/[()]/g,char=>'%'+char.charCodeAt(0).toString(16))).join('/')}>)`).join(' · ')).join('\n');
     if (Buffer.byteLength(old + section + links) > 1_000_000) throw new Fault('维护文件已超过 1 MB');

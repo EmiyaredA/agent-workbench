@@ -93,13 +93,12 @@ test('interrupted archive resumes expected before/after states and preserves ext
   assert.equal(read(g,archived),plan2.changes.find(change=>change.file===archived).after);
 });
 
-test('archive cannot bypass registered rules, follow symlinks or archive a pending proposal',t=>{
+test('archive is restricted to decision notes, refuses symlinks and pending proposals',t=>{
   const f=setup(t);
   const proposed=old.replace('/implemented/','/proposed/'); f.write(proposed,body('proposed'));
   assert.throws(()=>planArchive(f.store,f.project.id,{file:proposed}),/只能归档/);
   assert.throws(()=>planArchive(f.store,f.project.id,{file:old,successor:old}),/另一篇/);
-  f.store.configure(f.project.id,{ruleRoots:['.agents/notes']});
-  assert.throws(()=>archive(f),/已登记约束/);
+  assert.throws(()=>planArchive(f.store,f.project.id,{file:'AGENTS.md'}),/笔记/);
   const g=setup(t); const outside=path.join(g.root,'outside'); fs.mkdirSync(outside);
   fs.symlinkSync(outside,path.join(g.projectRoot,'.agents/notes/archived'));
   assert.throws(()=>archive(g),/符号链接/);

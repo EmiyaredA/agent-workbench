@@ -271,8 +271,21 @@ async function skillDetail(file) {
 }
 
 function closeDialog() { $('#dialog').close(); lastFocus?.focus?.(); }
+let drawerBackdropPress = false;
+function isDrawerBackdrop(event) {
+  const dialog = $('#dialog');
+  if (event.target !== dialog || !dialog.classList.contains('drawer')) return false;
+  const bounds = dialog.getBoundingClientRect();
+  return event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom;
+}
+$('#dialog').addEventListener('pointerdown',event => { drawerBackdropPress = isDrawerBackdrop(event); });
+$('#dialog').addEventListener('click',event => {
+  const dismiss = drawerBackdropPress && isDrawerBackdrop(event); drawerBackdropPress = false;
+  if (dismiss) { event.preventDefault(); event.stopPropagation(); closeDialog(); }
+});
 function showDialog(title, body, { subtitle = '', wide = false, drawer = false, submit } = {}) {
   const dialog = $('#dialog'); lastFocus = document.activeElement;
+  drawerBackdropPress = false;
   if (dialog.open) dialog.close();
   dialog.onkeydown = null;
   dialog.className = drawer ? 'drawer' : wide ? 'wide-dialog' : '';
@@ -291,9 +304,9 @@ const formActions = (primary, extra = '') => `<div class="modal-actions">${extra
 function registerProject() {
   const demoPath = S.session.demo ? `${S.session.dataDir}/demo-projects/new-project` : '';
   const layout = S.session.layout;
-  const body = field('项目名称','name','',{placeholder:'例如：my-project'})+field('本地目录','root',demoPath,{required:true,placeholder:'/Users/you/Projects/my-project',help:'填写已存在目录的绝对路径。登记本身不修改项目文件。'})+`<div class="row">${button('检查目录','inspect-project','','small')}<span class="muted small" id="inspect-message">校验通过后可查看映射预览</span></div><div class="layout-summary"><span>项目入口 <code>${esc(layout.ruleFiles.join(' · '))}</code></span><span>约束目录 <code>${esc(layout.ruleRoots.join(' · '))}</code> · 先读 <code>index.md</code></span><span>维护日志 <code>${esc(layout.journalDir)}</code></span></div><details class="field"><summary class="muted small">兼容旧项目目录（可选）</summary>${field('约束入口（逗号分隔）','ruleFiles',layout.ruleFiles.join(', '))}${field('约束目录（逗号分隔）','ruleRoots',layout.ruleRoots.join(', '))}${field('维护目录','journalDir',layout.journalDir)}</details><p class="notice">只保存目录与来源映射，不自动创建约束文件。</p>`+formActions('登记项目');
+  const body = field('项目名称','name','',{placeholder:'例如：my-project'})+field('本地目录','root',demoPath,{required:true,placeholder:'/Users/you/Projects/my-project',help:'填写已存在目录的绝对路径。登记本身不修改项目文件。'})+`<div class="row">${button('检查目录','inspect-project','','small')}<span class="muted small" id="inspect-message">检查标准目录中的文件</span></div><div class="layout-summary"><span>项目入口 <code>${esc(layout.ruleFiles.join(' · '))}</code></span><span>约束目录 <code>${esc(layout.ruleRoots.join(' · '))}</code> · 先读 <code>index.md</code></span><span>维护日志 <code>${esc(layout.journalDir)}</code></span></div><p class="notice">按以上固定目录读取，不自动创建约束文件。</p>`+formActions('登记项目');
   showDialog('登记项目',body,{subtitle:'把一个已有项目加入工作台。',submit:async values => {
-    const project = await api('/api/projects',{...values,ruleFiles:splitPaths(values.ruleFiles),ruleRoots:splitPaths(values.ruleRoots)});
+    const project = await api('/api/projects',values);
     closeDialog(); toast('项目已登记，未修改项目文件'); S.message = null; route('rules',{projectId:project.id,file:'',proposal:''});
   }});
 }
@@ -315,9 +328,9 @@ async function settings() {
   if (!S.projectId) { registerProject(); return; }
   if (S.projectId === 'global') { globalSettings(); return; }
   const project = (await api(`/api/projects/${S.projectId}`)).project;
-  showDialog('目录约定',field('项目名称','name',project.name,{required:true})+`<div class="layout-summary"><span>项目入口 <code>${esc(project.ruleFiles.join(' · '))}</code></span><span>约束目录 <code>${esc(project.ruleRoots.join(' · '))}</code></span><span>维护日志 <code>${esc(project.journalDir)}</code></span></div><details class="field"><summary class="muted small">兼容目录设置</summary>`+field('约束入口（逗号分隔）','ruleFiles',project.ruleFiles.join(', '),{required:true})+field('约束目录（逗号分隔）','ruleRoots',project.ruleRoots.join(', '),{help:'按需拆分文档；只从登记目录中识别活动约束。'})+field('只读参考文档（逗号分隔）','referenceFiles',(project.referenceFiles ?? []).join(', '),{help:'只读打开契约和背景资料，不加入有效约束或自动上下文。'})+field('维护目录','journalDir',project.journalDir,{required:true})+`</details><p class="notice">按固定来源读取，索引链接说明何时展开相关文件；目录不存在时不自动创建。全局偏好独立配置。</p><div class="row between"><span class="muted small">${esc(project.root)}</span>${button('解除项目登记','remove-project',attr('id',project.id),'text small')}</div>`+formActions('保存映射'),{submit:async values => {
-    await api(`/api/projects/${project.id}`,{...values,ruleFiles:splitPaths(values.ruleFiles),ruleRoots:splitPaths(values.ruleRoots),referenceFiles:splitPaths(values.referenceFiles)},'PATCH');
-    closeDialog(); toast('来源映射已保存'); S.file = ''; await load();
+  showDialog('目录约定',field('项目名称','name',project.name,{required:true})+`<div class="layout-summary"><span>项目入口 <code>${esc(project.ruleFiles.join(' · '))}</code></span><span>约束目录 <code>${esc(project.ruleRoots.join(' · '))}</code></span><span>维护日志 <code>${esc(project.journalDir)}</code></span></div>`+field('只读参考文档（逗号分隔）','referenceFiles',(project.referenceFiles ?? []).join(', '),{help:'只读打开契约和背景资料，不加入有效约束或自动上下文。'})+`<p class="notice">约束和维护日志使用以上固定目录；全局偏好独立配置。</p><div class="row between"><span class="muted small">${esc(project.root)}</span>${button('解除项目登记','remove-project',attr('id',project.id),'text small')}</div>`+formActions('保存设置'),{submit:async values => {
+    await api(`/api/projects/${project.id}`,{...values,referenceFiles:splitPaths(values.referenceFiles)},'PATCH');
+    closeDialog(); toast('项目设置已保存'); S.file = ''; await load();
   }});
 }
 async function removeProject(id) {

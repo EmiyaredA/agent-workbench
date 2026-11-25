@@ -16,14 +16,18 @@ test('registration and inspection do not change project files',t => {
   assert.throws(() => f.store.inspect({root:'relative'}),/绝对路径/);
   assert.throws(() => f.store.inspect({root:path.join(f.root,'absent')}),/目录不存在/);
 });
-test('custom rule and journal mappings are classified correctly',t => {
-  const f = fixture(t); f.store.configure(f.project.id,{ruleFiles:['instructions.md'],ruleRoots:['rules'],journalDir:'docs/logs'});
-  f.write('instructions.md','# Custom'); f.write('rules/ui.md','# UI');
-  f.store.record(f.project.id,{title:'Change',category:'testing',background:'Why',result:'Done'});
-  const docs = f.store.catalog(f.project.id).docs;
-  assert.equal(docs.find(d => d.file === 'instructions.md').role,'rule');
-  assert.ok(docs.some(d => d.file.startsWith('docs/logs/') && d.role === 'journal'));
-  assert.throws(() => f.store.configure(f.project.id,{journalDir:'rules'}),/重叠/);
+test('project sources are fixed and custom directory inputs are rejected',t => {
+  const f = fixture(t);
+  for (const [key,value] of Object.entries({ruleFiles:['instructions.md'],ruleRoots:['rules'],journalDir:'docs/logs'})) {
+    assert.throws(() => f.store.configure(f.project.id,{[key]:value}),/不支持的项目设置/);
+    assert.throws(() => f.store.register({root:f.projectRoot,[key]:value}),/不支持的项目设置/);
+  }
+  const saved=JSON.parse(fs.readFileSync(f.store.registryFile,'utf8')).projects[0];
+  for (const key of ['ruleFiles','ruleRoots','journalDir']) assert.equal(saved[key],undefined);
+  f.write('AGENTS.md','# Entry'); f.write('.agent-workbench/rules/ui.md','# UI');
+  const result=f.store.record(f.project.id,{title:'Change',category:'testing',background:'Why',result:'Done'});
+  assert.match(result.file,/^docs\/maintenance\/\d{4}-\d{2}\.md$/);
+  assert.equal(f.store.catalog(f.project.id).docs.find(d=>d.file===result.file).role,'journal');
 });
 test('context includes global and project bodies, module index only; pending stays out',t => {
   const f = fixture(t); f.write('AGENTS.md','# 项目\n当前规则'); f.write('.agent-workbench/rules/frontend.md','# 前端\n按需正文');
@@ -104,10 +108,10 @@ test('recovery never overwrites edits made after an interrupted write',t => {
   assert.equal(restarted.proposal(p.id).status,'conflict'); assert.equal(restarted.document(f.project.id,'AGENTS.md').content,'User subsequent edit');
 });
 test('journal failure after target write can be repaired without a second target write',t => {
-  const f = fixture(t,{afterWrite:() => f.write('logs','blocking file')}); f.store.configure(f.project.id,{journalDir:'logs'}); const p = f.proposal();
+  const f = fixture(t,{afterWrite:() => f.write('docs/maintenance','blocking file')}); const p = f.proposal();
   assert.throws(() => f.store.apply(p.id,p));
   assert.equal(f.store.document(f.project.id,'AGENTS.md').content,p.content);
-  fs.unlinkSync(path.join(f.projectRoot,'logs')); const restarted = new Workbench(f.data); restarted.recover();
+  fs.unlinkSync(path.join(f.projectRoot,'docs/maintenance')); const restarted = new Workbench(f.data); restarted.recover();
   assert.equal(restarted.proposal(p.id).status,'applied'); assert.equal(restarted.journal(f.project.id).length,1);
 });
 test('path escapes, ordinary symlinks and dangling symlinks are rejected',t => {
@@ -187,11 +191,28 @@ test('standard directories are chosen without creating files; unrelated docs are
   assert.deepEqual(f.store.catalog(f.project.id).docs.map(doc => doc.file),['.agent-workbench/rules/index.md','AGENTS.md','.agent-workbench/rules/frontend.md'].sort((a,b) => (a.endsWith('/index.md') ? -1 : b.endsWith('/index.md') ? 1 : a.localeCompare(b))));
   assert.throws(() => f.store.document(f.project.id,'docs/random.md'),/没有发现/);
 });
-test('explicit old directory mappings remain the only source of truth; no implicit second rule tree',t => {
-  const f = fixture(t); f.store.configure(f.project.id,{ruleRoots:['docs/agent']});
-  f.write('docs/agent/frontend.md','# Existing rule'); f.write('.agent-workbench/rules/other.md','# Other tree');
+test('stored custom paths and old Trellis sources do not redirect standard reads or writes',t => {
+  const f = fixture(t);
+  Object.assign(f.store.registry.projects[0],{ruleFiles:['instructions.md'],ruleRoots:['docs/agent'],journalDir:'old-logs'});
+  f.store.saveRegistry();
+  f.write('instructions.md','# Old entry'); f.write('docs/agent/frontend.md','# Old rule');
+  f.write('old-logs/2026-11.md','# Old log\n\n## Old event');
+  f.write('.trellis/workspace/journal.md','# Trellis log\n\n## Old event');
+  f.write('.trellis/spec/index.md','# Old rules');
+  f.write('AGENTS.md','# Entry'); f.write('.agent-workbench/rules/frontend.md','# Current rule');
+  const registryBefore=fs.readFileSync(f.store.registryFile,'utf8');
   const restarted = new Workbench(f.data);
-  assert.deepEqual(restarted.context(f.project.id).modules.map(doc => doc.file),['docs/agent/frontend.md']);
-  assert.throws(() => restarted.document(f.project.id,'.agent-workbench/rules/other.md'),/没有发现/);
-  assert.throws(() => restarted.propose({projectId:f.project.id,file:'.agent-workbench/rules/other.md',title:'Wrong tree',reason:'No',source:'Fixture',content:'# No'}),/已登记/);
+  assert.deepEqual(restarted.context(f.project.id).modules.map(doc=>doc.file),['.agent-workbench/rules/frontend.md']);
+  assert.deepEqual(restarted.journal(f.project.id),[]);
+  for(const file of ['instructions.md','docs/agent/frontend.md','old-logs/2026-11.md','.trellis/workspace/journal.md']) {
+    assert.throws(()=>restarted.document(f.project.id,file),/没有发现/);
+    assert.throws(()=>restarted.target(restarted.project(f.project.id),file),/约束入口或模块/);
+  }
+  const empty=new Workbench(path.join(f.root,'empty-state'));
+  assert.deepEqual(empty.inspect({root:f.projectRoot}).discovered,['AGENTS.md','.agent-workbench/rules']);
+  assert.equal(fs.readFileSync(f.store.registryFile,'utf8'),registryBefore,'reading does not migrate files');
+  restarted.configure(f.project.id,{name:'Renamed'});
+  const stored=JSON.parse(fs.readFileSync(f.store.registryFile,'utf8')).projects[0];
+  for(const key of ['ruleFiles','ruleRoots','journalDir'])assert.equal(stored[key],undefined);
+  assert.equal(fs.readFileSync(path.join(f.projectRoot,'instructions.md'),'utf8'),'# Old entry');
 });

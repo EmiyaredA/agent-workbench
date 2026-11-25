@@ -4,7 +4,7 @@
 
 2026-11-25 用户进一步澄清：重点是每次约束迭代都有记录，不要求每次先人审。当前已增加直接修改并留档，与可选提案共用“变更记录”的时间线、清单与同页抽屉。`change` 按已读取的 baseHash 写入，保留前后正文、来由、来源及幂等标识，同步追加事实日志；recorded 与审核后的 applied 分开。下文“每次人审”属于初始设计取舍，不再是所有作用域的统一产品门槛；具体任务仍遵守其用户授权和项目约定。历史外部编辑没有快照时不推造差异。
 
-当前目录约定已收拢为根 `AGENTS.md`、`.agent-workbench/rules/index.md` 与按需模块、`docs/maintenance/`。采用项目自身命名，`.trellis` 仅用于兼容旧映射；常规读取不再调用范围更广的 `discoverDocs`。具体实现以 [目录约定](directory-convention.md) 为准；下面的路径和发现方案属于初期设计记录。
+当前目录固定为根 `AGENTS.md`、`.agent-workbench/rules/index.md` 与按需模块、`docs/maintenance/`。2026-11-25 按用户要求移除旧目录配置、自定义映射和 `.trellis/workspace` 自动读取；只读参考仍可逐文件登记。具体实现以[目录约定](directory-convention.md)为准；下文的旧目录兼容方案属于历史设计，不是现有能力。
 
 维护记录的进一步融合建议见 [write-notes × mini-trellis 调研](research/maintenance-integration.md)，包含固定版本探针与当前缺口。同一决策集合的维护四视图、迭代关联与记录重试现已实现。2026-11-25 补充 Skill 决策写作／状态流转指引与 CLI 校验／归档；看板仍只读，外部变更自动送审未实现。
 

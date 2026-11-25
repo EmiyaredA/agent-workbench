@@ -23,7 +23,7 @@ node <skill目录>/scripts/workbench.mjs maintenance --project <项目ID或目�
 
 `context` 的 `rules` 返回全局／项目入口正文，`indexes` 返回 `.agent-workbench/rules/index.md` 等已登记模块根索引的正文，`modules` 只给出可展开文件。先按索引的任务条件选择模块，再用 `read` 展开；模块引用共用规则时读取链接目标，不复制另一份正文。不默认读取全部模块、历史日志或原始会话。不把维护背景、被否决方案和被替代说明当成有效指令。没有登记的项目需由用户在看板登记，不自行扩大读取范围。
 
-新项目固定使用根 `AGENTS.md`、`.agent-workbench/rules/` 和 `docs/maintenance/`；已有项目以登记映射为准，不额外猜测或扫描其他规则目录。小项目可只有入口文件，目录和模块索引不存在不代表需要自动创建。需要新入口时可参考工作台仓库的 `templates/project/`，按当前任务授权选择直接记录或提案。
+所有项目固定使用根 `AGENTS.md`、`.agent-workbench/rules/` 和 `docs/maintenance/`。不接受自定义约束／维护目录，不扫描 `.trellis` 等旧来源；只读参考文件按显式登记路径读取。小项目可只有入口文件，目录和模块索引不存在不代表需要自动创建。需要新入口时可参考工作台仓库的 `templates/project/`，按当前任务授权选择直接记录或提案。
 
 ## 约束迭代：修改并记录
 

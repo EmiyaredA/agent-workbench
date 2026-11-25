@@ -68,9 +68,9 @@ try {
 
 
   await page.locator('[data-action=global]').click(); await fill('file',globalFile); await submit(); await waitFormClosed();
-  await page.locator('.header [data-action=settings]').click(); await dialog().locator('summary').click(); await capture('02-configure-sources');
-  await fill('journalDir','docs/logs'); await fill('referenceFiles','docs/api.md'); await submit(); await waitFormClosed();
-  assert.equal(store.project(projectId).journalDir,'docs/logs'); check('configure global source and custom maintenance mapping');
+  await page.locator('.header [data-action=settings]').click(); await capture('02-configure-sources');
+  assert.equal(await dialog().locator('[name=ruleFiles],[name=ruleRoots],[name=journalDir]').count(),0); await fill('referenceFiles','docs/api.md'); await submit(); await waitFormClosed();
+  assert.equal(store.project(projectId).journalDir,'docs/maintenance'); check('configure global source and references with fixed project directories');
 
   assert.deepEqual(store.project(projectId).referenceFiles,['docs/api.md']);
   assert.equal(await page.locator('.file-button[data-file="docs/api.md"]').count(),0);
@@ -154,7 +154,7 @@ try {
   assert.equal(await page.locator('select').count(),0); await capture('custom-month-dropdown');
   await page.keyboard.press('Escape'); assert.equal(await page.locator('#month-filter .dropdown-trigger').getAttribute('aria-expanded'),'false');
   await page.locator('#month-filter .dropdown-trigger').click(); await page.locator('.header h1').click(); assert.equal(await page.locator('#month-filter .dropdown-trigger').getAttribute('aria-expanded'),'false');
-  await page.locator('#month-filter .dropdown-trigger').press('ArrowDown'); await page.keyboard.press('End'); await page.keyboard.press('Enter'); await page.locator('[data-action=maintenance-reset]').click(); check('add maintenance entries to configured directory and read separate journal history');
+  await page.locator('#month-filter .dropdown-trigger').press('ArrowDown'); await page.keyboard.press('End'); await page.keyboard.press('Enter'); await page.locator('[data-action=maintenance-reset]').click(); check('add maintenance entries to standard directory and read separate journal history');
   await page.locator('[data-action=maintenance-view][data-view=list]').click();
   await page.locator('#maintenance-status .dropdown-trigger').click(); await page.locator('#maintenance-status [data-value=rejected]').click();
   await visible(page.getByRole('button',{name:'常驻观察服务',exact:true}));

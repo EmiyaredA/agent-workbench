@@ -37,6 +37,18 @@ test('mutations require same-origin UI nonce and invalid JSON is rejected',async
   assert.equal((await f.request(route,{},'POST',{'X-Workbench-Nonce':'wrong'})).status,403);
   assert.equal((await f.request(route,[])).status,400);
 });
+test('project registration and settings reject custom source directories',async t => {
+  const f = await service(t);
+  for (const [key,value] of Object.entries({ruleFiles:['old.md'],ruleRoots:['docs/agent'],journalDir:'logs'})) {
+    for (const response of [await f.request('/api/projects',{root:f.projectRoot,[key]:value}),await f.request(`/api/projects/${f.project.id}`,{[key]:value},'PATCH')]) {
+      assert.equal(response.status,400);
+      assert.match((await response.json()).error,/不支持的项目设置/);
+    }
+  }
+  assert.equal((await f.request(`/api/projects/${f.project.id}`,{name:'Renamed',referenceFiles:[]},'PATCH')).status,200);
+  const catalog=await fetch(f.base+`/api/projects/${f.project.id}`).then(r=>r.json());
+  assert.equal(catalog.project.name,'Renamed');assert.equal(catalog.project.journalDir,'docs/maintenance');
+});
 test('direct changes require the UI nonce and expose history without duplicating snapshot bodies in state',async t=>{
   const f=await service(t); f.write('AGENTS.md','# Before');
   const payload={projectId:f.project.id,file:'AGENTS.md',title:'Direct iteration',reason:'User task',category:'process',source:'User',baseHash:f.store.document(f.project.id,'AGENTS.md').hash,content:'# After',operationId:'http-direct'};

@@ -33,7 +33,7 @@ npm start -- --port 4180 --data /absolute/path/to/workbench-data
 
 | 功能 | 当前行为 |
 | --- | --- |
-| 项目登记 | 检查目录、重复项；设置已有约束、模块与维护文档来源 |
+| 项目登记 | 检查目录、重复项；按固定目录读取约束、模块与维护日志 |
 | 约束阅读 | 项目入口与补充约束按实际目录树展示，可展开／折叠；全局偏好独立进入，支持阅读／原文切换 |
 | 变更记录 | 直接修改并保留前后版本、来由与来源；时间线／清单共用记录，支持搜索和同页抽屉；也支持待审提案 |
 | 维护路径 | 修改或审核写入后留日志；可手动记录背景、实际结果、验证、后续和取舍 |
@@ -50,8 +50,8 @@ npm start -- --port 4180 --data /absolute/path/to/workbench-data
 
 ## 文件与状态
 
-- 项目默认来源：根 `AGENTS.md`、`.agent-workbench/rules/` 与 `docs/maintenance/`；模块先读 `index.md`。新项目只需登记目录，旧布局在兼容设置中保留。完整规则见 [目录约定](docs/directory-convention.md)。
-- 保留现有目录；同时可读取 `.trellis/workspace/` 的既有日志。新记录追加到配置的维护目录，不修改上游 journal 索引。
+- 项目固定来源：根 `AGENTS.md`、`.agent-workbench/rules/` 与 `docs/maintenance/`；模块先读 `index.md`。登记只需名称和已有目录。完整规则见 [目录约定](docs/directory-convention.md)。
+- 维护日志固定读取和追加到 `docs/maintenance/`；不自动扫描 `.trellis` 或其他旧目录。
 - 索引引用的既有 README、契约或背景资料可在项目目录设置的 `referenceFiles` 中逐文件登记；只读打开，不加入有效约束或自动上下文。
 - 全局偏好登记一个已有 Markdown 文件，不自动修改任何 Agent 配置。
 - 演示 v4 为三项目补充具体取舍、明确的主题关联和验收场景，保留旧 demo／demo-v2／demo-v3 目录和其中的用户编辑，不迁移真实项目。
@@ -98,7 +98,7 @@ npm run test:ui
 
 `build` 输出 `dist/`，包含运行源码、静态页面、Skill 与许可；没有前端编译链。在分发目录运行 `npm ci --omit=dev --ignore-scripts` 后即可 `npm start`。开发验收命令在源码仓库运行。
 
-当前本机验收：62 项 Node／HTTP／CLI 测试、38 项浏览器检查通过。浏览器覆盖 17 张设计稿的主要操作和状态及 Skill 参考／模板阅读；截图、对照图与机器报告保存在忽略的 `.local/ui-acceptance/`。四视图专项另有14张截图和报告，位于 `.local/maintenance-ui/`。CI 配置运行检查、测试、构建及两组浏览器验收，上传隔离示例的验收截图。
+当前本机验收：63 项 Node／HTTP／CLI 测试、38 项浏览器检查通过。浏览器覆盖 17 张设计稿的主要操作和状态及 Skill 参考／模板阅读；截图、对照图与机器报告保存在忽略的 `.local/ui-acceptance/`。四视图专项另有14张截图和报告，位于 `.local/maintenance-ui/`。CI 配置运行检查、测试、构建及两组浏览器验收，上传隔离示例的验收截图。
 
 ## 设计依据与边界
 
