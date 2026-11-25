@@ -1,10 +1,49 @@
-# Agent Workbench · 独立 UI 交互预览
+# 交互设计档案
 
-2026-11-24 · 共 17 张 · 使用内置 image_gen 逐张生成。
+[← 项目首页](../../../README.md) · [当前界面截图](../../images/README.md) · [完整设计稿画廊](index.html)
 
-这些是静态设计稿，不代表界面或功能已经实现。每张展示一个操作或状态，沿用选定的文档工作台布局与 write-notes-like-deepseek 的蓝白风格。图片文案是设计示例，最终行为与功能验收以实现为准。
+**2026-11-24 · 17 张早期设计稿 · 内置 image_gen 逐张生成。**
 
-可打开 [本地画廊](index.html) 连续浏览。生成风格提示和逐张目标摘要见 [manifest.json](manifest.json)，完整生成指令保留在本次对话的工具调用中。
+> 本目录保存静态设计稿。它们使用早期蓝白风格，部分入口和文案已经调整；当前暖色界面与已实现行为，请看 [实际运行截图](../../images/README.md) 和 [使用指南](../../usage.md)。
+
+## 按任务浏览
+
+<table>
+  <tr>
+    <td width="33%"><a href="01-register-project.png"><img src="01-register-project.png" alt="早期设计稿：登记已有项目"></a></td>
+    <td width="33%"><a href="03-read-module-rules.png"><img src="03-read-module-rules.png" alt="早期设计稿：阅读模块约束"></a></td>
+    <td width="33%"><a href="07-review-diff.png"><img src="07-review-diff.png" alt="早期设计稿：审核修改差异"></a></td>
+  </tr>
+  <tr>
+    <td><strong>登记项目</strong> · 01–02</td>
+    <td><strong>阅读与查找</strong> · 03–04</td>
+    <td><strong>提出与审核</strong> · 05–11</td>
+  </tr>
+  <tr>
+    <td><a href="12-maintenance-timeline.png"><img src="12-maintenance-timeline.png" alt="早期设计稿：维护时间线"></a></td>
+    <td><a href="15-skill-connection.png"><img src="15-skill-connection.png" alt="早期设计稿：Skill 接入"></a></td>
+    <td><a href="17-directory-error.png"><img src="17-directory-error.png" alt="早期设计稿：目录不可读错误"></a></td>
+  </tr>
+  <tr>
+    <td><strong>维护与决策</strong> · 12–14</td>
+    <td><strong>Agent 接入</strong> · 15</td>
+    <td><strong>空状态与错误</strong> · 16–17</td>
+  </tr>
+</table>
+
+## 设计与当前实现的对照
+
+| 早期设计 | 当前实现 |
+| --- | --- |
+| 自定义入口、模块与维护目录 | 固定为 AGENTS.md、.agent-workbench/rules/、docs/maintenance/；只读参考可逐文件登记 |
+| 阅读／原文切换 | 统一为预览／Markdown 分段控件 |
+| 以待审提案为主要入口 | 变更记录同时呈现直接修改留档和可选提案 |
+| 维护时间线 | 工程决策采用四视图；实际迭代从独立日志入口或关联进入 |
+| 蓝白配色 | 暖白、栗红主题与红莉栖头像 |
+
+## 全部 17 张设计稿
+
+以下“目标”描述当时的设计意图，具体功能以当前实现与验收为准。点击名称可打开原图。
 
 | 编号 | 交互图 | 目标 |
 | --- | --- | --- |
@@ -25,3 +64,9 @@
 | 15 | [Skill 接入](15-skill-connection.png) | 展示 Skill 位置与命令示例；支持读取约束、查询背景和提交候选，不提供批准入口。 |
 | 16 | [待审队列为空](16-empty-proposals.png) | 无待审提案时提供新建提案、查看已处理记录与 Skill 接入入口。 |
 | 17 | [目录不可读](17-directory-error.png) | 目录校验失败时保留输入、就地显示原因，修正路径后重试，不自动创建目录。 |
+
+## 来源与生成记录
+
+布局与工程决策表达参考 [write-notes-like-deepseek](https://github.com/czm15053/write-notes-like-deepseek)，感谢原作者的设计与方法分享。这里的图片由本项目独立生成。
+
+生成风格提示和逐张目标摘要见 [manifest.json](manifest.json)。完整图集可在 [HTML 画廊](index.html) 连续浏览；实现验收见 [视觉验收记录](../../../design-qa.md)。

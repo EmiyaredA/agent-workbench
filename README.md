@@ -1,68 +1,116 @@
-# agent-workbench
+<div align="center">
+  <img src="web/assets/kurisu-avatar.png" width="80" height="80" alt="Agent Workbench 的 Q 版红莉栖标识">
+  <h1>Agent Workbench</h1>
+  <p><strong>把项目约束、修改来由和工程决策，留在下一位 Agent 找得到的地方。</strong></p>
+  <p>本机运行 · Markdown 存储 · 多项目管理 · CLI / Skill 接入</p>
+  <p>
+    <a href="#快速开始">快速开始</a> ·
+    <a href="#功能一览">功能一览</a> ·
+    <a href="docs/images/README.md">界面图集</a> ·
+    <a href="docs/usage.md">使用指南</a> ·
+    <a href="#参考与致谢">参考与致谢</a>
+  </p>
+</div>
 
-个人多项目的 Agent 文档工作台：登记已有项目，统一查看项目约束，记录约束迭代，按需讨论修改提案，保留维护来由。正式内容留在项目 Markdown，换一个 code agent 仍能接着使用。
+![工程决策看板：左侧切换项目，顶部切换约束、变更与维护记录，正文展示架构基线和主题分类](docs/images/decisions.jpg)
 
-v0.1 使用 **mini-trellis-core 0.4.2 + 一个本机 Node 进程 + 原生浏览器页面**。没有数据库、专属模型服务或常驻观察 Agent；当前不接 CloudCLI。
+<p align="center"><sub>v0.1 实际运行界面 · 暖白与栗红主题 · 截图来自隔离演示项目，点击图片可查看大图</sub></p>
 
-## 启动
+多个项目、多个 Agent、许多次会话之后，依然能找到三件事：**现在遵循什么、上次改了什么、当初为什么这样决定。**
 
-需要 Node.js 24+ 和 npm。Git 可用于管理项目版本，但看板也支持非 Git 目录。
+工作台登记已有项目，按目录阅读约束，保存修改前后版本，并将实际迭代与工程决策关联起来。正式正文保存在项目 Markdown 中，便于交接和版本管理。
+
+## 快速开始
+
+需要 **Node.js 24+** 和 npm。在仓库根目录运行：
 
 ```sh
 npm ci --ignore-scripts
 npm start
 ```
 
-打开 [本地工作台](http://127.0.0.1:4173)。默认是真实空工作区，由你登记已有目录；登记只保存映射，不创建或改写项目文件。
+打开 [本地工作台](http://127.0.0.1:4173)，登记一个已有项目目录即可开始。默认工作区为空，登记只保存映射，不创建或改写项目文件；非 Git 目录也可使用。
 
-完整交互的独立示例：
+想先体验完整功能：
 
 ```sh
 npm run demo -- --port 4174
 ```
 
-打开 [演示工作台](http://127.0.0.1:4174)。示例与正式数据隔离；演示模式只接受演示目录。登记表单会给出一个已准备好的空示例目录。内置工作台、作品站和 API 服务三个不同项目，包含22份约束、11条待审／写入／拒绝／冲突提案、跨三个月的25条维护记录和27份决策笔记。示例版本保存在 `.runtime/demo-v4/`，旧演示目录原样保留。
+打开 [演示工作台](http://127.0.0.1:4174)。内置工作台、作品站、API 服务三个虚构项目，包含约束、待审／已写入／拒绝／冲突提案、维护日志与决策笔记。演示数据与正式工作区隔离。
 
-可用 `--port`、`--data` 或 `AGENT_WORKBENCH_DATA` 指定端口和数据位置：
+<details>
+<summary>端口与数据目录</summary>
 
 ```sh
 npm start -- --port 4180 --data /absolute/path/to/workbench-data
 ```
 
-## 可以做什么
+也可使用 `AGENT_WORKBENCH_DATA`。默认正式数据位于 `.runtime/workbench/`，演示位于 `.runtime/demo-v4/`；映射、候选、回执和锁均不提交 Git。服务只监听 `127.0.0.1`。
 
-| 功能 | 当前行为 |
-| --- | --- |
-| 项目登记 | 检查目录、重复项；按固定目录读取约束、模块与维护日志 |
-| 约束阅读 | 项目入口与补充约束按实际目录树展示，可展开／折叠；全局偏好独立进入，支持阅读／原文切换 |
-| 变更记录 | 直接修改并保留前后版本、来由与来源；时间线／清单共用记录，支持搜索和同页抽屉；也支持待审提案 |
-| 维护路径 | 修改或审核写入后留日志；可手动记录背景、实际结果、验证、后续和取舍 |
-| 工程决策 | 四视图共用 `.agents/notes`；Skill 指导写作与状态流转，CLI 校验格式、链接和封印，并按精确计划归档；看板只读展示 |
-| 查找与交接 | 搜索当前项目的文档与提案；Skill／CLI 按需读取规则和维护背景 |
+</details>
 
-用户授权直接修改时，可通过“修改并记录”或 CLI change 更新已登记约束，不必每次先走提案。每次保存旧版、新版、理由和来源，同步写维护日志，原文变化则停止；已完成请求重试不会覆盖之后的编辑。需要讨论或按项目约定人审时仍可创建提案，批准绑定原文和候选的具体版本。只读 HTTP 与 CLI 查询不会顺带执行恢复写入。工程决策笔记保存事实与取舍，状态变化不自动修改约束。
+## 功能一览
 
-约束提案的“已写入”和工程笔记的“已落地”是两种状态。历史记录、被否决的方案和待审候选不会自动成为有效指令。Markdown 中的原始 HTML 以文本呈现，图片显示为链接，不自动加载外部资源。
+| 你想做什么 | 从哪里开始 | 可以得到什么 |
+| --- | --- | --- |
+| 找到当前任务的约束 | **约束** → 文件树 | 项目入口、按需模块、预览／Markdown 切换与关联记录 |
+| 追溯一次约束修改 | **变更记录** → 时间线／清单 | 修改前后版本、类别、理由、来源与同页详情 |
+| 讨论一份修改方案 | **变更记录** → 新建提案 | 精确差异审核、拒绝原因、原文冲突提示与重新提案 |
+| 理解架构与历史取舍 | **维护记录** → 四种视图 | 架构基线、演进时间线、避坑智库、决策清单 |
+| 记录实际发生的迭代 | **维护记录** → 记录迭代 | 背景、结果、验证、后续，以及决策／文件链接 |
+| 给 Code Agent 交接 | **Skill 接入** / CLI | 按需读取约束、查询维护背景、记录修改、校验与归档决策 |
 
-维护记录默认打开架构基线。四个标签是同一批决策笔记的不同视图：基线突出当前决定与主题，时间线按笔记日期排列，避坑提取这些笔记中的备选／否决理由，清单列出全部决策。月份、类别、状态与关键词共用，切换视图保留筛选。实际迭代从“迭代日志”入口或决策关联进入，不混入决策时间线。方案稿、否决和历史状态分别标注。记录迭代可选择类别、关联已有决策与文件；重试复用同一操作标识，不重复追加。详情中的决策、文档与迭代链接在同一个抽屉切换，支持浏览器前后退和阅读／原文切换。决策正文与状态仍由 Agent 维护，看板不提供决策编辑或归档操作。
+### 01 · 约束按目录展开，正文安静阅读
 
-项目内只保留约束、变更记录和维护记录；全局也使用相同流程。变更记录默认按月排列，清单、搜索、状态筛选与当前页抽屉共用同一批记录。约束页按文件关联迭代，不拆散或复制正式 Markdown。新迭代、提案和手工维护日志必须选择六类标签之一；旧记录没有标签时显示“未标注”，不自动补造。项目从左侧切换。月份筛选与窄屏项目切换使用统一自定义菜单，支持键盘选择。
+项目入口与模块遵循真实文件树，按需展开。正文支持 **预览 / Markdown** 切换；文件路径、相关变更和维护背景集中在右侧栏，全局偏好有独立入口。
 
-## 文件与状态
+![约束阅读：项目文件树、模块索引、文档显示方式与右侧信息栏](docs/images/rules.jpg)
 
-- 项目固定来源：根 `AGENTS.md`、`.agent-workbench/rules/` 与 `docs/maintenance/`；模块先读 `index.md`。登记只需名称和已有目录。完整规则见 [目录约定](docs/directory-convention.md)。
-- 维护日志固定读取和追加到 `docs/maintenance/`；不自动扫描 `.trellis` 或其他旧目录。
-- 索引引用的既有 README、契约或背景资料可在项目目录设置的 `referenceFiles` 中逐文件登记；只读打开，不加入有效约束或自动上下文。
-- 全局偏好登记一个已有 Markdown 文件，不自动修改任何 Agent 配置。
-- 演示 v4 为三项目补充具体取舍、明确的主题关联和验收场景，保留旧 demo／demo-v2／demo-v3 目录和其中的用户编辑，不迁移真实项目。
-- 本机状态默认在 `.runtime/workbench/`，演示在 `.runtime/demo-v4/`；来源映射、候选、回执与锁均不提交 Git。
-- 工作台仅绑定 `127.0.0.1`。直接修改与提案审核都是应用流程，不是对同一用户下其他文件工具的系统级隔离。
+### 02 · 每次修改，都有前后版本和来由
 
-普通改动不强制产出新规则。随着模型能力增强，应当合并、收窄或删除不再需要的提示；根据项目约定与本次用户授权选择直接留档或先提案。
+获授权的直接修改可通过“修改并记录”或 CLI `change` 留档；需要讨论时创建待审提案。审核绑定原文与候选的具体版本，原文变化时停止写入。详情展示差异、理由与来源，修改或审核写入后同步追加维护日志。
 
-## Code Agent Skill
+![提案差异审核：同页抽屉并排显示原文与建议内容，保留理由、来源和版本信息](docs/images/review.jpg)
 
-仓库内 [Skill](skills/agent-workbench/SKILL.md) 不需要先全局安装即可使用：
+<details>
+<summary>查看变更记录时间线</summary>
+
+![变更记录：按月排列修改记录，支持状态筛选、关键词搜索和清单切换](docs/images/changes.jpg)
+
+时间线和清单共用同一批记录。每次新修改或提案必须选择类别，历史无标签的记录显示“未标注”。
+
+</details>
+
+### 03 · 看见决定，也看见放弃的路
+
+**架构基线、演进时间线、避坑智库、决策清单**是同一批 `.agents/notes` 的四种视图。共用月份、类别、状态与关键词筛选，切换视图保留筛选条件；实际迭代从独立“迭代日志”入口或决策关联进入。
+
+<table>
+  <tr>
+    <td width="50%"><a href="docs/images/decisions.jpg"><img src="docs/images/decisions.jpg" alt="架构基线：当前决定、引用权重与主题分类"></a></td>
+    <td width="50%"><a href="docs/images/pitfalls.jpg"><img src="docs/images/pitfalls.jpg" alt="避坑智库：放弃的备选方案、权衡依据与对应决定"></a></td>
+  </tr>
+  <tr>
+    <td><strong>架构基线</strong> · 找到当前决定和领域主题</td>
+    <td><strong>避坑智库</strong> · 了解备选与否决理由</td>
+  </tr>
+</table>
+
+<details>
+<summary>查看决策详情与手机布局</summary>
+
+![决策详情：在同一个抽屉阅读问题、采用方案、备选、代价与关联迭代](docs/images/decision-detail.jpg)
+
+<p align="center"><img src="docs/images/mobile.jpg" width="280" alt="手机上的维护看板：项目切换、四视图导航、筛选与决策卡片"></p>
+
+看板只读展示工程决策；正文、状态与归档由 Agent / CLI 维护。方案稿、被否决、归档与已落地内容分别标注，历史决定不会自动成为有效约束。
+
+</details>
+
+### 04 · 在已有 Code Agent 中继续工作
+
+使用仓库内 [Agent Workbench Skill](skills/agent-workbench/SKILL.md)，无需先全局安装：
 
 ```sh
 node skills/agent-workbench/scripts/workbench.mjs projects
@@ -71,42 +119,75 @@ node skills/agent-workbench/scripts/workbench.mjs read --project PROJECT_ID --fi
 node skills/agent-workbench/scripts/workbench.mjs journal --project PROJECT_ID --query 关键词
 ```
 
-`context` 返回全局／项目正文、模块根索引正文和模块文件列表；模块正文按需 `read`。普通 README、其他 docs 与研究笔记不在常规扫描范围。加载 Skill 的 code agent 根据当前对话提出候选，工作台不后台采集聊天，也不运行额外推理模型。复制安装 Skill 时，用 `AGENT_WORKBENCH_ROOT` 指向本仓库，数据目录与看板保持一致。
+`context` 提供全局／项目入口、模块根索引与模块文件列表；正文按任务需要再 `read`。CLI 还支持直接修改留档、维护记录、提案及决策校验／归档，没有提案批准命令。复制安装 Skill 时，用 `AGENT_WORKBENCH_ROOT` 指向本仓库。
 
-CLI 支持 `projects / context / read / journal / maintenance / propose / change / record / notes`，没有提案批准命令。`change --project <ID或global> --input <JSON>` 用于获授权的直接修改：输入包含 file、title、reason、source、content、必填标签 category、read 返回的 baseHash 和稳定 operationId；返回 recorded 后可在“变更记录”查看真实前后差异。提案输入与维护记录格式见 Skill；HTTP 接口见 [接口说明](docs/api.md)。
+<details>
+<summary>查看 Skill 接入页面</summary>
 
-决策写作、proposed／implemented／rejected 流转与三种模板见 [Skill 决策参考](skills/agent-workbench/references/decision-notes.md)。笔记在获授权的项目中由 Agent 维护；涉及约束时按用户授权记录迭代或提交提案。校验与归档命令：
+![Skill 接入：在工作台内阅读 Skill、复制原文与路径，并打开决策参考和模板](docs/images/skill.jpg)
 
-```sh
-node skills/agent-workbench/scripts/workbench.mjs notes --project PROJECT_ID --action verify
-node skills/agent-workbench/scripts/workbench.mjs notes --project PROJECT_ID --action archive --file .agents/notes/implemented/architecture/YYYY-MM-DD-old.md --successor .agents/notes/implemented/architecture/YYYY-MM-DD-new.md > /tmp/note-archive-plan.json
-node skills/agent-workbench/scripts/workbench.mjs notes --project PROJECT_ID --action apply --input /tmp/note-archive-plan.json
+</details>
+
+## 文件就是交接入口
+
+```text
+你的项目/
+├── AGENTS.md                     # 项目入口与当前约束
+├── .agent-workbench/rules/
+│   ├── index.md                  # 按任务选择模块
+│   └── frontend.md               # 按需拆分的约束
+├── .agents/notes/                # 工程决策与取舍
+│   ├── proposed/
+│   ├── implemented/
+│   ├── rejected/
+│   └── archived/
+└── docs/maintenance/YYYY-MM.md   # 实际迭代、验证与后续
 ```
 
-`archive` 只读生成完整前后文本计划；核对后 `apply` 才写入归档副本、SHA-256 清单和接管篇链接，最后移除原路径。中断后以相同计划与数据目录重试，遇到外部新编辑停止；不改写封存正文或覆盖旧封印。旧入站链接需另行修复后再次校验，日志与规则的链接也会核对。无 Git 时只能校验当前哈希，不能证明历史只增不改。具体范围与历史缺封印的处理见 [校验与归档](skills/agent-workbench/references/note-operations.md)。工具随工作台分发，不依赖上游项目路径或新增运行包。
+约束与维护目录固定，目录不存在时不自动创建。既有契约、README 或背景资料可通过 `referenceFiles` 逐文件登记为只读参考；它们不加入有效约束或自动上下文。详见 [目录约定](docs/directory-convention.md)。
 
-## 验证与构建
+## 开发与验证
+
+v0.1 使用 **mini-trellis-core 0.4.2 + 本机 Node 进程 + 原生浏览器页面**，无需数据库或专属模型服务。
 
 ```sh
+npm ci --ignore-scripts
 npm run check
 npm test
 npm run build
 npm run test:ui
 ```
 
-`npm test` 必须找到并执行实际测试。`test:ui` 使用独立临时目录与全新浏览器配置，不读真实会话或项目数据。macOS 默认可使用已安装的 Chrome；也可设置 `AWB_CHROME`，或运行 `npx playwright install chromium` 使用测试浏览器。Playwright 仅为开发依赖。
+当前已通过 **63 项 Node / HTTP / CLI 测试、38 项浏览器检查**。浏览器验收使用临时目录与独立浏览器配置。`build` 输出含源码、静态页面、Skill 和许可的 `dist/`，没有前端编译链。
 
-`build` 输出 `dist/`，包含运行源码、静态页面、Skill 与许可；没有前端编译链。在分发目录运行 `npm ci --omit=dev --ignore-scripts` 后即可 `npm start`。开发验收命令在源码仓库运行。
+| 文档 | 内容 |
+| --- | --- |
+| [使用与维护指南](docs/usage.md) | 启动参数、写入语义、CLI、校验、归档和分发 |
+| [界面图集](docs/images/README.md) | 8 张实际截图、功能入口与重新截图方法 |
+| [HTTP 接口](docs/api.md) | 请求字段、版本核对与重试约定 |
+| [整体设计](docs/design.md) / [源码审查](docs/research/source-review.md) | 当前边界、设计来由与上游复用依据 |
+| [视觉验收](design-qa.md) / [维护记录](docs/maintenance/2026-11.md) | 验收证据与重要修改记录 |
+| [历史交互设计稿](docs/ui/interaction-previews/README.md) | 17 张早期静态设计稿与功能对照 |
 
-当前本机验收：63 项 Node／HTTP／CLI 测试、38 项浏览器检查通过。浏览器覆盖 17 张设计稿的主要操作和状态及 Skill 参考／模板阅读；截图、对照图与机器报告保存在忽略的 `.local/ui-acceptance/`。四视图专项另有14张截图和报告，位于 `.local/maintenance-ui/`。CI 配置运行检查、测试、构建及两组浏览器验收，上传隔离示例的验收截图。
+<details>
+<summary>当前边界</summary>
 
-## 设计依据与边界
+- 看板未提供工程笔记编辑／归档按钮；Skill / CLI 已提供决策流程与归档写入。
+- 外部工具直接编辑约束时，没有最后已审快照或自动送审；`context` 读取磁盘现状。已有候选在批准前再次核对版本。
+- 未实现聊天历史导入、跨设备同步、常驻观察 Agent 或后台自动提炼；当前不接 CloudCLI。提炼由加载 Skill 的宿主 Agent 按需执行，尚未评估真实对话准确率。
+- 文件查看受单文件 1 MB 与扫描上限约束，不完整时提示。Markdown 原始 HTML 以文本呈现，图片显示为链接，不自动加载外部资源。
+- 本机写入流程不构成对同一用户其他文件工具的系统级隔离。普通维护不强制产出新规则；约束变化遵守用户授权和项目约定。
 
-- [整体设计](docs/design.md)、[源码审查](docs/research/source-review.md)、[mini-trellis 取用边界](docs/research/mini-trellis.md)
-- [17 张独立交互图](docs/ui/interaction-previews/README.md)、[视觉验收](design-qa.md)、[维护记录](docs/maintenance/2026-11.md)
+</details>
 
-外部工具直接编辑约束时，当前还没有最后已审快照或自动送审；`context` 读取磁盘现状。已有候选仍会在批准前核对版本并阻止覆盖外部新编辑。
+## 参考与致谢
 
-看板未提供工程笔记编辑／归档按钮；Skill／CLI 已提供决策流程与归档写入。未实现原始聊天历史导入、跨设备同步或后台自动提炼。提炼质量取决于加载 Skill 的宿主 Agent，尚未进行真实对话准确率评估。文件查看按单文件 1 MB 与扫描上限工作，结果不完整时给出提示。
+特别感谢 **[czm15053 / write-notes-like-deepseek](https://github.com/czm15053/write-notes-like-deepseek)**。本项目参考了它将工程决定、备选方案、收益代价与验证留在仓库中的方法，以及决策笔记生命周期和看板四视图的组织方式。这些思路帮助工作台把“现在的约束”与“当初的取舍”联系起来。
 
-使用 AGPL-3.0，保留上游依赖的许可与归属，见 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。
+同样感谢 **[Tiger-zzZ / mini-trellis](https://github.com/Tiger-zzZ/mini-trellis)**。本项目参考了它记录实际修改、验证与后续的维护日志方法，以及按需读取文档和追溯来源关系的思路；代码中实际使用 `mini-trellis-core 0.4.2` 的文档替代关系解析与查询辅助能力。具体复用范围见 [mini-trellis 源码审查与取用边界](docs/research/mini-trellis.md)。
+
+也感谢 [Compound Engineering](https://github.com/EveryInc/compound-engineering-plugin)、[ECC](https://github.com/affaan-m/ECC) 的文档实践启发。
+
+决策工具与页面由本项目独立实现；具体取用版本和边界见 [决策流程来源](skills/agent-workbench/references/note-sources.md) 与 [NOTICE](NOTICE)。
+
+本项目使用 **AGPL-3.0**，保留依赖的许可与归属。见 [LICENSE](LICENSE)。
