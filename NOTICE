@@ -26,3 +26,10 @@ templates are vendored. See docs/research/note-sources.md.
 
 Other runtime dependencies retain their notices in node_modules:
 @phosphor-icons/web, diff, marked and DOMPurify.
+Architecture visualization uses elkjs 0.12.0 for graph layout (EPL-2.0 with GPL-3.0 secondary license; see node_modules/elkjs/LICENSE.md), and fast-xml-parser 5.12.1 for XML input (MIT; see node_modules/fast-xml-parser/LICENSE). Original licenses are retained in offline distributions. Graph UI and legacy report adapter are implemented in this repository.
+
+The default constraint template also adapts requirements from the user-supplied
+go-zero-starter-main.zip (SHA-256 a60ceded39d481ce92856cabd97ff0af8c2a1894058aa2e5a64628ee0c62ed7d).
+No upstream application code or executable setup scripts are vendored.
+Conditional adaptations and document-level provenance are recorded in
+ docs/research/template-adaptation.md and docs/research/scaffold-rule-map.xml.

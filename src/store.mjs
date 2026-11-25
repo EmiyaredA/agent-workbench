@@ -210,7 +210,7 @@ export class Workbench {
     validateFields(input,['name','description']);
     if(!input.name?.trim() || input.name.length>80) throw new Fault('请填写不超过 80 字的模板名称');
     const tree=this.constraintFiles(input);
-    if(this.templates().length>=102) throw new Fault('个人模板已达到 100 个上限');
+    if(this.templates().filter(template=>!template.builtin).length>=100) throw new Fault('个人模板已达到 100 个上限');
     if(this.templates().some(template=>template.name===input.name.trim())) throw new Fault('模板名称已存在，请换一个名称',409);
     const template={id:randomUUID(),builtin:false,name:input.name.trim(),description:short(input.description),...tree,createdAt:now()};
     atomic(path.join(this.dataDir,'templates',template.id+'.json'),JSON.stringify(template,null,2)); return template;

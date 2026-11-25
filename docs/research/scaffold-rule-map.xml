@@ -1,0 +1,2381 @@
+<?xml version='1.0' encoding='utf-8'?>
+<scaffold-map date="2026-11-26" scope="来源文档，不是活动指令" semantic-review="逐项归类，机械校验仅验证覆盖与引用，不能证明语义等价">
+  <decisions>
+    <decision id="roles">按职责使用宿主能力，不绑定模型或工具厂商</decision>
+    <decision id="browser">保留真实操作、截图与权威状态验收目标，不绑定 MCP</decision>
+    <decision id="git">新功能独立分支／worktree、分块提交；推送合并发布须授权</decision>
+    <decision id="approval">用户明确要求实施即为确认，不重复索取固定口令</decision>
+    <decision id="schema">数据库策略按技术栈保留，已有项目冲突明确审核</decision>
+    <decision id="retention">业务记录追加留存，隔离临时测试夹具可按生命周期清理</decision>
+  </decisions>
+  <source file="CLAUDE.md" sha256="98d6d0655956ec5ca3e3c84f034e9466a4ce98b01e9046052c10c43b29b107f4">
+    <item id="CLAUDE.md:L3" line="3" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="23e633b7de7ee0fd">
+      <excerpt>&gt; **模板说明（`scripts/init.sh` 不会动本说明，用不上就删掉）**：本文分两块。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L4" line="4" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="d5fd7d953bf10e10">
+      <excerpt>&gt; 1. 「通用习惯」块（`&lt;!-- BEGIN GENERIC --&gt;` 到 `&lt;!-- END GENERIC --&gt;` 之间）：所有 go-zero 项目共用的红线、分层、写法、错误与日志、API 契约、数据库、测试、开发流程。**以后只在 go-zero-starter 模板仓库里改**，项目里不要直接改这一块；用 `./scripts/sync-c</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L5" line="5" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="0ca6dbc8a2829cde">
+      <excerpt>&gt; 2. 「本项目特有」块：新项目按每节开头的提示填空，填完删掉提示。项目特有的规则只写这里，不写进通用块；通用块与本块冲突时以本块为准。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L9" line="9" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="7003e3169090e82a">
+      <excerpt>优先级：用户当前要求 &gt; 本文 &gt; [`AGENTS.md`](AGENTS.md)（Codex / `developer` 子代理的执行者说明书）&gt; [`docs/系统设计.md`](docs/系统设计.md)（现行业务规则，以它为准，需求文档只是当时的设计）&gt; [`docs/架构.md`](docs/架构.md) &gt; [`cmd/&lt;服务名&gt;/desc/a</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L13" line="13" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="2d0a07865b3d0b5e">
+      <excerpt>| 仓库地图、分层、主要流程、钱的链路、配置与缓存、数据库、实测细则（新人先看） | [`docs/架构.md`](docs/架构.md) |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L14" line="14" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="4fe91afd5331a8b5">
+      <excerpt>| 现行业务规则（含角色与权限、定价、通知；需求完成后并入这里） | [`docs/系统设计.md`](docs/系统设计.md) |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L15" line="15" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="5483302cb4197aaa">
+      <excerpt>| 接口定义与契约规则 | [`cmd/&lt;服务名&gt;/desc/api-contract.md`](cmd/&lt;服务名&gt;/desc/api-contract.md) |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L16" line="16" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="4b79e2a276824692">
+      <excerpt>| Codex / `developer` 子代理执行规则、开发记录模板 | [`AGENTS.md`](AGENTS.md) |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L17" line="17" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="8971c9baf8b40cdc">
+      <excerpt>| 前端约定 | [`cmd/&lt;服务名&gt;/web/CLAUDE.md`](cmd/&lt;服务名&gt;/web/CLAUDE.md) |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L18" line="18" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="f6d463967b51cccf">
+      <excerpt>| 前端项目说明与构建 / 页面与交互设计 | [`cmd/&lt;服务名&gt;/web/README.md`](cmd/&lt;服务名&gt;/web/README.md) / `docs/前端设计.md`（有再建） |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L20" line="20" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="f8c69ec139cb24c2">
+      <excerpt>| 踩坑手册（每条带「为什么」） | [`docs/playbook.md`](docs/playbook.md) |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L21" line="21" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="87c50d9882ba2e09">
+      <excerpt>| 进行中的需求，标题下状态行 `状态：待确认` / `状态：可以开发 YYYY-MM-DD` | `docs/需求/进行中/&lt;名称&gt;.md` |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L22" line="22" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="122c7fa04dee52eb">
+      <excerpt>| 原型（只放 html，叫 `YYYY-MM-DD-&lt;名称&gt;.html`，日期为创建日，不挪不改名） | `docs/需求/原型/` |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L23" line="23" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="8e6024cd2e7f3ae1">
+      <excerpt>| 已完成的需求（含回溯信息、开发记录） | `docs/需求/已完成/YYYY-MM-DD-&lt;名称&gt;.md` |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L24" line="24" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="f33b9b7e3e1ebbad">
+      <excerpt>| 外部接入与法规参考 | `docs/参考/` |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L25" line="25" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="ee17fadeaaf5316e">
+      <excerpt>| 实测截图、走查记录、汇总页（不进 git） | `cmd/.playwright-mcp/&lt;YYYY-MM-DD&gt;-&lt;需求名&gt;/` |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L26" line="26" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="466f99c26e32468d">
+      <excerpt>| 手工迁移 SQL（线上执行、用户确认后删该日期目录） | `docs/db-migration/&lt;YYYY-MM-DD&gt;/` |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L27" line="27" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="af725d2869e330fa">
+      <excerpt>| 后端接口、模型、缓存装饰器、迁移脚本的步骤与规则（动 go-zero 后端或审后端 diff 前必读 `api.md`、`model.md` 末两节；与本文冲突以本文为准） | `~/.claude/skills/go-zero` |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L28" line="28" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="9528b13bb4849a97">
+      <excerpt>| 从零搭新项目、初始化脚本、同步模板 | [`docs/新项目指南.md`](docs/新项目指南.md)、`scripts/init.sh`、`scripts/sync-claude.sh` |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L29" line="29" section="CLAUDE.md" status="合并保留" condition="适用业务或职责存在时" fingerprint="19c9d91ca70291ae">
+      <excerpt>| 全局 CLAUDE.md、settings、go-zero skill 以 `~/.claude` 为准（不在仓库里）；项目子代理和权限示例 | `.claude/` |</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L33" line="33" section="核心指令" status="合并保留" condition="适用业务或职责存在时" fingerprint="1611f86ee6f3c010">
+      <excerpt>- **禁止操作线上服务器、线上数据库、线上 Redis**（读写、改部署、改配置都不行）；开发和测试只连本地 / 测试库，不确定是不是线上先停下问。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L34" line="34" section="核心指令" status="合并保留" condition="适用业务或职责存在时" fingerprint="da9b182273d98288">
+      <excerpt>- 新写的代码按本文的目标规则；存量代码改到时再对齐，不顺手大改。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L35" line="35" section="核心指令" status="合并保留" condition="适用业务或职责存在时" fingerprint="54b621c1a4b00a17">
+      <excerpt>- 旧代码只作业务参考：新领域上线时同一提交删旧代码，不并存两套；改了就删旧入口，不留兼容层，要兼容旧接口先问。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L36" line="36" section="核心指令" status="合并保留" condition="适用业务或职责存在时" fingerprint="d03d17e99b31dd86">
+      <excerpt>- 系统设置里的安全开关（二次验证、请求签名、人机验证、浏览器指纹等）在共享 settings 表里，改了会影响所有连同一个库的实例，测试时不许动；只有改动本身涉及它们时才先问再专项测、测完立即恢复。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L40" line="40" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="9de478ce1573af60">
+      <excerpt>1. **钱只在 service 里动**：订单、支付、库存、额度、价格只能经对应 service / model 改；每次变动有唯一业务键（数据库唯一约束兜底），重复请求返回第一次结果；钱和权限的变动在同一事务里写审计（`shared/audit` 的 `audit.RecordTx`）。**高频流水除外**（比如每次调用的预扣、结算、退回，每次一条会淹没</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L41" line="41" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="7ba9b2afef7f4a5f">
+      <excerpt>2. **不用浮点算钱**：人民币用「分」`int64`，先乘后除，只在最后取整一次；更小的计价单位（微元、毫积分）由项目在「本项目特有」里定义，库里永远存整数。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L42" line="42" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="1c3da03015a2f510">
+      <excerpt>3. **闸门遇到未知值走拒绝侧**（能否调用、下发、出款、免费、支付）；脏数据一律拒绝；关闭某项检查要显式配置，并在放行时记 `Infof`（操作人、金额、关闭的项）；没填的风控项按内置默认执行，显式填 0 才是不启用。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L43" line="43" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="508c9b9c7c3b8045">
+      <excerpt>4. **身份以数据库为准**：角色、封禁状态、成员关系、会话每次请求从库取（可缓存，改动处立即失效），不信令牌里的声明；当前用户从请求上下文取，按 id 操作必须校验归属。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L44" line="44" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="e0debc9ac89d2c1c">
+      <excerpt>5. **状态迁移和余量扣减用条件更新**（`WHERE id = ? AND status = &lt;旧&gt;`、`WHERE remaining &gt;= ?`，0 行即冲突，不先查后整行写）；库存、订单、额度必须有事务或锁并可幂等重试；同一事务里先动冷行、被高并发争抢的热行放最后，缩短持锁时间，失败整体回滚。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L45" line="45" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="68b2b17911060270">
+      <excerpt>6. **枚举只用常量**：状态、角色、类型放 `shared/domain`，字段也用 domain 类型，字面量只在 domain 的 `String` / `Parse` 和稳定性测试里；存量的字符串 / 数字字面量改到时顺手换。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L46" line="46" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="322bc3f22dd67973">
+      <excerpt>7. **对外错误只用 `shared/bizerr`**，内部细节只进日志；`ref_code` 只追加不改旧值，内部失败对外 `bizerr.Internal`。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L47" line="47" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="1eb44a0191f30625">
+      <excerpt>8. **表结构由 `shared/models` 的模型结构体定义**（见「数据库」）。`shared/models` 只放 `make db` 产物、手写的 `&lt;table&gt;_cache.go`、系统设置 `settings_*.go`、建表守卫 `schema_guards.go`、跨表只读聚合查询（`*_view_model.go`、`dashboa</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L48" line="48" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="19fbbb6683a57be5">
+      <excerpt>9. **密钥不进仓库、不进日志**：只提交 `config.example.yaml`，代码里不给密钥写默认值；日志、审计、告警不输出密码、token、密文凭据、原始凭据。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L49" line="49" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="030469bf141b76fd">
+      <excerpt>10. **事务内不做外部调用**（支付、上游、短信、邮件、对象存储、机器人通知）。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L50" line="50" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="ee94e0c7378e3ef1">
+      <excerpt>11. **发放必须可追溯**：给人价值或权限的记录（码、套餐、余额、密钥、管理员角色、商品和价格的新建和修改、库存分配），记录本身存：谁操作（用户 ID）、发给谁、什么时候、为什么（原因或备注）、来源（订单、发放、补发…，domain 常量）、审批人（有审批时）；变更保留历史不覆盖；页面上每条都能看到，只写在审计日志里不算。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L51" line="51" section="红线" status="合并保留" condition="适用业务或职责存在时" fingerprint="7e5154bbaa738d69">
+      <excerpt>12. **审计日志、调用明细和排查记录永久保留**，只追加，不设保留天数、不写清理任务或删除逻辑，测试收尾也不删：审计表 `audit_logs`（见 `shared/models`），以及以后新增的带请求 ID 的排查表（登录尝试、拒绝请求、通知发送、任务轮次…）；有条件的表用触发器禁止删除（`schema_guards.go` 里补齐），高价值流水（用</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>retention</decisions>
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L55" line="55" section="分层与依赖" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="7d76d9c2de335657">
+      <excerpt>- handler 解析请求，logic 做权限、校验和编排，models 做查询、事务和锁。多 Model、外部调用或副作用才加 service，service 不返回 `types` DTO；新业务规则放进负责它的 service，没有合适的先问再建。依赖只能往下：handler → logic → service → models → domain。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L56" line="56" section="分层与依赖" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="f59b744325e8a282">
+      <excerpt>- 中间件实现写 `shared/middleware`；`cmd/&lt;服务名&gt;/internal/middleware` 只是 goctl 生成名字的转接层（`type XxxMiddleware = sharedmw.XxxMiddleware`），不写逻辑。其余 HTTP 相关进 `cmd/&lt;服务名&gt;/internal`。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L57" line="57" section="分层与依赖" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="3f5a0bd711d8719a">
+      <excerpt>- 通用能力先用 `github.com/bytemind-io/infra`（errors、databases/sqldb、databases/redisdb、zrohandler、oss、notifications、payment、common/lock、backoff…），infra 有的不重写，缺的先问。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L58" line="58" section="分层与依赖" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="55ef6933d39cf7a2">
+      <excerpt>- `cmd/&lt;服务名&gt;/internal` 只有 goctl 标准目录加 `pkg`：专用辅助包放 `internal/pkg/&lt;用途&gt;`（`dto`、`apperr`…）；多个 logic 共用的解析、闸门、DTO 转换放这里，不复制。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L59" line="59" section="分层与依赖" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="7c6d4aed5ae964f8">
+      <excerpt>- 两个以上真实调用方才抽象；改完删旧入口，不留兼容层。不建 `util`、`common`、`helper`、`misc` 包。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L63" line="63" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="488a3cef58cea41f">
+      <excerpt>- 代码风格见全局；注释英文在前、中文放括号，只写为什么，`.api` 字段和 `json:` 边界 struct 写行尾中文说明。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L64" line="64" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="deece9f6f40cb986">
+      <excerpt>- 命名：Go 缩写全大写，唯一例外是 `shared/models` 的字段（`Id`、`UserId`）；JSON 和库列 snake_case；表 `orders` → `Orders` / `OrdersModel` / `svcCtx.Orders`，service 用领域名。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L65" line="65" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="a39048602b4e42d7">
+      <excerpt>- 状态类型放 `shared/domain`，`domain_test.go` 钉住取值；持久化状态一个列一个整型类型，取值留空档（10 / 20 / 30），不用 `iota`。业务日按北京时间（项目在 domain 里定义 `CST`）。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L66" line="66" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="5d01ad37695d6213">
+      <excerpt>- 校验写 `.api` tag（`oneof`、`range`、`default`），logic 的 `Validate` 只留业务校验；每个 error 分支 `l.Errorf`。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L67" line="67" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="d972ee7186a7457b">
+      <excerpt>- `FindOne` / `FindByXxx` 找不到返回 `(nil, nil)`，先判 `err` 再判 `nil`。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L68" line="68" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="0ba9617f738dc3d2">
+      <excerpt>- GORM 带 `WithContext`，不用 `Save` 覆盖整行。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L69" line="69" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="55b213cbb57214b0">
+      <excerpt>- DTO 带被引用实体的名称和关键属性（商品名、企业名、用户昵称），细则见 `cmd/&lt;服务名&gt;/web/CLAUDE.md`。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L70" line="70" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="a258ad376c482de7">
+      <excerpt>- 消息正文（短信、邮件、机器人）写成独立 `.tmpl`，`//go:embed` + 包初始化时 `template.Must` 解析，放 `shared/service/notifications/tmpl/&lt;事件&gt;.tmpl` 或对应服务的 `tmpl/` 目录，不在代码里 `fmt.Sprintf` 拼正文。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L71" line="71" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="27335a77a9e9dcb1">
+      <excerpt>- JSON：新代码用 `sonic.ConfigStd`；go-zero 的 `httpx` 和第三方库内部不替换，存量改到时顺手换；升级 Go 前先确认 sonic 已支持，不支持就退回标准库，不锁死旧 Go。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L72" line="72" section="写法" status="按技术栈适配" condition="选择对象存储 OSS" fingerprint="0fd288dd515983e7">
+      <excerpt>- 文件只存对象存储（OSS），不落本地盘，没有本地回退：对象存储未配置时上传、下载、导出返回对应的业务错误（如 `bizerr.FileStorageUnavailable`）；文件服务直接用 infra 的 `oss.Oss`，测试用包内的内存实现；对象存储客户端一律经统一的构造函数创建。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/oss.md" />
+    </item>
+    <item id="CLAUDE.md:L73" line="73" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="a76b37d855edc0da">
+      <excerpt>- 配置：config 只放启动项——监听与日志（RestConf）、数据库、Redis、密钥环 `Secrets`（解密 settings 里的密字段，所以只能在 config）；`RestConf.Middlewares` 四项和 `RestConf.Log.Stat` 写 `false`，代码里不覆盖框架配置（原因见 `~/.claude/skills</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L74" line="74" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="7637c7cae21356e0">
+      <excerpt>- 密字段标 `Secret`（用主密钥加密存库）；密文和完整明文永不返回客户端，只返回「已设置」（可加 `secret_hint`：明文不少于 16 个字符时的末 4 个字符），日志里也不记；目录里标 `Secret` 才加密，管理视图只报告是否已设置。一改就让全部会话 / 哈希失效的密钥（如 pepper）标 `Secret` + `Immutable`</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L75" line="75" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="7289fa8a92557b56">
+      <excerpt>- goroutine 有退出路径，外部调用带 recover 和超时 context；不持锁做阻塞 I/O。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L76" line="76" section="写法" status="按技术栈适配" condition="Go 及参考配置／命名适用时" fingerprint="58829c569a57550e">
+      <excerpt>- handler panic 由框架中间件兜底，不重复写 recover。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/go.md" />
+      <target file="templates/default/rules/gozero.md" />
+    </item>
+    <item id="CLAUDE.md:L80" line="80" section="缓存" status="合并保留" condition="选择 Redis 且涉及业务缓存" fingerprint="9a8e8c409a664bad">
+      <excerpt>- 目前没有缓存层的项目不要凭空加。需要缓存时只用 `shared/cache`（rockscache 强一致封装：`Fetch` 回源、改动后 `Invalidate`，不存在用零值 + nil 缓存，新增行后清对应的「不存在」键）或 `shared/models/&lt;table&gt;_cache.go` 装饰器，不许裸 Redis `GET/SET` 或进程内</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="CLAUDE.md:L81" line="81" section="缓存" status="合并保留" condition="选择 Redis 且涉及业务缓存" fingerprint="93465e7b0c503b31">
+      <excerpt>- 钱的余量、库存不缓存，一律以数据库条件更新为准；需要强一致的调用方显式走不带缓存的方法。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="CLAUDE.md:L82" line="82" section="缓存" status="合并保留" condition="选择 Redis 且涉及业务缓存" fingerprint="c27f4493c66f86d9">
+      <excerpt>- 设置快照（进程内只读副本）和目录类稳定输入不算业务数据缓存，不受「不许进程内 map」限制；用量事实 outbox 这类暂存区不是缓存，也不许拿来读业务数据。它们的细则写在 `docs/架构.md`「配置、缓存、设置快照」。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="CLAUDE.md:L83" line="83" section="缓存" status="合并保留" condition="选择 Redis 且涉及业务缓存" fingerprint="52ae36603baa8b66">
+      <excerpt>- 先写库、提交成功后再清缓存，绝不在事务里清；事务里用 `tx` 重建的模型不带缓存；清缓存失败记 `Errorf` 后按成功处理（有 `models.ErrCacheStale` 的项目：清缓存失败返回它，调用方记 `Errorf` 后按成功处理）。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="CLAUDE.md:L84" line="84" section="缓存" status="合并保留" condition="选择 Redis 且涉及业务缓存" fingerprint="a073d4af38a81375">
+      <excerpt>- 一次写入清它影响的所有键：改手机号 / 邮箱连旧键一起清；停用、离职、角色变化级联清会话和成员关系；权限类缓存（会话、角色、成员关系）改动处立即失效，并写测试证明「失效后下一次请求立即被拒」，TTL 只是兜底。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="CLAUDE.md:L85" line="85" section="缓存" status="合并保留" condition="选择 Redis 且涉及业务缓存" fingerprint="fae94cd2e2ba23be">
+      <excerpt>- 装饰器热点查询在 `InitModels` 里装配：`svcCtx.Users = models.NewUsersModelCache(svcCtx.Cache, models.NewUsersModel(db), ttl)`。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="CLAUDE.md:L97" line="97" section="错误与日志" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="e440cc2629bf4434">
+      <excerpt>- service 的业务拒绝返回 `bizerr` 变量；其他错误 `%w` 包一层，由 logic 用 `apperr.Client`（`cmd/&lt;服务名&gt;/internal/pkg/apperr`）记一次后转成 `bizerr.Internal`，不手写 `errors.As`。`apperr` 还没有的项目先补上再用；补齐前业务拒绝（4xx）返回前自</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L98" line="98" section="错误与日志" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="b2ac7e45013d223f">
+      <excerpt>- 错误全部在 `shared/bizerr`，错误号 6 位 = HTTP 状态码 × 1000 + 序号，只追加不重排；新增一个错误改四处：常量、错误变量、`locale.zh.toml` / `locale.en.toml`、钉住错误号表的测试。响应用 `errors.Err(w, r, err)`，必须传 request。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L99" line="99" section="错误与日志" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="027e59465a95f790">
+      <excerpt>- 业务拒绝（4xx）在 logic 层留日志：走 `apperr.Client` 的自动记 `rejected: &lt;原因链&gt;`；直接 `return nil, bizerr.XXX` 的，返回前自己写 `l.Infof`；新写的 logic 一律走 `apperr.Client`，不吞原因返回裸 `bizerr`。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L100" line="100" section="错误与日志" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="c77f05ddcd1b560c">
+      <excerpt>- 状态码 ≥ 400 由请求日志中间件统一再记一行 `reject …`，handler 不用再记；与 logic 那行靠同一个 `req_id` 对上。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L101" line="101" section="错误与日志" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="351e28ae0d2c7d83">
+      <excerpt>- 入站回调（支付 webhook 等）记渠道、事件 id、去重结论（accepted / duplicate / ignored）；出站调用前记意图、后记结果和耗时；定时任务和补偿 job 每轮汇总（picked / delivered / failed），不逐条打 Info。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L102" line="102" section="错误与日志" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="feebdba4f787b8d6">
+      <excerpt>- 事务内成功日志用 `commitlog.Infof(ctx, tx, ...)`（事务入口用 `commitlog.Transaction`），提交后才输出、回滚丢弃；业务拒绝日志不受此限；没有 `commitlog` 的项目把成功日志放到事务提交之后再记。幂等键只记前 8 位（`request.ShortKey`）。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L106" line="106" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="bf22a3712c2834a3">
+      <excerpt>契约先行：改 `cmd/&lt;服务名&gt;/desc/*.api` → `cd cmd/&lt;服务名&gt; &amp;&amp; make api` → 写 logic；改之前先读 [`api-contract.md`](cmd/&lt;服务名&gt;/desc/api-contract.md)。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L114" line="114" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="bf9d3b44c3cde632">
+      <excerpt>- `routes.go`、`internal/types/`、`api.json` 是生成的，不许手改。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L115" line="115" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="b2c8387e845d1693">
+      <excerpt>- 新 type 与路由追加到文件末尾；**所有 `@server` 路由块只写在 `cmd/&lt;服务名&gt;/desc/api.api`**，`desc/&lt;领域&gt;/api.api` 只放类型：闸门、签名、幂等的链路测试只读主文件，写在别处的路由会躲过它们。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L116" line="116" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="33a3f262018f2a86">
+      <excerpt>- `@server` 块分管理侧和用户侧：**管理侧**（挂管理员或超管角色中间件）`prefix` 统一写 `/api/admin`，路由写 `/admin` 以下的相对路径（`get /dashboard`、`get /super/admins`），`group` 用 `admin/&lt;领域&gt;`（`admin/dashboard`），handler 和 </excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L117" line="117" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="bda5fc7334259568">
+      <excerpt>- `make api` 不覆盖已存在 handler；改 `handler.tpl` 要删旧 handler 重建。手工定制的 `health` 等 handler 误删从 git 恢复。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L118" line="118" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="47caa2963c330586">
+      <excerpt>- 中间件 stub 由 `go:generate` 删除，真实中间件在 `shared/middleware`；接口返回空先查 `routes.go` 接线。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L119" line="119" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="de59e2b5ae48c389">
+      <excerpt>- 用户端和后台对同一实体用不同 DTO；管理员接口必须带 `AuthMiddleware,AdminMiddleware`，普通接口不挂 `AdminMiddleware`。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L120" line="120" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="de271fd85bbd4c8a">
+      <excerpt>- 动钱的写接口带 `Idempotency-Key`：同键同内容返回第一次结果，同键不同内容 409。请求体全局上限 1MB，超出返回 413，只有 multipart 分组放宽。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L121" line="121" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="9b22dedf516b2b5a">
+      <excerpt>- 客户端头与请求签名：签名只提高脚本调用成本，**任何权限判断都不许依赖它**；有签名的项目，新接口默认要签，免签分组只有契约文档列出的几类。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L122" line="122" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="ae23876a807bf96e">
+      <excerpt>- `desc/api.api` 里用户手放的块（如 health 路由）位置、中间件、文案、路径都不改。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L123" line="123" section="API 契约" status="按技术栈适配" condition="参考 Go/go-zero 接口与目录约定适用时" fingerprint="6f1d183a6dfbed88">
+      <excerpt>- 删接口：`make api` 只生成不删旧文件，handler 和 logic 要手删；步骤见 api-contract「删除没用的接口」和 `~/.claude/skills/go-zero/api.md`。</excerpt>
+      <treatment>按主题归并到唯一正文，相关技术细节跟随配置；不复制重复条目</treatment>
+      <decisions>roles,retention</decisions>
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/engineering.md" />
+    </item>
+    <item id="CLAUDE.md:L127" line="127" section="数据库" status="已确认适配" condition="Go/GORM 数据库配置，PostgreSQL 专有部分不用于 SQLite" fingerprint="b9eaf8715c0997ff">
+      <excerpt>1. **表结构由模型定义，`CreateTable` 建表**：`shared/models` 的模型结构体定义表结构，`make db` 产物 `_gen.go` 带 `CreateTable() error`；`cmd/&lt;服务名&gt;/internal/svc/service_context.go` 的 `InitModels` 按 `tables` 列表</excerpt>
+      <treatment>采用 schema 决策；保留模型建表、AutoMigrate、同批手工方案与隔离验证</treatment>
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/go-postgres.md" />
+      <target file="templates/default/rules/go-sqlite.md" />
+    </item>
+    <item id="CLAUDE.md:L128" line="128" section="数据库" status="已确认适配" condition="Go/GORM 数据库配置，PostgreSQL 专有部分不用于 SQLite" fingerprint="b6c7be88711045a7">
+      <excerpt>2. **新建一张表**：先 SQL 建只有 `id` 的表 → `cd cmd/&lt;服务名&gt; &amp;&amp; make db TABLE=&lt;table&gt; DB_URL=&lt;连接串&gt;`（连接串只在命令行传入，只能指向本地 / 测试库，不连线上，库名和密码不写进 Makefile 和项目）生成到 `shared/models/`：`&lt;table&gt;_model_gen.go`</excerpt>
+      <treatment>采用 schema 决策；保留模型建表、AutoMigrate、同批手工方案与隔离验证</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/go-postgres.md" />
+      <target file="templates/default/rules/go-sqlite.md" />
+    </item>
+    <item id="CLAUDE.md:L129" line="129" section="数据库" status="已确认适配" condition="Go/GORM 数据库配置，PostgreSQL 专有部分不用于 SQLite" fingerprint="154e1fb44a2533e6">
+      <excerpt>3. **改动已有表必须同批写手工迁移脚本**：加 / 改 / 删列、改默认值或非空、加 / 删表、加触发器、回填或转换存量数据，都在同一批提交里往 `docs/db-migration/&lt;YYYY-MM-DD&gt;/` 追加脚本（线上执行完、用户确认后删该日期目录），供 DBA 在 `AutoMigrate` 被关或启动迁移失败时手工执行；不是迁移框架，应用不</excerpt>
+      <treatment>采用 schema 决策；保留模型建表、AutoMigrate、同批手工方案与隔离验证</treatment>
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/go-postgres.md" />
+      <target file="templates/default/rules/go-sqlite.md" />
+    </item>
+    <item id="CLAUDE.md:L130" line="130" section="数据库" status="已确认适配" condition="Go/GORM 数据库配置，PostgreSQL 专有部分不用于 SQLite" fingerprint="a9710502568b60a7">
+      <excerpt>4. 不用部分唯一索引（规则见 `model.md` 末），全表唯一才用 `uniqueIndex`；`bytea` 用 `[]byte`，状态列用 domain 类型，其余字段写法同该节。</excerpt>
+      <treatment>采用 schema 决策；保留模型建表、AutoMigrate、同批手工方案与隔离验证</treatment>
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/go-postgres.md" />
+      <target file="templates/default/rules/go-sqlite.md" />
+    </item>
+    <item id="CLAUDE.md:L131" line="131" section="数据库" status="已确认适配" condition="Go/GORM 数据库配置，PostgreSQL 专有部分不用于 SQLite" fingerprint="e6aaa4f7e14b6192">
+      <excerpt>5. 每个模型都有 `CreatedAt`、`UpdatedAt`、`DeletedAt` 三件套（写法见 `model.md` 末）；SQL 手工插行必须带 `created_at`、`updated_at`（`now()`），否则空值在 `ORDER BY created_at DESC` 排最前（应用里 GORM 自动填；不要在查询里加 `NULLS </excerpt>
+      <treatment>采用 schema 决策；保留模型建表、AutoMigrate、同批手工方案与隔离验证</treatment>
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/go-postgres.md" />
+      <target file="templates/default/rules/go-sqlite.md" />
+    </item>
+    <item id="CLAUDE.md:L139" line="139" section="测试" status="已确认适配" condition="相应验收场景和技术栈" fingerprint="93c499d98f23a277">
+      <excerpt>- 单元测试优先不连库、不连 Redis：domain 取值稳定性、bizerr 错误号表、钱的计算（先乘后除、只取整一次）、签名和请求解析；table-driven，不用 testify。</excerpt>
+      <treatment>采用 browser 与 retention 决策；保留真实操作、权限／并发及隔离环境目标</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+    </item>
+    <item id="CLAUDE.md:L140" line="140" section="测试" status="已确认适配" condition="相应验收场景和技术栈" fingerprint="d0034914f10a95d5">
+      <excerpt>- **连库测试只守数据库层面的规则**（锁加条件检查代替部分唯一索引、软删复活、库存出库、并发扣减、闸门）：写成 `&lt;主题&gt;_pg_test.go`，用环境变量（名字在「本项目特有」里定，模板默认 `STARTER_TEST_PG_DSN`，新项目可改名）指向的库、经 `shared/models/modelstest.Open` 建一次性 schema（</excerpt>
+      <treatment>采用 browser 与 retention 决策；保留真实操作、权限／并发及隔离环境目标</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+    </item>
+    <item id="CLAUDE.md:L141" line="141" section="测试" status="已确认适配" condition="相应验收场景和技术栈" fingerprint="b8761c7c61f15495">
+      <excerpt>- Web：`cd cmd/&lt;服务名&gt; &amp;&amp; make web`，`cmd/&lt;服务名&gt;/web/dist` 缺失会让 `go build` 失败。API：`goctl api validate --api ./cmd/&lt;服务名&gt;/desc/api.api` 和 `cd cmd/&lt;服务名&gt; &amp;&amp; make api`。</excerpt>
+      <treatment>采用 browser 与 retention 决策；保留真实操作、权限／并发及隔离环境目标</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+    </item>
+    <item id="CLAUDE.md:L142" line="142" section="测试" status="已确认适配" condition="相应验收场景和技术栈" fingerprint="04b5c156ec2a272a">
+      <excerpt>- 汇报时区分本次通过、未执行和仓库原有失败。</excerpt>
+      <treatment>采用 browser 与 retention 决策；保留真实操作、权限／并发及隔离环境目标</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+    </item>
+    <item id="CLAUDE.md:L146" line="146" section="接口与页面实测（功能验证一律按此执行；用户要求「测所有接口 / 页面」时覆盖全部路由）" status="已确认适配" condition="相应验收场景和技术栈" fingerprint="e150e800213c04fc">
+      <excerpt>- **红线**：配置连的往往是共享库 + 共享 Redis，支付、短信、对象存储等都可能是真实账号，通知机器人没清空时测试实例报错会真发群；不停用户自己的实例，不发真短信、不付款，花钱的接口先问用户；`psql` 连接串从配置读，连接串、密钥不打印、不进字幕和截图。`Database.AutoMigrate` 保持 `true`，不许为了测试关掉。</excerpt>
+      <treatment>采用 browser 与 retention 决策；保留真实操作、权限／并发及隔离环境目标</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+    </item>
+    <item id="CLAUDE.md:L147" line="147" section="接口与页面实测（功能验证一律按此执行；用户要求「测所有接口 / 页面」时覆盖全部路由）" status="已确认适配" condition="相应验收场景和技术栈" fingerprint="3fed63bc25657925">
+      <excerpt>- **页面实测一律用 Playwright MCP 工具（`mcp__playwright__*`），不自己写 Python / Node 脚本替代**：开跑前先用 ToolSearch 确认工具在；没有就立刻停下告诉用户，并给出补救（项目里没挂就执行 `claude mcp add playwright -- npx @playwright/mcp@la</excerpt>
+      <treatment>采用 browser 与 retention 决策；保留真实操作、权限／并发及隔离环境目标</treatment>
+      <decisions>browser,roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+    </item>
+    <item id="CLAUDE.md:L148" line="148" section="接口与页面实测（功能验证一律按此执行；用户要求「测所有接口 / 页面」时覆盖全部路由）" status="已确认适配" condition="相应验收场景和技术栈" fingerprint="685bcc1f596108e3">
+      <excerpt>- **有界面测试一次跑完**：先把整个需求的页面流程（正常、错误、权限、换角色、桌面和手机）列成一份完整清单，一个浏览器、一个 page 从头跑到尾，全部测完才关；不许测一步关一次、探路和正式测试各开一次浏览器；换角色在同页退出重登，换手机尺寸用同一个 page 调视口。主会话和子代理都可以跑页面实测，各自用独立的浏览器会话（隔离模式，不共用登录态和配置目</excerpt>
+      <treatment>采用 browser 与 retention 决策；保留真实操作、权限／并发及隔离环境目标</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+    </item>
+    <item id="CLAUDE.md:L149" line="149" section="接口与页面实测（功能验证一律按此执行；用户要求「测所有接口 / 页面」时覆盖全部路由）" status="已确认适配" condition="相应验收场景和技术栈" fingerprint="9d7c1eaf12242f03">
+      <excerpt>- 本机 curl 一律加 `--noproxy '*'`（环境有 `http_proxy`，带 `Host` 头的本地请求会被转去线上）。</excerpt>
+      <treatment>采用 browser 与 retention 决策；保留真实操作、权限／并发及隔离环境目标</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+    </item>
+    <item id="CLAUDE.md:L150" line="150" section="接口与页面实测（功能验证一律按此执行；用户要求「测所有接口 / 页面」时覆盖全部路由）" status="已确认适配" condition="相应验收场景和技术栈" fingerprint="0ea8c4a4f8665f4d">
+      <excerpt>- **其余实测细则**（起服务与构建、常驻测试数据、测试数据与清理、接口与权限与页面与注入的测法、防误判、系统设置项、实测速查、实测提速、实测收尾，以及 [`docs/架构.md`](docs/架构.md)「12. 接口与页面实测细则」）见 [`docs/开发与实测流程.md`](docs/开发与实测流程.md)「一、接口与页面实测」，实测前先读；上面的红</excerpt>
+      <treatment>采用 browser 与 retention 决策；保留真实操作、权限／并发及隔离环境目标</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+    </item>
+    <item id="CLAUDE.md:L154" line="154" section="开发流程" status="已确认适配" condition="开发与交付任务" fingerprint="47027a04442c1730">
+      <excerpt>- **新功能先出设计（涉及页面的附原型），用户明确说「可以开发」后才动代码**：没确认前不写代码、不改 `.api`、不改模型、不开执行子代理；只有 bug 修复、改文案、用户说清改法的小改动可直接做；符合条件的小需求走快车道。全文见 [`docs/开发与实测流程.md`](docs/开发与实测流程.md)「二、开发流程」。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L158" line="158" section="开发完成后的收尾（自动执行）" status="已确认适配" condition="开发与交付任务" fingerprint="46c9bfdc395eee3d">
+      <excerpt>有 `scripts/test-changed.sh` 的项目先跑它做增量检测（只查本次改动的包和文件），没有则按编译、单测；通过后自动按顺序做完再停：实测 -&gt; 修 -&gt; 审核（一个需求审一次）-&gt; 提交 -&gt; 收工 -&gt; 汇报，中途不问「要不要测 / 要不要提交」；新功能在 `feat/&lt;需求名&gt;` worktree 开发，用户说「上线」才合进 `mai</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L160" line="160" section="开发完成后的收尾（自动执行）" status="已确认适配" condition="开发与交付任务" fingerprint="af4a0bf133b68c29">
+      <excerpt>- 收尾前必须先打开读 [`docs/开发与实测流程.md`](docs/开发与实测流程.md)「三、开发完成后的收尾」，没读不许收工。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L161" line="161" section="开发完成后的收尾（自动执行）" status="已确认适配" condition="开发与交付任务" fingerprint="6755cf059c51613b">
+      <excerpt>- 汇报必写「&lt;审核所用模型名&gt; 已审，发现 N 条，已修 N 条」；由主会话把关、没派审核子代理的写「主会话已审」。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L162" line="162" section="开发完成后的收尾（自动执行）" status="已确认适配" condition="开发与交付任务" fingerprint="475353aeb2a763aa">
+      <excerpt>- 汇报最后一行写 `✅ 已收工，可以下班`（新功能加「（在分支 feat/&lt;需求名&gt;，等你说合并）」）；没做完写 `⏸ 未收工：卡在第 N 步，原因 …`。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L163" line="163" section="开发完成后的收尾（自动执行）" status="已确认适配" condition="开发与交付任务" fingerprint="585f10bab2d1aea1">
+      <excerpt>- 上线合并顺序：先把最新 &lt;主开发分支&gt; 合进 `feat/&lt;需求名&gt;`、解冲突、重跑构建和测试，再 `git merge --no-ff feat/&lt;需求名&gt;` 进 &lt;主开发分支&gt;，合并后删 worktree 和分支；同一步把需求文档回溯信息里的状态改成「已合入 &lt;主开发分支&gt;」并补合并提交号（单独一次 `docs:` 提交），再核对已完成目录里没有残留</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L167" line="167" section="模型分工" status="已确认适配" condition="开发与交付任务" fingerprint="8bb0917b70e22680">
+      <excerpt>- 执行交给 Sonnet 5.5 / Haiku 5.5 的 `developer` 子代理并行，Codex 作第二条开发线；主会话只拆任务、审核、汇报，有界面浏览器实测主会话和子代理都可以跑，不写大段代码、不被长任务占住。全文见 [`docs/开发与实测流程.md`](docs/开发与实测流程.md)「四、模型分工」。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L171" line="171" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="c0b0c3534f2f7290">
+      <excerpt>- 分步提交：每写完一个能独立构建、测试的部分就 commit，不攒到最后一起提。message 用 `feat:` / `bug:` / `docs:` 开头的中文单行，说清改了什么，不写 body、不加 Co-Authored-By；push 只在用户要求时执行。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L172" line="172" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="89ea13ebef205891">
+      <excerpt>- 不频繁触发 CI/CD：push 到 `main`（或其他会触发 GitHub Actions 的分支、tag）才会跑 workflow，每次 push 都会占用 runner 的 CPU 和内存（自建 runner 会挤满节点）；用户要求 push 时，先把已完成的提交攒成一次 push，不一个小改动 push 一次，不为了试一下反复 push 重跑；</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L173" line="173" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="89c82a2b6c51e6b4">
+      <excerpt>- 用 `gh`（GitHub CLI）协助我查和做 GitHub 上的事：只读的随时可用（`gh run list` / `gh run view &lt;id&gt; --log-failed` 看构建和失败日志、`gh pr status` / `gh pr view` / `gh pr checks`、`gh status`、`gh search`、`gh ap</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L174" line="174" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="a68b78899e140b67">
+      <excerpt>- 已做的提交不改（不 amend、reset、rebase、squash，不改写历史，子代理也一样），做错用新提交修正；用户常多终端并行改同一仓库：先看 `git status`，保留已有改动，不回滚无关文件，不用 `git add -A`，提交时只 add 自己改的文件（`git commit -- &lt;paths&gt;`）。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L175" line="175" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="91f469f77ef05f8a">
+      <excerpt>- 新写的需求、参考类文档（含 `docs/参考/`）文件名用 `YYYY-MM-DD-&lt;名称&gt;.md`，文内写创建日期；常驻文档（`docs/README.md`、`架构.md`、`系统设计.md` 等）一直维护、不带日期；旧文档不顺手改名，要改先问。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L176" line="176" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="245dc6b17544edbb">
+      <excerpt>- 删用户的文件（文档、原型、脚本、数据）先逐个列文件名给用户确认，笼统的「可以」不算；派子代理时把确认清单原样写进任务，清单外不删；挪动和改名不算删除，但不许顺手改名。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <decisions>retention</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L177" line="177" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="33e718af473108c8">
+      <excerpt>- 结构或边界变化同步更新本文、`docs/系统设计.md`、`api-contract.md`；目录、分层、调用链路变化更新 `docs/架构.md`；前端约定更新 `cmd/&lt;服务名&gt;/web/CLAUDE.md`、项目说明与构建更新 `cmd/&lt;服务名&gt;/web/README.md`；删掉失效说明，不并存新旧方案。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L178" line="178" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="bb6dc9aaf84507d6">
+      <excerpt>- 子代理汇报必须写出每个提交的提交哈希（至少 7 位）和该提交的文件清单；没写的，主会话先用 `git log` 核实再说完成；派子代理时在 prompt 里写明这一条。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L179" line="179" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="19dc8e969135ddb7">
+      <excerpt>- 验证通过后同一批主动更新文档，不等用户提醒；精简或改写文档时，规则不删、意思不变，改写措辞须用户当次同意。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <decisions>retention</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L180" line="180" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="e48721318de0d7ab">
+      <excerpt>- 多个会话并行改同一仓库的提交办法见全局「提交与文档」（临时暂存区只暂存自己的 hunk，提交后 `git show --stat HEAD` 核对没夹带别人的改动）。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L181" line="181" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="b9ae56510204c559">
+      <excerpt>- 一个窗口一个需求：窗口里的活派子代理做（改代码、构建、起实例、改文档、提交、合并），主窗口只审核、纠正、跟用户汇报；浏览器实测也可派子代理做（各用独立浏览器会话），不必主窗口亲自跑。自己的活没提交前，不插手别的会话的事，汇报也只讲自己的需求。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L182" line="182" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="0ec62ccc3b3492eb">
+      <excerpt>- 和别的会话有交叉（可能改同一批文件、接口、表、设置，或被对方没提交的改动挡住）时，先用 `SendMessage` 跟对方说清楚改哪里、谁先谁后；联系不上或谈不拢，再来问用户。别硬改、别干等、别替别人 stash 或回滚。没有交叉的，让子代理只暂存自己的文件或 hunk 提交，不用问。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L183" line="183" section="提交与文档" status="已确认适配" condition="开发与交付任务" fingerprint="16e0c8007d844057">
+      <excerpt>- 需求文档生命周期（进行中 → 已完成、回溯信息、一个需求一个文件、`git mv` 规则）见 [`docs/README.md`](docs/README.md)「需求文档生命周期」。</excerpt>
+      <treatment>采用 roles、git、approval 决策；固定模型、结束口号和无边界自动化改为真实职责与结果说明</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="CLAUDE.md:L189" line="189" section="本项目特有" status="文档资源" condition="适用业务或职责存在时" fingerprint="d20577fdd25445c6">
+      <excerpt>&gt; 以下每节开头的「填写提示」填完后删掉。这一块 `scripts/sync-claude.sh` 不会覆盖。通用块与本块冲突时以本块为准。</excerpt>
+      <treatment>项目事实与填写项不能当作目标项目现状；保留架构／系统设计写作参考，不自动生成空约束</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="CLAUDE.md:L195" line="195" section="项目" status="文档资源" condition="适用业务或职责存在时" fingerprint="2830089d0a85a877">
+      <excerpt>- 项目名：`&lt;项目名&gt;`</excerpt>
+      <treatment>项目事实与填写项不能当作目标项目现状；保留架构／系统设计写作参考，不自动生成空约束</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="CLAUDE.md:L196" line="196" section="项目" status="文档资源" condition="适用业务或职责存在时" fingerprint="aab56baa73f5e986">
+      <excerpt>- 模块路径：`github.com/your-org/go-zero-starter`（`scripts/init.sh` 已替换为你的模块路径）</excerpt>
+      <treatment>项目事实与填写项不能当作目标项目现状；保留架构／系统设计写作参考，不自动生成空约束</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="CLAUDE.md:L197" line="197" section="项目" status="文档资源" condition="适用业务或职责存在时" fingerprint="b6b88248897e449c">
+      <excerpt>- 主开发分支：`main`</excerpt>
+      <treatment>项目事实与填写项不能当作目标项目现状；保留架构／系统设计写作参考，不自动生成空约束</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="CLAUDE.md:L198" line="198" section="项目" status="文档资源" condition="适用业务或职责存在时" fingerprint="4c1b632d723652ff">
+      <excerpt>- 一句话：</excerpt>
+      <treatment>项目事实与填写项不能当作目标项目现状；保留架构／系统设计写作参考，不自动生成空约束</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="CLAUDE.md:L204" line="204" section="服务与端口" status="文档资源" condition="适用业务或职责存在时" fingerprint="0939db8af22a82d6">
+      <excerpt>| 服务 | 目录 | 用途 | 开发端口 | 测试实例端口 |</excerpt>
+      <treatment>项目事实与填写项不能当作目标项目现状；保留架构／系统设计写作参考，不自动生成空约束</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="CLAUDE.md:L206" line="206" section="服务与端口" status="文档资源" condition="适用业务或职责存在时" fingerprint="fb53785fd4698318">
+      <excerpt>| | `cmd/&lt;服务名&gt;` | 后端 API，内嵌前端 `cmd/&lt;服务名&gt;/web` | | |</excerpt>
+      <treatment>项目事实与填写项不能当作目标项目现状；保留架构／系统设计写作参考，不自动生成空约束</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="CLAUDE.md:L230" line="230" section="术语" status="文档资源" condition="适用业务或职责存在时" fingerprint="925ede017198af89">
+      <excerpt>| 概念 | 统一叫法 | 不再使用 | 对应代码 |</excerpt>
+      <treatment>项目事实与填写项不能当作目标项目现状；保留架构／系统设计写作参考，不自动生成空约束</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+  </source>
+  <source file="AGENTS.md" sha256="ac2c82afdcdae54052c9b56e7d6e9908ebb58c3f2788127ebb3ab3945884bf40">
+    <item id="AGENTS.md:L3" line="3" section="AGENTS.md" status="合并与适配" condition="适用业务或职责存在时" fingerprint="e0a285e0a7352f1a">
+      <excerpt>执行者说明书：给所有动手写代码的代理——Codex（启动时自动读本文）和 Claude 的 `developer` 子代理（定义在 [`.claude/agents/developer.md`](.claude/agents/developer.md)，开工先读本文）。设计、审核、有界面实测、合并和归档由 Claude 主会话负责，不在本文范围。本仓库的全部</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L7" line="7" section="开工前" status="合并与适配" condition="适用业务或职责存在时" fingerprint="c92d075af06d67c2">
+      <excerpt>1. **确认需求可以开发**：任务必须对应 `docs/需求/进行中/` 里一份状态行为 `状态：可以开发 YYYY-MM-DD` 的需求文档；`状态：待确认` 的不接，停下来问。没有需求文档，或任务内容和文档对不上，也停下来问，不要按自己的理解开发（bug 修复和用户说清改法的小改动除外）。需求文档骨架见 [`docs/README.md`](docs/</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L8" line="8" section="开工前" status="合并与适配" condition="适用业务或职责存在时" fingerprint="9b86e9252e540424">
+      <excerpt>2. **按顺序读**：`CLAUDE.md`（红线、写法、日志、错误、数据库、缓存几节必读）→ `~/.claude/CLAUDE.md`（Claude 子代理已自动加载）→ `~/.claude/skills/go-zero/api.md`、`model.md`（末尾「规则：go-zero 后端」「规则：数据库与模型」两节是后端和数据库规则，必读）→ [</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L9" line="9" section="开工前" status="合并与适配" condition="适用业务或职责存在时" fingerprint="c91318b617551282">
+      <excerpt>3. **确定在哪改**：Codex 在主会话指定的基点拉分支：新功能的块从 `feat/&lt;需求名&gt;` 拉（主会话已开好 codex worktree 就直接在里面改），独立任务从主开发分支（默认 `main`，见 `CLAUDE.md`「本项目特有」）最新提交 `git switch -c codex/&lt;任务名&gt; &lt;主开发分支&gt;`；Claude 子代理在主</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L13" line="13" section="协作方式" status="合并与适配" condition="适用业务或职责存在时" fingerprint="347bf189cd02a23b">
+      <excerpt>- 只改任务范围需要的文件；任务涉及契约、生成、装配、模型和相关文档时，由当前任务负责者一并完成。并行工作时按文件划分责任，避免改同一文件。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L14" line="14" section="协作方式" status="合并与适配" condition="适用业务或职责存在时" fingerprint="bce0d5ea6f083c52">
+      <excerpt>- 每完成一个能独立构建、测试的部分提交一次；只提交自己改的文件，不用 `git add -A`（Codex 在独立分支上 `git add` 后 `git commit` 即可；Claude 子代理用 `git commit -- &lt;路径&gt;`）；bug 修复（主开发分支工作区）改完不提交，交回主会话，审核、实测、预筛都过后由主会话提交；新功能只提交在 `f</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles,retention</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L15" line="15" section="协作方式" status="合并与适配" condition="适用业务或职责存在时" fingerprint="48330b59f357fa11">
+      <excerpt>- 提交信息：`feat:` / `bug:` / `docs:` 开头的中文单行，不写 body、不加 Co-Authored-By。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L16" line="16" section="协作方式" status="合并与适配" condition="适用业务或职责存在时" fingerprint="a1b69a6f06fe9e40">
+      <excerpt>- 要改的文档：接口变了改 `cmd/&lt;服务名&gt;/desc/api-contract.md`，前端约定变了改 `cmd/&lt;服务名&gt;/web/CLAUDE.md`（项目说明与构建变了改 `README.md`），改已有表在 `docs/db-migration/&lt;YYYY-MM-DD&gt;/` 写手工迁移脚本（写法见 `CLAUDE.md`「数据库」）。**不改*</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L17" line="17" section="协作方式" status="合并与适配" condition="适用业务或职责存在时" fingerprint="125c7976239f2dd4">
+      <excerpt>- Codex 不跑有界面浏览器（页面实测由 Claude 会话做）；接口用 curl 测（本机一律加 `--noproxy '*'`），起测试实例的规则见 `CLAUDE.md`「接口与页面实测」、[`docs/开发与实测流程.md`](docs/开发与实测流程.md)「一、接口与页面实测」和 `docs/架构.md`「接口与页面实测细则」，优先用其中的本</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L18" line="18" section="协作方式" status="合并与适配" condition="适用业务或职责存在时" fingerprint="0c12aa7391e1519a">
+      <excerpt>- 做完在**需求文档末尾**追加「开发记录」（同一个需求开发几轮就追加几段，旧的不改；文档里还没有 `## 开发记录` 就先加这个标题），和这次的代码改动一起提交。没有需求文档的 bug 修复不写文档，把同样的内容写进交回的汇报。固定模板：</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L37" line="37" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="6ae45c53395afb92">
+      <excerpt>- 通用能力先用 `github.com/bytemind-io/infra`（errors、databases/sqldb、databases/redisdb、zrohandler、oss、notifications、payment、common/lock…），不保留旧工具包依赖，infra 有的不要重写，缺的先问。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L38" line="38" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="2a078ea508e3dd57">
+      <excerpt>- 契约先行：改 `cmd/&lt;服务名&gt;/desc/*.api`（路由只写在 `desc/api.api`，新 type 与路由追加到文件末尾，每个字段写中文行尾注释，校验写 `.api` tag）→ `cd cmd/&lt;服务名&gt; &amp;&amp; make api` → 写 logic；`routes.go`、`internal/types/`、`api.json` 是生</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L39" line="39" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="ff69f7128dc73bb5">
+      <excerpt>- 对外错误只用 `shared/bizerr`（新增错误改四处：常量、错误变量、两份 `locale.*.toml`、错误号表测试），`ref_code` 只追加不改旧值；logic 用 `apperr.Client` 转错误（业务拒绝记 `Infof` 原样返回，其他错误记一次 `Errorf` 后变 `bizerr.Internal`）；日志只写英文、</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L40" line="40" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="299d8b7cfaece9f3">
+      <excerpt>- 中间件实现写在 `shared/middleware`，`cmd/&lt;服务名&gt;/internal/middleware` 只做 goctl 名字转接；service 之间只能单向依赖（见 CLAUDE.md「分层与依赖」）。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L41" line="41" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="0e795fed6070c4fe">
+      <excerpt>- 枚举（角色、状态、类型）只用 `shared/domain` 的类型常量，不写 `"owner"`、`status = 20`；持久化状态一个列一个整型类型，取值留空档（10 / 20 / 30），不用 `iota`。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L42" line="42" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="7b31ba6dc9e69cf0">
+      <excerpt>- 钱用整数（分，更小的单位见 CLAUDE.md「本项目特有」），不用浮点，先乘后除只取整一次；状态迁移和余量扣减用条件更新（`WHERE id = ? AND status = &lt;旧&gt;`，查影响行数）；事务内不做外部调用；动钱的写接口带幂等键；钱只在 service 里动，每次变动有唯一业务键，钱和权限的变动在同一事务里写审计（`audit.Record</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L43" line="43" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="41112ce41b7fcb38">
+      <excerpt>- 发放必须可追溯：给人价值或权限的记录（码、套餐、余额、密钥、价格），记录本身存操作人、发给谁、时间、原因、来源（常量）、审批人，变更留历史，页面可见。审计日志、调用明细和排查记录只追加、永久保留，不写清理任务。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>retention</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L44" line="44" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="0b99c5c5d4d1677b">
+      <excerpt>- 配置分两处：config 只放监听与日志、数据库、Redis、密钥环 `Secrets` 这类启动项；其余（对象存储、支付、短信 / 邮件、通知、人机验证、任务开关…）一律进 `settings` 表（密钥字段标 `Secret`，只返回「已设置」），在管理员后台配置并热重建；pepper 这类一改就让全部会话失效的密钥首次启动自动生成、不可改。不要往 </excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L45" line="45" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="a77c443878aa3f53">
+      <excerpt>- 表结构由 `shared/models` 的模型结构体定义，模型用 `cd cmd/&lt;服务名&gt; &amp;&amp; make db TABLE=&lt;表&gt; DB_URL=&lt;连接串&gt;` 生成后按 CLAUDE.md 的写法手写结构体；`Database.AutoMigrate` 默认常开、不许关，启动在 `InitModels` 里逐个调 `CreateTable`，新表的</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L46" line="46" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="de56d7c8903bebc9">
+      <excerpt>- `FindOne` / `FindByXxx` 找不到返回 `(nil, nil)`，先判 `err` 再判 `nil`；GORM 带 `WithContext`，不用 `Save` 覆盖整行。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L47" line="47" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="defad63007a3c075">
+      <excerpt>- 缓存只走 `shared/cache` 或 `&lt;table&gt;_cache.go` 装饰器，提交成功后再清缓存，钱的余量永不缓存；权限类缓存改动处立即失效，并写测试证明「失效后下一次请求立即被拒」。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L48" line="48" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="bd82149140295a4f">
+      <excerpt>- 消息正文（短信、邮件、机器人）写成独立 `.tmpl`，不用 `fmt.Sprintf` 拼；新代码的 JSON 用 `sonic.ConfigStd`。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L49" line="49" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="73843d9d9ba150e7">
+      <excerpt>- 结构体定义不写成一行（`type X struct{ A, B string }` 不许，空结构体除外）；多字段结构体字面量一行一个字段；注释英文在前、中文放括号，只写「为什么」；Go 缩写全大写（`UserID`），数据库模型除外。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L50" line="50" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="de436d4778cad531">
+      <excerpt>- 时间库里 `timestamptz`，API 返回 Unix 秒，业务日按北京时间；给人看的时间 `2026-10-01 11:39:45`。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L51" line="51" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="5967599cad5b0814">
+      <excerpt>- 验证：`gofmt -l`、`go build ./...`、`go vet`、`go test` 相关包（优先不连库的 table-driven 测试，不用 testify；展示和错误映射类测试不提交）；只有锁加条件检查、软删复活、并发扣减这类数据库层面的规则才写连库测试 `&lt;主题&gt;_pg_test.go`（环境变量没设就 `t.Skip`，绝不指向共</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L52" line="52" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="a9b180a62ddb3859">
+      <excerpt>- 审核意见一次攒齐、一次改完：改完自己 grep 同一规则的其他出现处再汇报，汇报先结论，「通过 / 未执行 / 失败」分开写。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="AGENTS.md:L53" line="53" section="最容易踩的规则（完整规则见 CLAUDE.md 和 `~/.claude/CLAUDE.md`，缓存见其中「缓存」一节）" status="合并与适配" condition="适用业务或职责存在时" fingerprint="09c6b3753be89ae4">
+      <excerpt>- `make api` 会打印「暂不支持 map 类型」，无害，不用查；只用 `make api` 生成，`types.go`、`routes.go` 不手改。</excerpt>
+      <treatment>执行流程按已确认职责与分支政策适配，重复红线链接唯一正文；Go 专有细节条件化</treatment>
+      <target file="templates/default/rules/workflow.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+  </source>
+  <source file="cmd/starter/web/CLAUDE.md" sha256="3b7c4723e8b39d37efb822ba96c17c44f9eb0cbc5041168306dfa90bf4656082">
+    <item id="cmd/starter/web/CLAUDE.md:L3" line="3" section="CLAUDE.md — 前端" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="57b280b1d5467653">
+      <excerpt>本文是前端约定和一行一条的页面约束；项目说明、命令、目录和后端契约见 [`README.md`](README.md)，红线、分层和后端规则见根目录 [`CLAUDE.md`](../../../CLAUDE.md)，接口以 [`api-contract.md`](../desc/api-contract.md) 为准。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L7" line="7" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="8c7197aa439c03b9">
+      <excerpt>- 页面不直接用 axios / fetch，只调 `src/api/&lt;领域&gt;.ts`；类型逐字段对照后端契约，字段行尾写中文说明。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L8" line="8" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="b7c156daad393ddb">
+      <excerpt>- 响应：成功是裸 JSON（无外层信封）；错误体 `{code, message, ref_code}`，`message` 已按 `Accept-Language` 本地化，前端原样显示（`toast.error(e)`），不翻译、不按 message 文本判断。**只有 401 登出**（登录接口自己的 401 除外），403 只提示。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L9" line="9" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="65175453a0c1e73d">
+      <excerpt>- 枚举只用 `config/` 里的常量和判断函数（如 `Role.Admin`、`isAdmin`），不写 `10`、`100` 字面量；未知值走拒绝侧。角色以服务端 `/api/me` 为准，路由守卫只是体验层。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L10" line="10" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="24ade6c02a43bf3d">
+      <excerpt>- 时间：接口是 Unix 秒，显示只用 `lib/format.ts` 的 `formatTime`（`YYYY-MM-DD HH:mm:ss`）和 `formatDate`（`YYYY-MM-DD`），北京时间，禁用 `toLocaleString`。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L11" line="11" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="c26c01667cc17da2">
+      <excerpt>- 金额：人民币用「分」整数；输入框的元字符串只用 `lib/money.ts` 的 `parseYuanToFen`（最多两位小数，非法返回 `null`，调用方禁止提交），显示用 `formatFen`；不许 `Number(x) * 100`。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L12" line="12" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="af470aaa4a6c3a23">
+      <excerpt>- `v-html` 前必须经 `lib/sanitize.ts` 的 `sanitizeHtml`。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L13" line="13" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="d9d783813a44d5e9">
+      <excerpt>- 弹窗只用 `components/ui/BaseDialog.vue`，不写原生 `alert` / `confirm`（eslint 拦截）。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L14" line="14" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="3c646010503e5780">
+      <excerpt>- 设计 token 集中在 `style.css`：`@theme` 里是令牌类名，取值在下面 `:root` 和 `:root[data-theme='dark']` 两套配色里，`stores/theme.ts` 切换（先用存储的选择，没有就跟随系统）；颜色只用 token 类名（`text-ink`、`bg-canvas`、`bg-surface`、</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L15" line="15" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="86e41ff819359899">
+      <excerpt>- 文案：词条写在 `src/i18n/zh.ts`，key 为 `&lt;区&gt;.&lt;页面或组件&gt;.&lt;camelCase&gt;`，`en.ts` 必须同形（少写多写 vue-tsc 报错）；模板里 `t('…')`，组件以外 `import { t } from '@/i18n'` 且只能在显示时调用；代码里不写死中文。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L16" line="16" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="ce1bc4e55061e07d">
+      <excerpt>- 请求层 `api/client.ts` 统一带 `Authorization`、`Accept-Language` 和控制台客户端头 `x-platform` / `x-version` / `x-timezone`（后端 `HeaderCheckMiddleware` 要求）；动钱的写接口用 `api.post(url, body, { 'Idempo</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L17" line="17" section="约定" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="22f90f24d72bd5aa">
+      <excerpt>- 凭据（令牌）存在 `localStorage`，读写都包 try/catch。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L21" line="21" section="约束（踩到就是 bug）" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="bae64b5527935542">
+      <excerpt>- 不引 UI 组件库，缺组件就在 `src/components/ui/` 补一个，写成全站共用的；同一个样式写第二遍时抽成组件类或组件。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L22" line="22" section="约束（踩到就是 bug）" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="863363e4c94c2c8e">
+      <excerpt>- **展示含义和关系，不展示裸 ID 和裸数字**：订单显示单号 + 金额 + 状态，用户显示昵称 + 手机号，企业显示名称；ID 只作可复制的次要信息；数值带单位和口径（分 / 元、秒、%）。后端 DTO 缺这些字段就先补契约（`.api` 返回名称和关键属性），不许让前端拿 ID 再逐条请求拼。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L23" line="23" section="约束（踩到就是 bug）" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="2b1a6f77ec9dd9b9">
+      <excerpt>- **同一个东西全站一个样**：状态文字和徽标色调只用 `config/` 里的 `*Label` / `*Tone`，不在页面里再写一套映射；统一某个写法时 grep 同一实体在所有页面和弹窗里的写法一起改。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L24" line="24" section="约束（踩到就是 bug）" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="cd302f5f3f8bbfc8">
+      <excerpt>- **一格只放一样东西**：状态列只放徽标，截止时间、原因、来源各自成列，列名不写「A / B」（「已用 / 额度」这种分数除外）。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L25" line="25" section="约束（踩到就是 bug）" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="cab884d0982b95d7">
+      <excerpt>- **能选填就选填**：不填不会出错的就选填；真必填（金额、对象、法务风控要求的）不放宽。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L26" line="26" section="约束（踩到就是 bug）" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="71147efd0dc22df6">
+      <excerpt>- 新增或改动的 UI 要在中文、英文、手机三种宽度下各量一遍（英文词条更长，窄卡片、列宽、图例最容易重叠或超出）；小需求快车道只量中文、英文两种桌面宽度，手机留到上线前统一适配。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L27" line="27" section="约束（踩到就是 bug）" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="5863faf9544044a9">
+      <excerpt>- 英文词条按母语习惯写，不逐字直译中文；句子用整句插槽，不拼接碎片。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+    <item id="cmd/starter/web/CLAUDE.md:L28" line="28" section="约束（踩到就是 bug）" status="按项目适配" condition="通用界面要求；Vue 专有实现仅在具备对应实现时" fingerprint="5892466226176eb2">
+      <excerpt>- 提交前 `pnpm typecheck &amp;&amp; pnpm lint &amp;&amp; pnpm test &amp;&amp; pnpm build`；`pnpm typecheck` 连 `*.test.ts` 一起查，只跑 vitest 发现不了测试文件的类型错误。</excerpt>
+      <treatment>保留契约、权限、展示、主题、多语言和验收要求；具体路径、凭据存储及组件名称不强塞给其他项目</treatment>
+      <target file="templates/default/rules/frontend-common.md" />
+      <target file="templates/default/rules/vue.md" />
+    </item>
+  </source>
+  <source file="docs/开发与实测流程.md" sha256="7592ea7625e284611aebb11530717d4fceba209cbacc198ddb24ee007ed00a5f">
+    <item id="docs/开发与实测流程.md:L3" line="3" section="开发与实测流程" status="已确认适配" condition="适用业务或职责存在时" fingerprint="65f321c92e1b3e4e">
+      <excerpt>本文是从根目录 `CLAUDE.md` 搬出的开发、实测、审核、收尾和模型分工细则（安全闸门「红线」、「用户说可以开发才动代码」仍留在 `CLAUDE.md`）。创建日期 2026-10-26。预筛工具、审核分级脚本、常驻测试数据脚本目前都没有，下文写到它们的地方一律按「项目有的话」执行，建好后在 `CLAUDE.md`「本项目特有」登记。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L7" line="7" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="789667c759820d63">
+      <excerpt>- **起服务**：用最新代码编译，另开端口（端口在`CLAUDE.md`「本项目特有」里定，配置复制 `etc/config.yaml` 只改 `Port`）；配了固定验证码（如 `auth.devCode`）只固定码、不挡发送，配了真实短信通道时发码会真发，实测前先看实例启动日志里的发送通道类型，启动日志显示 `phone=real` 时不用真实手机号发</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L8" line="8" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="712c8a27a9d7a83f">
+      <excerpt>- **常驻测试数据**：项目有常驻测试数据脚本的（写在`CLAUDE.md`「本项目特有」），实测前先跑它补齐和恢复，账号、token、ID 从它输出的不进 git 的文件读；常驻数据只做不破坏状态的操作，会改状态的测试另建临时数据，测试不写死会变的 ID。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L9" line="9" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="cbe7bec3af4319d1">
+      <excerpt>- **测试数据**：只通过接口造，名字 / 邮箱带 `e2e-…-deletable` 标记（测完默认留着共用不删，只有遗留数据影响本需求功能或别的测试判断时才清理，并在汇报里说清）；dev 模式的验证码用固定码（见`CLAUDE.md`「本项目特有」）；管理员用 SQL 把 `auth_users.role` 之类的角色列设为管理员后重新登录；SQL 手</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles,retention</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L10" line="10" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="ff2e4d29b3cab389">
+      <excerpt>- **接口要从页面测**：先起后端，再在对应前端页面上模拟真人操作触发接口，同时看 network 状态码和响应体、页面提示、库里记录，三者都符合预期；边界条件（空值、超长、非法格式、重复提交、连续快速点击、无权限、数据不存在、并发改同一条）顺带测，只用 curl 打通不算测过。细则见 `docs/架构.md`「接口与页面实测细则」。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L11" line="11" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="c8f04c9d99aae612">
+      <excerpt>- **接口**：用真实 `curl` 逐个打每个路由，本机一律加 `--noproxy '*'`；每行输出「期望码/实际码 方法 路径 说明 | 响应摘要」，关键接口同时测正常和错误路径（未登录、越权、参数非法、重复操作、缺幂等键、同键不同体）；错误响应必须是本地化的 `bizerr` 文案，不能是 `notfound.xxx` 这类消息 ID 字面量或驱</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L12" line="12" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="31bec9f567554107">
+      <excerpt>- **权限（重点，普通用户绝不能拿到管理员能力）**：每个 `/api/admin/*` 路由分别用普通用户（期望 403）、未登录（401）、伪造 token（401）打一遍；再测篡改 JWT payload 的 role、`alg=none`、用默认密钥自签、登录 / 改资料时夹带 `role`、管理员降级后旧 token、封禁后旧 token、用户间</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L13" line="13" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="cbcf34286fa41aa6">
+      <excerpt>- **页面**：一律用 Playwright MCP 工具（`mcp__playwright__*`）开**有界面浏览器**，不自己写脚本替代；开跑前用 ToolSearch 确认工具在，没有就停下告诉用户并给补救（`claude mcp add playwright -- npx @playwright/mcp@latest`，重开会话才加载），不擅自改</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>browser,roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L14" line="14" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="0b4e97e9021ec3a1">
+      <excerpt>- **长内容与注入**：超长名称 / 描述、2 万字文本、不换行长单词、昵称、备注，确认库里不截断、页面不撑破；内容里夹 `&lt;script&gt;`、`&lt;img onerror&gt;`、`javascript:` 链接，确认页面不执行；超过 1MB 的请求体应返回 413。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L15" line="15" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="7c3a4fc1a2bde4a3">
+      <excerpt>- **防误判**：改 localStorage 后必须 `reload` 才生效；每页先断言仍在目标路由且没有登录弹窗，再比对数据；每个账号的会话数有上限，反复登录会挤掉旧 token，测试用专用 e2e 账号，别登录用户在用的账号；异步加载的页面等加载完成再取数；PASS 后抽看截图确认。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L16" line="16" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="b388a3d66936e08f">
+      <excerpt>- **系统设置项**：新增或改动设置项，必须管理员在后台设置页改值、保存、回库、查审计（用本地隔离后端）。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L17" line="17" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="42c80d560b2917b3">
+      <excerpt>- **实测速查**：本项目的测试账号、固定验证码、端口、安全开关的当前状态写在`CLAUDE.md`「本项目特有」，以库里 settings 为准，变了就更新。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L18" line="18" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="da5df36f899855d0">
+      <excerpt>- **实测提速**：派 `developer` 的同时就编译并起测试实例（先用最新主开发分支代码起），不等开发交回，开发交回后在该 worktree 增量重编（前端有改动先 `pnpm build` 再 `go build`，`web/dist` 靠 `go:embed` 打进二进制）并重启实例，再开始测；**接口实测必须拆子代理并行，不由一个子代理或主会</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L19" line="19" section="一、接口与页面实测" status="已确认适配" condition="适用业务或职责存在时" fingerprint="390c205b3aac05e7">
+      <excerpt>- **收尾**：恢复被改的系统设置（关掉假支付实例、补偿任务恢复），测试数据默认留着共用不删（只有遗留数据影响本需求功能或别的测试判断时才按 `e2e-…-deletable` 标记清理，并在汇报里说清；审计日志不删，见红线 12），停掉测试实例；取消测试订单；如实说明留在对象存储、支付商户后台、第三方追踪等无法删除的东西。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>retention</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L23" line="23" section="二、开发流程" status="已确认适配" condition="适用业务或职责存在时" fingerprint="fab61eaed3011b66">
+      <excerpt>- 设计写进 `docs/需求/进行中/&lt;名称&gt;.md`（模板见 `docs/README.md`「需求文档模板」，用户的需求和我的设计是同一份文档），标题下状态行 `状态：待确认`；用户说「可以开发」后改成 `状态：可以开发 YYYY-MM-DD`。原型放 `docs/需求/原型/YYYY-MM-DD-&lt;名称&gt;.html`（日期为创建日）并在文档里链接。至</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L24" line="24" section="二、开发流程" status="已确认适配" condition="适用业务或职责存在时" fingerprint="c3cf24ac5b2861cc">
+      <excerpt>- 用户提修改意见就改设计再给他看，直到确认；确认的设计是开发和审核的验收依据，开发中要偏离先停下问。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L25" line="25" section="二、开发流程" status="已确认适配" condition="适用业务或职责存在时" fingerprint="db7421890e67b4f2">
+      <excerpt>- 只有 bug 修复、改文案、用户说清改法的小改动可以不出设计直接做。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L26" line="26" section="二、开发流程" status="已确认适配" condition="适用业务或职责存在时" fingerprint="b69c790cb4466c5c">
+      <excerpt>- **小需求快车道**：适用条件是预计改动 5 个文件以内，且不碰钱、权限、状态迁移、表结构、错误号、系统设置、通知，不涉及信息泄露类红线。做法：设计文档只写问题、一段话改法、原型、3 条验收；用户确认（状态行照样改「可以开发」）后开发；仍在 feat 分支、用户说上线才合；审核分级全部判定为「主会话把关」的由主会话预检把关，有必审文件的派一个审核子代理；</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L30" line="30" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="aac7fd68936fbded">
+      <excerpt>适用新功能和 bug 修复（含说清改法的小改动），编译、单测通过后按顺序做完再停，中途不问「要不要测 / 要不要提交」；纯文档、讨论、只出设计不适用。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L32" line="32" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="44bfd272782e4d9c">
+      <excerpt>1. 实测：按「接口与页面实测」起测试实例，主窗口或子代理用 Playwright MCP 有界面（各用独立浏览器会话；没加载先停下告诉用户，不改用脚本）走改动的页面和接口，正常 / 错误 / 权限都测，每步查库；需求文档开发记录只写测试结论。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>browser</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L33" line="33" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="cb057c0464664261">
+      <excerpt>2. 修：修完重测；偏离已确认的设计、动钱或权限规则先问。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L34" line="34" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="e9e82f3ac91b927a">
+      <excerpt>3. 审核：**一个需求审一次**：developer 分块交回时主会话只跑预检（`gofmt`、`go build`、`go vet`、受影响包 `go test`），不派审核；全部块交回后，对整个需求的 diff（新功能 `main...feat/&lt;需求名&gt;`）统一审一次；bug 修复和说清改法的小改动交回即审。新功能分块提交在 feat 分支上，审核问</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L35" line="35" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="cc54374a68e55b66">
+      <excerpt>- 分级和切 diff：派之前主会话先跑 `gofmt -l`、`go build`、`go vet`、受影响包 `go test`；未提交的改动先做快照提交（`git stash create` 不含未跟踪的新文件，有新源码文件时改用临时 `GIT_INDEX_FILE` 先 `git add` 再 `write-tree` / `commit-tree`</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L36" line="36" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="087b9172a00fed0e">
+      <excerpt>- 预筛不挡审核：项目有预筛工具（如 Jev）的，派审核的同时后台并行跑，不等它；结果出来后主会话对照审核结论，审核没覆盖的标记项用 SendMessage 发给对应审核者专项核实，审核已结束就派一个只核这几项的小审核。但挡合入：bug 修复提交进主开发分支、新功能合并进主开发分支前，预筛结果必须出来、标记项核实完。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L37" line="37" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="86408099a5255045">
+      <excerpt>- prompt 只给：本次改动的目的、设计或验收依据、与本次相关的几条红线（写条号和原文摘录，不让它通读整份规则）、该审核者的 diff 文件路径（先读它，只在追调用链时才读源码）。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L38" line="38" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="0f0901e87c2f1022">
+      <excerpt>- 首次审核全量逐文件：按切出的每份必审 diff 各派一个审核子代理并行；只有一份就一个。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L39" line="39" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="5ef0b5f3472e147a">
+      <excerpt>- 打回后的复审只审增量：固定用 Sonnet 5.5（Agent 传 `model: sonnet`，代码首审仍跟随 `/model`）；prompt 里列上轮问题清单和文件:行，对照代码核实修对并扫这些改动带来的新问题，不重跑脚本和测试（要实测的由主会话跑），同样并行。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L40" line="40" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="cc2d34964f2f3ed2">
+      <excerpt>- 规则和文档类改动（CLAUDE.md、本文、AGENTS.md、`.claude/agents/**`、系统设计、架构、前端设计、接口契约、各 README）首审也用 Sonnet 5.5；改的是红线、钱、权限规则的仍跟随 `/model`。改之前先 grep 出所有提到同一件事的地方（含子目录下的 README、前端文档）一次改全，审核 prompt </excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L41" line="41" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="837fbe54dfa5d0c6">
+      <excerpt>- 范围：只追本次 diff 触及的调用链，向外最多两层；再往外的疑点记成「待确认」列出，不展开。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L42" line="42" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="6c906a194a992d98">
+      <excerpt>- 输出：先写「通过」或「不通过」和发现数，再按严重度列问题（文件:行、问题、建议），不复述 diff。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L43" line="43" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="7eede3f5daf7dd03">
+      <excerpt>- 分级：必须派审核子代理：涉及钱、权限、事务、迁移、对外错误号、信息泄露（密钥、个人信息）、缓存失效、审计和排查表的改动，以及规则文档、接口契约、系统设计这类「定义行为」的文档。可由主会话读 diff 加预检（gofmt、go build、go vet、受影响包 go test；项目有预筛工具的加其结果）把关：纯文案、注释、纯测试、前端样式、只写开发记录的</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L44" line="44" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="40f3c01b5df6ab2d">
+      <excerpt>- 复审最多一轮：首次审核只打回「高、中」；打回修完的复审只核实打回项，并扫这些改动新引入的「中」以上问题，不再提新的「低」。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L45" line="45" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="3051f07a723782f2">
+      <excerpt>- 「低」要可见：「低」和「待确认」记进版本规划文档（`docs/需求/进行中/&lt;版本&gt;-版本规划.md`，没有就先建一份），并在汇报里列出，不阻塞；涉及钱、权限、泄露的「低」按「中」处理。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L46" line="46" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="4a2c267ca7300ea5">
+      <excerpt>- 范围围栏：一个需求只修它自己的问题；实测或审核中发现的同类问题记进版本规划并在汇报里列出，只有影响钱、权限、泄露或本需求正确性的才当场修。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L47" line="47" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="6a3b25397b38ae94">
+      <excerpt>- 并行：审核和实测同时开始，两边都过才汇报（bug 修复两边都过才提交），有问题合成一批打回；测试端口按需求分开（主目录一个、新功能 worktree 从`CLAUDE.md`「本项目特有」划定的一段范围里取空闲端口，用的端口写进需求文档开发记录），起前 `lsof` 查，互不排队。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L48" line="48" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="d7e2d32c7c061486">
+      <excerpt>4. 提交：新功能提交到 `feat/&lt;需求名&gt;`，bug 修复提交到主开发分支（默认 `main`，本项目特有里写明）；受影响的文档（`CLAUDE.md`、本文、`docs/系统设计.md`、`docs/架构.md`、`api-contract.md`、`cmd/&lt;服务名&gt;/web/CLAUDE.md`、`cmd/&lt;服务名&gt;/web/README.md`</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L49" line="49" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="5f5b6ee1d47dccaf">
+      <excerpt>5. 收工：只关自己起的进程（测试端口的服务、测试开的浏览器、本会话派出的子代理和后台任务），别的会话的不动，拿不准先问；测试数据默认留着共用，只有影响本需求或别的测试时才按 `e2e-…-deletable` 标记清理，恢复改过的设置。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L50" line="50" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="373dc54aa3ec1965">
+      <excerpt>6. 汇报：改了什么、测了什么（附截图汇总页并打开给我看）、修了什么、没测或删不掉的、提交号和分支；写明「&lt;审核所用模型名&gt; 已审，发现 N 条，已修 N 条」。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L51" line="51" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="ebaef0d43d4e27bf">
+      <excerpt>7. 最后一行写 `✅ 已收工，可以下班`（新功能加「（在分支 feat/&lt;需求名&gt;，等你说合并）」）；没做完写 `⏸ 未收工：卡在第 N 步，原因 …`。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L53" line="53" section="三、开发完成后的收尾（自动执行）" status="已确认适配" condition="适用业务或职责存在时" fingerprint="1c1b61d067294358">
+      <excerpt>**新功能分支**：确认可以开发后，主会话 `git worktree add ../&lt;项目目录名&gt;-&lt;需求名&gt; -b feat/&lt;需求名&gt; &lt;主开发分支&gt;`（不切主目录分支，免得影响别的会话）；developer 子代理只在这个目录改、分步提交，实测也用它编译。我说「上线」（或「合并」）后，主会话先把最新 `main` 合进分支、解冲突、重跑构建和测试，再</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L57" line="57" section="四、模型分工" status="已确认适配" condition="适用业务或职责存在时" fingerprint="6400dd03fc42b892">
+      <excerpt>- 执行交给便宜的模型：写代码、跑单测、curl 测试、改文档，用 Haiku 5.5（`claude-haiku-5-5`，Agent 传 `model: haiku`）或 Sonnet 5.5（`claude-sonnet-5-5`，传 `model: sonnet`）。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L58" line="58" section="四、模型分工" status="已确认适配" condition="适用业务或职责存在时" fingerprint="7b8ec85ca08dae07">
+      <excerpt>- 开发默认多个 Sonnet 5.5 并行：按能独立构建、测试的部分拆开，同时开多个 `developer` 子代理（`.claude/agents/developer.md`；开工先读 `AGENTS.md`，做完在需求文档末尾追加开发记录），彼此不改同一文件；只派状态行为 `状态：可以开发 YYYY-MM-DD` 的需求，`状态：待确认` 的不派；Ha</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L59" line="59" section="四、模型分工" status="已确认适配" condition="适用业务或职责存在时" fingerprint="944256a510993147">
+      <excerpt>- 主会话只做审核把关：拆任务、写验收标准、看 diff 和测试结果、对照红线和约定把关，不自己写大段代码。审 diff 由主会话派审核子代理（审核额度够用时，审核子代理一律用 Opus 5.5（`model: opus`），额度吃紧时才按下面的分级，拿不准额度先问（5 小时限额用到阈值即算额度吃紧，Max 20x 账号 60%、Max 5x 账号 30%（</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L60" line="60" section="四、模型分工" status="已确认适配" condition="适用业务或职责存在时" fingerprint="9f679520121ffac1">
+      <excerpt>- **多需求并行**：每个需求一个会话、一个 worktree、一个测试端口（从一段范围里取空闲端口，起前 `lsof` 查），一个在开发或实测时用户去确认另一个的设计；合进主开发分支一次合一个，合前先合入最新主开发分支（见「新功能分支」规则）。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L61" line="61" section="四、模型分工" status="已确认适配" condition="适用业务或职责存在时" fingerprint="f5423be13425fb61">
+      <excerpt>- 主窗口不被占住：开发、修 bug、跑测试、改多份文档、批量挪文件、查资料一律派后台子代理（开发用 `developer`，只读查找用 `Explore`），互不冲突的块同时派；主窗口只做设计、拆任务、审核、向用户要决定和汇报，派完立刻回复，不干等；自己动手只限一两条命令能做完的小事。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L62" line="62" section="四、模型分工" status="已确认适配" condition="适用业务或职责存在时" fingerprint="47081961e0546694">
+      <excerpt>- Playwright 有界面实测主窗口和子代理都可以跑，各用独立的浏览器会话（隔离模式），测完关自己的；一律用 Playwright MCP 工具跑，不写脚本替代；并行测试用不同的测试账号（测试账号单会话，换账号会互相踢登录）。</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>browser</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/开发与实测流程.md:L63" line="63" section="四、模型分工" status="已确认适配" condition="适用业务或职责存在时" fingerprint="1cf70b214fcf9132">
+      <excerpt>- Codex 作第二条开发线（规则见 `AGENTS.md`），**默认用起来**：一个需求能拆出互不改同一文件、能独立构建的块时，至少一块交 Codex 与 `developer` 并行：主会话从 `feat/&lt;需求名&gt;` 拉 `codex/&lt;任务名&gt;` worktree，后台跑 `codex exec`（`-C &lt;worktree&gt;`、`-o` 把结果</excerpt>
+      <treatment>保留设计、验收、审核、提交与收尾目标；按已确认 roles/browser/git/approval/retention 政策适配工具和执行主体</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+  </source>
+  <source file="docs/playbook.md" sha256="8dcd387df3f629b4fa29ab5c9a5c9eaca2fb57beea53b06b63d2cc0b6830dbc1">
+    <item id="docs/playbook.md:L3" line="3" section="踩坑手册" status="合并保留" condition="适用业务或职责存在时" fingerprint="8ebc1f9039b2f9da">
+      <excerpt>每条一句规则加一句「为什么」，来自 [`CLAUDE.md`](../CLAUDE.md) 和全局约定。遇到新坑追加到对应小节末尾，不改旧条。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L7" line="7" section="钱与状态" status="合并保留" condition="适用业务或职责存在时" fingerprint="d120a195062b1bfa">
+      <excerpt>- **钱用整数，不用浮点**：人民币用「分」`int64`，更小单位（微元、毫积分）也是整数。为什么：`0.1 + 0.2` 在浮点里不等于 `0.3`，累加后对账差几分钱就是事故。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L8" line="8" section="钱与状态" status="合并保留" condition="适用业务或职责存在时" fingerprint="8a93b90198d4b7d4">
+      <excerpt>- **先乘后除，只在最后取整一次**：为什么：每一步取整都会丢精度，多步取整后总额与明细对不上。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L9" line="9" section="钱与状态" status="合并保留" condition="适用业务或职责存在时" fingerprint="b740e4c672256b9b">
+      <excerpt>- **前端元转分按字符串解析**（最多两位小数，非法返回 null 并禁止提交），不许 `Number(x) * 100`。为什么：`Number(1.15) * 100` 得 `114.99999999999999`。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L10" line="10" section="钱与状态" status="合并保留" condition="适用业务或职责存在时" fingerprint="3f5dbdcf23eb9f31">
+      <excerpt>- **状态迁移和余量扣减用条件更新**：`WHERE id = ? AND status = &lt;旧&gt;`，检查影响行数，0 行即冲突。为什么：先查后写在并发下两个请求都读到旧状态，都写成功就重复发货或超卖。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L11" line="11" section="钱与状态" status="合并保留" condition="适用业务或职责存在时" fingerprint="baa352815a32727c">
+      <excerpt>- **动钱的写接口带 `Idempotency-Key`**：同键同内容返回第一次结果，同键不同内容 409。为什么：网络重试、用户连点、webhook 重放都会让同一笔钱被动两次。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L12" line="12" section="钱与状态" status="合并保留" condition="适用业务或职责存在时" fingerprint="a4c36842de13e233">
+      <excerpt>- **每次变动有唯一业务键，数据库唯一约束兜底**。为什么：应用层的「先查再插」挡不住并发，唯一约束是最后一道闸。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L13" line="13" section="钱与状态" status="合并保留" condition="适用业务或职责存在时" fingerprint="0d01b039fbab7862">
+      <excerpt>- **事务内不做外部调用**（支付、短信、邮件、对象存储、机器人）。为什么：外部调用慢或超时会长时间占着事务和行锁；调用成功但事务回滚，外部副作用就收不回来。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L14" line="14" section="钱与状态" status="合并保留" condition="适用业务或职责存在时" fingerprint="887ebc94ff68dd5e">
+      <excerpt>- **闸门遇到未知值走拒绝侧**。为什么：新增枚举值、脏数据落到「默认放行」会让本不该通过的请求通过。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L15" line="15" section="钱与状态" status="合并保留" condition="适用业务或职责存在时" fingerprint="4278d6cb995a9717">
+      <excerpt>- **审计日志、调用明细、排查记录只追加、永久保留**，测试收尾也不删。为什么：出事时靠它们还原现场；一旦写了清理任务，最需要的那天它已经被清掉了。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <decisions>retention</decisions>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L19" line="19" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="6928a93c68b6a5b2">
+      <excerpt>- **持久化状态用整型类型，取值留空档（10 / 20 / 30），不用 `iota`**，稳定性测试钉住取值。为什么：`iota` 在中间插一项会让后面全部变号，库里存的数字就对不上了；留空档以后可以在中间插新状态。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L20" line="20" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="53a024bbf62dc1f3">
+      <excerpt>- **枚举只用常量，不写 `"owner"`、`status = 20`**。为什么：按符号查引用才找得全，字面量改名时必漏。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L21" line="21" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="1b858f680fe4866d">
+      <excerpt>- **默认 `Database.AutoMigrate: true` 一直开启，不许为了测试关掉；改已有表同一批写 `docs/db-migration/&lt;日期&gt;/` 手工脚本**。为什么：新表新列靠启动时的 `CreateTable` 落到库里，关了新代码会在缺表缺列的库上 500；脚本是给 DBA 在自动建表被关或失败时手工执行的后路。AutoMigr</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L22" line="22" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="0371391317d634be">
+      <excerpt>- **不用部分唯一索引**，用事务内先锁父行（`FOR UPDATE`）再条件检查，并写连库测试覆盖并发。为什么：GORM 标签写不出 `where`，手工建的部分索引不在模型里，新库建不出来，模型与线上结构分叉。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L23" line="23" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="52114066afd4fa7e">
+      <excerpt>- **每个模型都有 `CreatedAt` / `UpdatedAt` / `DeletedAt` 三件套；SQL 手工插行必须带 `created_at`、`updated_at`（`now()`）**。为什么：空值在 `ORDER BY created_at DESC` 里排最前；不要用 `NULLS LAST` 补救，会用不上索引。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L24" line="24" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="fcef08373bacec7a">
+      <excerpt>- **`FindOne` / `FindByXxx` 找不到返回 `(nil, nil)`，先判 `err` 再判 `nil`**。为什么：只判 `err` 会在找不到时对 nil 解引用 panic。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L25" line="25" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="d850577c067b1533">
+      <excerpt>- **GORM 带 `WithContext`，不用 `Save` 覆盖整行**。为什么：`Save` 会把并发修改的其他列覆盖回旧值，还会绕过条件更新。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L26" line="26" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="ab818998a7bc2101">
+      <excerpt>- **时间库里 `timestamptz`，API 返回 Unix 秒，业务日按北京时间切分**。为什么：无时区时间在跨时区和夏令时下无法比较；按服务器本地时区切日会让日报在不同机器上不一致。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L28" line="28" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="26613250cf8f4233">
+      <excerpt>- **同一事务里先动冷行，被高并发争抢的热行放最后，失败整体回滚**。为什么：热行锁持有得越久，排队的请求越多；放最后能把持锁时间压到最短，条件更新 0 行时整个事务回滚再走原路径。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L29" line="29" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="72c140d729f359ac">
+      <excerpt>- **先写库、提交成功后再清缓存，绝不在事务里清**；事务里用 `tx` 重建的模型不带缓存。为什么：事务里清了缓存，提交前别的请求会把旧值又读回缓存；回滚了缓存更是白清。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L30" line="30" section="枚举与数据库" status="合并保留" condition="适用业务或职责存在时" fingerprint="091bd716ed10f819">
+      <excerpt>- **权限类缓存（会话、角色、成员关系）改动处立即失效，并写测试证明「失效后下一次请求立即被拒」**，TTL 只是兜底。为什么：被降级或封禁的人在 TTL 内还能继续操作，等于权限没收回。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L34" line="34" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="eae651b02569e889">
+      <excerpt>- **契约先行，一律走 `make api`**，不手改 `routes.go`、`types`。为什么：手敲 goctl 会漏 `-home`（`make api` 里是 `../../tpls`，`make db` 先 `cd ../..` 再用 `./tpls`） 用上默认模板，生成物与仓库约定不一致；手改的生成物下次生成就被覆盖。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L35" line="35" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="57e6e526c9f96e82">
+      <excerpt>- **所有 `@server` 路由块只写在 `desc/api.api`**。为什么：闸门、签名、幂等的链路测试只读主文件，写在别处的路由会躲过它们。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L36" line="36" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="a3f70a5621ee5290">
+      <excerpt>- **请求体全局上限 1MB，超出返回 413**，只有 multipart 分组放宽。为什么：不设上限，一个恶意大 body 就能吃光内存。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L37" line="37" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="876cc19f7ba29e38">
+      <excerpt>- **`RestConf.Middlewares` 四项和 `RestConf.Log.Stat` 写 `false`**。为什么：go-zero 自带的熔断、超时在上游故障时回空体 503 或截断流式响应；`Log` 与自己的请求日志重复；`Stat` 是定期统计日志，噪声大。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L38" line="38" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="7092474e56ade915">
+      <excerpt>- **config 只放启动项，其余进 `settings` 表**，密字段标 `Secret` 加密存库，只返回「已设置」。为什么：运行参数放 config 要改文件重启，且密钥很容易漏进仓库；放库里可以热更新并留审计。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L39" line="39" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="d60672c423916627">
+      <excerpt>- **身份以数据库为准**，不信令牌里的角色声明。为什么：令牌签发后角色被降级、账号被封禁，旧令牌仍然带着旧声明。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L40" line="40" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="c49c27389e913424">
+      <excerpt>- **按 id 取别人的资源一律回 NotFound**，不回 403。为什么：回 403 会让人试出某个 id 存在。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L41" line="41" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="a57da193d81fa5e8">
+      <excerpt>- **对外错误只用 `bizerr`，内部细节只进日志**。为什么：把驱动错误返回客户端会泄露表结构。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L42" line="42" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="fb2bff044541df88">
+      <excerpt>- **每个返回「内部错误」前必须有一条带底层 error 的 `Errorf`；业务拒绝（4xx）返回前必须记一条 `Infof`（操作、关键 id、原因链）**，统一走 `apperr.Client`。为什么：访问日志只有 `POST /x 400`，看不出是哪个校验、哪些 id；500 没有底层 error 的日志就没法排查。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L43" line="43" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="7cfc68f9d5438786">
+      <excerpt>- **新增接口的 logic 先返回 `bizerr.NotImplemented`（501000），实现后再删**。为什么：goctl 生成的空实现若直接返回 200，调用方会以为成功，线上静默出错。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L44" line="44" section="接口与配置" status="合并保留" condition="适用业务或职责存在时" fingerprint="53f081639498a555">
+      <excerpt>- **日志不记密码、token、API Key、完整请求 / 响应体**。为什么：日志常被更多人和系统读到，密钥进了日志等于泄露。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L48" line="48" section="测试与环境" status="合并保留" condition="适用业务或职责存在时" fingerprint="e87869d22da4db98">
+      <excerpt>- **本机 curl 一律加 `--noproxy '*'`**。为什么：环境里常有 `http_proxy`，带 `Host` 头的本地请求会被转去线上，测的不是本机。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L49" line="49" section="测试与环境" status="合并保留" condition="适用业务或职责存在时" fingerprint="ff493b80a7502e18">
+      <excerpt>- **测试实例另开端口，不停用户自己的实例；起前 `lsof` 查端口**。为什么：用户的实例上有他正在用的登录态和数据，停掉或占用端口会打断他的工作。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L50" line="50" section="测试与环境" status="合并保留" condition="适用业务或职责存在时" fingerprint="b67bf8bad7cf2923">
+      <excerpt>- **测已提交版本时用 `git worktree` 检出 HEAD 单独编译**。为什么：主目录里常有别的会话未提交的改动，直接编译会把它们带进测试结果。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L51" line="51" section="测试与环境" status="合并保留" condition="适用业务或职责存在时" fingerprint="401265f0a3d5dbd6">
+      <excerpt>- **每个账号的会话数有上限，测试用专用 `e2e-…-deletable` 账号**，别登录用户在用的账号。为什么：超过上限登录会挤掉旧 token，用户的浏览器会被莫名登出。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L52" line="52" section="测试与环境" status="合并保留" condition="适用业务或职责存在时" fingerprint="b5107317bd031321">
+      <excerpt>- **测试数据只通过接口造，名字带 `e2e-…-deletable`**。为什么：接口造出来的数据才保证走了业务规则；带标记才能在需要清理时精确定位，不误动真实数据；测完默认留着共用，只有遗留数据影响本需求功能或别的测试判断时才清理。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L53" line="53" section="测试与环境" status="合并保留" condition="适用业务或职责存在时" fingerprint="b2c50294a2c64c84">
+      <excerpt>- **测试库通知机器人常驻清空，实测前确认仍为空（多个会话并行时，一个测完恢复会让另一个的测试推到真实群），不发真短信、不付款**。为什么：测试实例连的是真实的外部账号，一次下单通知就会真的发到群里。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L54" line="54" section="测试与环境" status="合并保留" condition="适用业务或职责存在时" fingerprint="6df7c0bd785a5343">
+      <excerpt>- **连库测试用环境变量开关，没设就 `t.Skip`，绝不指向共享库，在一次性 schema 里跑完就删**。为什么：写死连接串会让别人 `go test` 时误连到共享库并写脏数据。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L55" line="55" section="测试与环境" status="合并保留" condition="适用业务或职责存在时" fingerprint="43dd3647d1f25a78">
+      <excerpt>- **改 localStorage 后必须 `reload` 才生效；每页先断言仍在目标路由且没有登录弹窗**。为什么：「无横向滚动」在登录弹窗上也成立，不先断言会把没进页面的测试误判为通过。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L56" line="56" section="测试与环境" status="合并保留" condition="适用业务或职责存在时" fingerprint="85ec431cfe0e07ae">
+      <excerpt>- **每个会话一个独立浏览器、一个 page 用到底**，主会话和子代理各开各的（隔离模式）、测完关自己的。为什么：共用浏览器会互相挤掉登录态；测试账号单会话，并行测试用不同的测试账号。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L60" line="60" section="协作与提交" status="合并保留" condition="适用业务或职责存在时" fingerprint="ab35838d219e4121">
+      <excerpt>- **先设计后开发，用户说「可以开发」才动代码**。为什么：没确认的设计一旦写成代码再被否定，返工比改文档贵得多。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L61" line="61" section="协作与提交" status="合并保留" condition="适用业务或职责存在时" fingerprint="2e1860ae1326ac30">
+      <excerpt>- **新功能在 `feat/&lt;需求名&gt;` 分支（worktree）开发，上线才合进 `main`**。为什么：没定上线的代码进了主分支，不上线只能回滚。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L62" line="62" section="协作与提交" status="合并保留" condition="适用业务或职责存在时" fingerprint="e0c4ac0b8d938e82">
+      <excerpt>- **提交只 add 自己的文件，不用 `git add -A`；已做的提交不 amend / reset / rebase**。为什么：多个终端并行改同一仓库，`add -A` 会夹带别人的改动，改写历史会让别人的分支失效。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L63" line="63" section="协作与提交" status="合并保留" condition="适用业务或职责存在时" fingerprint="ef601ecb5a77e82f">
+      <excerpt>- **删用户的文件先逐个列文件名确认，笼统的「可以」不算**。为什么：曾因一句「可以」批了一组删除，原型被误删。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L64" line="64" section="协作与提交" status="合并保留" condition="适用业务或职责存在时" fingerprint="9d23a37bd3ac1ab4">
+      <excerpt>- **多个终端并行改同一仓库：先看 `git status`，不回滚别人的改动，提交时只暂存自己的文件（必要时用临时 `GIT_INDEX_FILE` 只暂存自己的 hunk），提交后 `git show --stat HEAD` 核对没夹带别人的改动**。为什么：同一个工作区里常有别的会话未提交的半成品，夹带进去会让提交既编译不过又说不清来源。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+    <item id="docs/playbook.md:L65" line="65" section="协作与提交" status="合并保留" condition="适用业务或职责存在时" fingerprint="2ba4520e6c5424cd">
+      <excerpt>- **审核意见一次攒齐、一次改完**。为什么：逐条提逐条改，每轮都要重跑构建测试，总耗时翻倍。</excerpt>
+      <treatment>保留规则及原因，重复事实链接唯一正文；技术专有规则随配置，不采用只增不改</treatment>
+      <target file="templates/default/rules/playbook.md" />
+      <target file="templates/default/rules/engineering.md" />
+      <target file="templates/default/rules/gozero.md" />
+      <target file="templates/default/rules/gorm.md" />
+      <target file="templates/default/rules/redis.md" />
+    </item>
+  </source>
+  <source file="docs/README.md" sha256="5dd810688633c273575577d54974e84a753725792663b9679520f397a6799dc4">
+    <item id="docs/README.md:L3" line="3" section="文档索引" status="结构适配" condition="适用业务或职责存在时" fingerprint="778e663e6535d916">
+      <excerpt>需求文档放 `需求/进行中/&lt;名称&gt;.md`，标题下一行写状态：`状态：待确认`（设计等用户确认，Codex / developer 子代理不接）；用户说「可以开发」后 Claude 改成 `状态：可以开发 YYYY-MM-DD`，才能交给 developer 子代理 / Codex 开发，末尾追加开发记录；实测通过、提交、文档更新后挪到 `需求/已完成/Y</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L21" line="21" section="需求文档模板" status="结构适配" condition="适用业务或职责存在时" fingerprint="078731feb1b50f2f">
+      <excerpt>新需求复制下面的骨架写到 `需求/进行中/&lt;名称&gt;.md`；原型图放 `需求/原型/YYYY-MM-DD-&lt;名称&gt;.html`。挪到「已完成」时在标题下插入回溯信息块（格式见下）。</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L70" line="70" section="入口" status="结构适配" condition="适用业务或职责存在时" fingerprint="ff74e494b3946e1f">
+      <excerpt>| [架构.md](架构.md) | 新人先看：仓库地图、分层、主要流程、钱的链路、权限、配置与缓存、数据库、实测细则。 |</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L71" line="71" section="入口" status="结构适配" condition="适用业务或职责存在时" fingerprint="c7f059d0bdb0268e">
+      <excerpt>| [系统设计.md](系统设计.md) | 现行业务规则、状态与流程的设计依据（以它为准，需求文档只是当时的设计）；需求完成后把现行规则并入这里。 |</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L72" line="72" section="入口" status="结构适配" condition="适用业务或职责存在时" fingerprint="59acfbc2a691c758">
+      <excerpt>| [playbook.md](playbook.md) | 踩坑手册：每条带「为什么」。 |</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L73" line="73" section="入口" status="结构适配" condition="适用业务或职责存在时" fingerprint="1a912e08ed82744c">
+      <excerpt>| [新项目指南.md](新项目指南.md) | 从模板到第一个接口的步骤和日常开发循环。 |</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L74" line="74" section="入口" status="结构适配" condition="适用业务或职责存在时" fingerprint="d1eef01963398f45">
+      <excerpt>| [开发与实测流程.md](开发与实测流程.md) | 开发流程、实测细则、收尾与审核、模型分工。 |</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L75" line="75" section="入口" status="结构适配" condition="适用业务或职责存在时" fingerprint="23bdb00ae4e0e829">
+      <excerpt>| [CLAUDE.md](../CLAUDE.md) | 全仓工程约定、红线、实测与提交流程。 |</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L76" line="76" section="入口" status="结构适配" condition="适用业务或职责存在时" fingerprint="04c221b2a07222a7">
+      <excerpt>| [cmd/&lt;服务名&gt;/web/CLAUDE.md](../cmd/&lt;服务名&gt;/web/CLAUDE.md) | 前端约定。 |</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L77" line="77" section="入口" status="结构适配" condition="适用业务或职责存在时" fingerprint="64901ff9e2c5a967">
+      <excerpt>| [cmd/&lt;服务名&gt;/web/README.md](../cmd/&lt;服务名&gt;/web/README.md) | 前端项目说明与构建。 |</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L78" line="78" section="入口" status="结构适配" condition="适用业务或职责存在时" fingerprint="c4b9e5b64681af78">
+      <excerpt>| [api-contract.md](../cmd/&lt;服务名&gt;/desc/api-contract.md) | 接口定义规则与接口清单；模板自带起步骨架，按项目改。 |</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L82" line="82" section="版本规划" status="结构适配" condition="适用业务或职责存在时" fingerprint="e011904c54bb7b2c">
+      <excerpt>「低」严重度问题、「待确认」项和没做完的事记进 `需求/进行中/&lt;版本&gt;-版本规划.md`（没有就先建一份，如 `v1-版本规划.md`），审核和汇报里同步列出，不阻塞当前需求。</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L84" line="84" section="版本规划" status="结构适配" condition="适用业务或职责存在时" fingerprint="2673306acf498b01">
+      <excerpt>`db-migration/` 只放还没在线上执行的手工迁移脚本和运维说明，按日期分目录；不是迁移框架，应用不加载，表结构的唯一来源仍是模型。线上执行完、用户确认后删除该日期目录（git 历史可查）。</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L88" line="88" section="需求文档生命周期" status="结构适配" condition="适用业务或职责存在时" fingerprint="a67ca43b233b16a9">
+      <excerpt>- **需求文档生命周期**：进行中（待确认 → 可以开发）→ 已完成。用户提的需求和我写的设计是同一份文档，放 `docs/需求/进行中/&lt;名称&gt;.md`，标题下状态行 `状态：待确认`，等用户确认；用户说「可以开发」后我把状态行改成 `状态：可以开发 YYYY-MM-DD`，只有这样的才交给 developer 子代理 / Codex 开发，末尾追加开发</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <decisions>roles,retention</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L89" line="89" section="需求文档生命周期" status="结构适配" condition="适用业务或职责存在时" fingerprint="10fa9791d923a95e">
+      <excerpt>- 一个需求只有一个文件：设计在正文，Codex / 子代理每轮开发在末尾追加「开发记录」（模板见 `AGENTS.md`），做完后开头补回溯信息；不另建报告文件。</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+    <item id="docs/README.md:L90" line="90" section="需求文档生命周期" status="结构适配" condition="适用业务或职责存在时" fingerprint="4ca6ff574ced096d">
+      <excerpt>- 文档目录和流程见本文，不建 archive / misc 这类杂物目录；挪文档一律 `git mv`（保留 `git log --follow` 历史），同一提交里 grep 全仓同步旧路径；文件名里的日期和回溯信息的完成日期一致。</excerpt>
+      <treatment>需求生命周期保留在 workflow，索引由真实模块生成；需求／原型／迁移脚本留原项目 docs，不复制进活动规则</treatment>
+      <target file="templates/default/rules/workflow.md" />
+    </item>
+  </source>
+  <source file="docs/架构.md" sha256="f52262906ec01e3a1c1b5803e2580a263a54bc9a38f75235e055e6478f58e505">
+    <item id="docs/架构.md:L3" line="3" section="架构总览" status="文档资源" condition="适用业务或职责存在时" fingerprint="84a1a82f3909d44e">
+      <excerpt>新人入口。本文讲结构和主要流程；工程红线和写法见 [`CLAUDE.md`](../CLAUDE.md)，业务规则见 [系统设计](系统设计.md)，不在这里重复。新项目按每节提示填空，填完删掉提示；没有对应内容的节（如「钱的链路」）整节删掉，不留空壳。`cmd/&lt;服务名&gt;` 是占位，落成真实目录名。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L11" line="11" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="e5a7cf7703ee9015">
+      <excerpt>| 路径 | 作用 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L13" line="13" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="f8cb15333d55ef37">
+      <excerpt>| `cmd/&lt;服务名&gt;` | 后端服务：API，并把前端打进二进制 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L14" line="14" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="299c68a8c17268d7">
+      <excerpt>| `cmd/&lt;服务名&gt;/desc` | goctl 契约：`api.api`（所有路由块只在这里）、`&lt;领域&gt;/api.api`（只放类型）、[`api-contract.md`](../cmd/starter/desc/api-contract.md)（模板自带的起步骨架） |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L15" line="15" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="84e32cfc40bcb009">
+      <excerpt>| `cmd/&lt;服务名&gt;/internal/handler`、`logic`、`types` | goctl 生成的 handler 和手写 logic；`types`、`routes.go` 是生成物 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L16" line="16" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="2478341e8cce45ba">
+      <excerpt>| `cmd/&lt;服务名&gt;/internal/middleware` | goctl 要求的转接层，实现都在 `shared/middleware` |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L17" line="17" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="01b2c234da8347ca">
+      <excerpt>| `cmd/&lt;服务名&gt;/internal/svc` | `ServiceContext` 装配（模型 → service → 中间件）、定时任务注册 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L18" line="18" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="f04b0762a6fe1af8">
+      <excerpt>| `cmd/&lt;服务名&gt;/internal/pkg` | 服务专用辅助包：`apperr`、`dto`… |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L19" line="19" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="92950904fb5f897c">
+      <excerpt>| `cmd/&lt;服务名&gt;/web` | 前端工程，`dist/` 由 `web/embed.go` 的 `go:embed` 托管 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L20" line="20" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="b9394f123e472cfc">
+      <excerpt>| `shared/domain` | 枚举、常量、纯规则，只依赖标准库 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L21" line="21" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="5a5249c5b2e70fdf">
+      <excerpt>| `shared/models` | 表结构（模型结构体）、`make db` 产物、缓存装饰器 `&lt;table&gt;_cache.go`、系统设置、建表守卫 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L22" line="22" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="3ea91ff3d7304340">
+      <excerpt>| `shared/service/*` | 业务 service |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L23" line="23" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="60464e69a347182d">
+      <excerpt>| `shared/middleware`、`bizerr`、`authx`、`cryptox`、`request`、`audit`、`commitlog` | 中间件实现、对外错误、令牌、密钥加解密、请求上下文、审计、事务提交后日志 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L24" line="24" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="2139231e43c90e4c">
+      <excerpt>| `tpls` | goctl 模板（`api`、`model`），一律走 `make` 才会带上 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L25" line="25" section="2. 仓库地图" status="文档资源" condition="适用业务或职责存在时" fingerprint="88f0b1638101f6ea">
+      <excerpt>| `docs` | 文档，见 [README](README.md) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L31" line="31" section="3. 后端分层" status="文档资源" condition="适用业务或职责存在时" fingerprint="5f4668e95f6ef20d">
+      <excerpt>| 层 | 做什么 | 不做什么 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L33" line="33" section="3. 后端分层" status="文档资源" condition="适用业务或职责存在时" fingerprint="c17e8408a754de7f">
+      <excerpt>| handler | 解析、校验、调 logic、写响应（生成代码） | 业务逻辑（流式转发、multipart、支付回调这类要读原始报文的例外） |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L34" line="34" section="3. 后端分层" status="文档资源" condition="适用业务或职责存在时" fingerprint="3b22a08389497f7e">
+      <excerpt>| logic | 取当前用户、校验归属和权限、调 service、组装 DTO；只读查询可直接查 models | 事务、写库、写 Redis、业务规则 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L35" line="35" section="3. 后端分层" status="文档资源" condition="适用业务或职责存在时" fingerprint="d8151e6dba892007">
+      <excerpt>| service | 业务规则、事务边界、外部调用、状态迁移 | 返回 `types` DTO、读 HTTP 请求 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L36" line="36" section="3. 后端分层" status="文档资源" condition="适用业务或职责存在时" fingerprint="2b5e28d84437c21d">
+      <excerpt>| models | 查询、锁、条件更新 | 业务判断、跨表编排、外部调用 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L37" line="37" section="3. 后端分层" status="文档资源" condition="适用业务或职责存在时" fingerprint="52103a4767a68d63">
+      <excerpt>| jobs | 定时调 service | 自己实现业务规则 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L39" line="39" section="3. 后端分层" status="文档资源" condition="适用业务或职责存在时" fingerprint="ec11764251bb8b30">
+      <excerpt>依赖只能往下：`cmd/&lt;服务名&gt;` → `shared/middleware` → `shared/service/*` → 基础包 → `shared/models` → `cache` / `bizerr` / `cryptox` → `shared/domain`。service 之间只能单向依赖，依赖图画在这里：</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L60" line="60" section="6. 钱的链路" status="文档资源" condition="适用业务或职责存在时" fingerprint="adc0444b5b114060">
+      <excerpt>- **约束**：每次变动有唯一业务键，数据库唯一约束兜底，重复请求返回第一次结果；钱和权限的变动在同一事务里 `audit.RecordTx` 写审计；余量扣减一律条件更新；事务内不做外部调用（支付、短信、对象存储）。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L61" line="61" section="6. 钱的链路" status="文档资源" condition="适用业务或职责存在时" fingerprint="5efb1c4163345b82">
+      <excerpt>- **单位**：人民币用「分」`int64`；更小的计价单位由项目定义，库里永远存整数；先乘后除，只取整一次。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L62" line="62" section="6. 钱的链路" status="文档资源" condition="适用业务或职责存在时" fingerprint="dc8aa1fffd602ec5">
+      <excerpt>- **下单与支付**：订单建好、登记支付；回调验签、去重后确认到账；履约经负责它的 service，不直接写别的 service 的表。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L63" line="63" section="6. 钱的链路" status="文档资源" condition="适用业务或职责存在时" fingerprint="8471da23b18407f4">
+      <excerpt>- **对账**：核对预留、每日账目的任务调 service，每轮汇总记日志。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L69" line="69" section="7. 身份与权限" status="文档资源" condition="适用业务或职责存在时" fingerprint="5eec9f9451d1cadf">
+      <excerpt>- **会话以库为准**：鉴权中间件从令牌解析会话，角色、成员关系、封禁状态每次请求从库取（可缓存，改动处立即失效），不信令牌里的声明；当前用户从请求上下文取（`request.ActorFrom`），按 id 操作先校验归属，不属于当前身份时与「不存在」返回同一个错误（NotFound，不回 403）。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L70" line="70" section="7. 身份与权限" status="文档资源" condition="适用业务或职责存在时" fingerprint="afc3f39b0d006c32">
+      <excerpt>- **管理端**：`/api/admin/*` 挂 `AuthMiddleware` + `AdminMiddleware`，普通接口不挂 `AdminMiddleware`。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L71" line="71" section="7. 身份与权限" status="文档资源" condition="适用业务或职责存在时" fingerprint="c6e9ffc32c7f1edd">
+      <excerpt>- **HTTP 签名**（有的话）只提高脚本调用成本，任何权限判断都不依赖它。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L75" line="75" section="8. 配置、缓存、设置快照" status="文档资源" condition="适用业务或职责存在时" fingerprint="cc7d14d81faee2d7">
+      <excerpt>- **config 只放启动项**：监听与日志（RestConf）、`Database`、`Redis`、密钥环 / 主密钥（解密 settings 里的密字段，所以只能在 config）。其余（支付、对象存储、短信 / 邮件、通知机器人、回调地址、人机验证、IP 白名单、定时任务开关……）一律进 `settings` 表，管理员后台配置；密钥字段加密存库</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L76" line="76" section="8. 配置、缓存、设置快照" status="文档资源" condition="适用业务或职责存在时" fingerprint="9adef246f789a2e3">
+      <excerpt>- **字段目录**：`shared/models/settings_catalog.go` 的 `catalog` 是设置项的唯一清单，设置 ID 是 `&lt;分组&gt;.&lt;字段&gt;`；每个字段有类型（`domain.SettingString/Int/Bool/JSON`）、`Secret`（加密存库）、`Required`、`Immutable`（生成后后台不可</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L77" line="77" section="8. 配置、缓存、设置快照" status="文档资源" condition="适用业务或职责存在时" fingerprint="8a3a3316897bd17e">
+      <excerpt>- **设置快照**：`models.Store`（`settings_runtime.go`）持有进程内只读的 `Snapshot`（`settings_snapshot.go`），`Now()` 取当前快照、每次操作取一次不跨请求持有。保存走 `Store.Save`：校验 → 密钥用密钥环加密（AAD `setting:&lt;id&gt;`，复制到别的行解不开）</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L78" line="78" section="8. 配置、缓存、设置快照" status="文档资源" condition="适用业务或职责存在时" fingerprint="39cde95d4fafd35a">
+      <excerpt>- **前端壳的系统设置页**：模板的 `web/src/api/settings.ts`、`SettingsView.vue` 是按单键的占位，接后端时按 `GroupView`（分组、label、hint、默认值、`secret_hint`）和按组保存（`Store.Save`）重写。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L79" line="79" section="8. 配置、缓存、设置快照" status="文档资源" condition="适用业务或职责存在时" fingerprint="d18b0bfc670bf1a0">
+      <excerpt>- **读取侧不信存量**：加载时无法解密、密文标记与目录不一致、格式不合法的行直接丢弃，所在分组按未配置处理，不带着脏值运行；分组未配置就是关闭，调用方不许回退 YAML 或内置凭据。`auth.devCode` 只在 dev / test 生效：保存由 `models.AuthCheck(mode)` 拦（经 `Deps.Checks` 传入），读取处还</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L80" line="80" section="8. 配置、缓存、设置快照" status="文档资源" condition="适用业务或职责存在时" fingerprint="d137b3f5121fac2d">
+      <excerpt>- **管理视图**：`Store.Load` / `LoadGroup` 返回给后台页面；密钥永不返回明文和密文，只有「已设置」和 `secret_hint`（明文不少于 16 个字符时的末 4 位）；名称和说明按请求语言取（缺英文回退中文）。接口按分组保存（一次提交一个分组的若干键），密钥传空表示不改。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L81" line="81" section="8. 配置、缓存、设置快照" status="文档资源" condition="适用业务或职责存在时" fingerprint="f733ec032c7f69a5">
+      <excerpt>- **缓存只用 rockscache**（`shared/cache`、`shared/models/&lt;table&gt;_cache.go`）：强一致，TTL 与 `Delay` 在项目里定；先写库、提交后再清缓存，绝不在事务里清；权限类缓存要有「失效后下一次请求立即被拒」的测试；钱的余量不缓存。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L82" line="82" section="8. 配置、缓存、设置快照" status="文档资源" condition="适用业务或职责存在时" fingerprint="36bb00c0e0fb971b">
+      <excerpt>- **目录类缓存只缓存稳定输入，不缓存最终结果**：价格倍率、授权、受限判断仍在每次请求里现算。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L88" line="88" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="58e3b073bd877bcd">
+      <excerpt>- **模型即表结构**：`shared/models` 的结构体定义表，没有 migrations 目录。默认启动时 `Database.AutoMigrate: true`（常开，不许关）在 `InitModels` 里逐个调 `CreateTable`（GORM AutoMigrate）；项目若改成「只用于新库首次建表」，在 `CLAUDE.md` 本</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L89" line="89" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="7a05d1cad13122a0">
+      <excerpt>- **多实例启动**（项目有多个实例同时启动时再加）：用 advisory lock 串行迁移，锁只减少冲突、不卡启动——后到的最多等几分钟，等超时或拿锁失败只记 `Errorf` 后不带锁继续，所有步骤幂等；可以再算一个结构指纹，与记录一致就跳过逐表建表，不一致才完整执行、成功后更新，指纹算不出或读不出退回完整执行，前置条件和守卫每次都跑，`ForceM</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L90" line="90" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="96494ee3bc357f7f">
+      <excerpt>- **AutoMigrate 建不出的**：扩展（`uuid-ossp`）、只追加表的触发器、CHECK 和种子数据，由 `schema_guards.go` 幂等补齐；状态取值、金额非负等规则在代码里用 domain 的 `Valid` 和条件更新守住。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L91" line="91" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="4c88f0c0cc56c04a">
+      <excerpt>- **新建表**：先建只有 `id` 的表 → `cd cmd/&lt;服务名&gt; &amp;&amp; make db TABLE=&lt;table&gt; DB_URL=&lt;连接串&gt;`（连接串只在命令行传入，不写进 Makefile）生成 → 手写字段（gorm tag 简写，规则见 `~/.claude/skills/go-zero/model.md` 末「规则：数据库与模型」）→ 登</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L92" line="92" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="92aba80274a15f0c">
+      <excerpt>- **改动已有表**：同一批在 `docs/db-migration/&lt;YYYY-MM-DD&gt;/` 追加手工脚本（`00_dry_run` → `01_schema` → `02_backfill` → `04_verify`），供 DBA 在自动建表被关或失败时执行；应用不加载、我们不连线上执行；线上执行完、用户确认后删除该日期目录（git 历史可查）。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L93" line="93" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="d776dc660a620746">
+      <excerpt>- 编号分步，一步一个文件：`00_dry_run`（只读，列出缺什么、要回填多少行）→ `01_schema`（补表和列）→ `02_backfill`（回填和转换）→ `04_verify`（只读核对，每项应为 `t`）；每个文件一个事务，用 `IF NOT EXISTS` / 先查后改，**可重复执行**；执行用 `psql -v ON_ERROR_S</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L94" line="94" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="ef260f84d28b4f41">
+      <excerpt>- **删表、删列、不可逆的转换单独成文件**，放在「新版本发布之后」执行，文件头先统计行数、有数据就停，不直接删；README 写清执行顺序、不处理会怎样、回退办法。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L95" line="95" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="cb15f1a15f7b4efc">
+      <excerpt>- 连接串由执行人自己带，不写进任何文件；新增的非空列带默认值；删了模型不会删线上的表，所以删模型的同一批必须有对应的 DROP 脚本。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L96" line="96" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="a52d95c053ff67aa">
+      <excerpt>- 脚本只在测试库的一次性 schema 里演练，**我们不连线上库、不执行**；同一目录同日只留一个 README，后续改动往里追加，不另起新目录。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L97" line="97" section="9. 数据库" status="文档资源" condition="适用业务或职责存在时" fingerprint="65df4716c5856c5d">
+      <excerpt>- 审计和排查表（`audit_logs` 以及以后新增的带请求 ID 的表）只追加、永久保留。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>retention</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L105" line="105" section="10. 定时任务与通知" status="文档资源" condition="适用业务或职责存在时" fingerprint="ad38c80e1951465a">
+      <excerpt>- **定时任务**：runner 每轮先取 Redis 锁（infra `lock`），拿到才跑，任务必须可重入，每轮记一行汇总（picked / done / failed）并写一条轮次记录（带请求 ID，永久保留）；任务只调 service；设置里可整体关闭。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>retention</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L106" line="106" section="10. 定时任务与通知" status="文档资源" condition="适用业务或职责存在时" fingerprint="98796adb9a6c9cb4">
+      <excerpt>- **通知**：统一发送（机器人、短信、邮件、站内信）；消息正文写成 `tmpl/*.tmpl`，`//go:embed` 嵌入、包初始化时 `template.Must` 解析，每个模板配数据结构体，代码里不拼正文；发送记录入库，可补发。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L110" line="110" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="3aad671177d7266e">
+      <excerpt>| 想了解 | 看 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L112" line="112" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="add0a7eab184ef9b">
+      <excerpt>| 工程红线、写法、测试和实测流程 | [`CLAUDE.md`](../CLAUDE.md) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L113" line="113" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="7e230615da5773a7">
+      <excerpt>| 接口与页面实测细则（权限清单、页面、长内容与注入、防误判、本地隔离后端） | 本文第 12 节 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L114" line="114" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="e019650de28db2d2">
+      <excerpt>| 开发流程、收尾流程、模型分工 | [开发与实测流程.md](开发与实测流程.md) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L115" line="115" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="c83167a54f045e1f">
+      <excerpt>| 需求文档生命周期 | [README](README.md) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L116" line="116" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="39d6a08a14ae1fdb">
+      <excerpt>| 业务规则 | [系统设计](系统设计.md) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L117" line="117" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="76df8bf9e1986c48">
+      <excerpt>| 页面清单和交互 | [`cmd/&lt;服务名&gt;/web/README.md`](../cmd/&lt;服务名&gt;/web/README.md)，页面设计多了再建 `前端设计.md` |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L118" line="118" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="a27ce853746118ab">
+      <excerpt>| 接口定义 | `cmd/&lt;服务名&gt;/desc/api-contract.md` |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L119" line="119" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="c10e4cc75e4708ad">
+      <excerpt>| 没做完的需求（待确认 / 可以开发）、版本规划 | [需求/进行中](需求/进行中/) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L120" line="120" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="0b2e3810846826d2">
+      <excerpt>| 已完成需求的设计回溯 | [需求/已完成](需求/已完成/) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L121" line="121" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="171c9ad5a1a5de1c">
+      <excerpt>| 某个需求每轮怎么开发、测了什么 | 该需求文档末尾的「开发记录」 |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L122" line="122" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="053cd6a87eab190e">
+      <excerpt>| 执行开发的代理（Codex、`developer` 子代理）守什么流程 | [`AGENTS.md`](../AGENTS.md) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L123" line="123" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="4a1758bd1c1bf506">
+      <excerpt>| 踩坑手册 | [playbook](playbook.md) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L124" line="124" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="cc3b62d32c4c5bfb">
+      <excerpt>| 页面和方案原型 | [需求/原型](需求/原型/) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L125" line="125" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="9cdc8abf5263d90f">
+      <excerpt>| 还没上线执行的手工迁移脚本 | [db-migration](db-migration/) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L126" line="126" section="11. 去哪看细节" status="文档资源" condition="适用业务或职责存在时" fingerprint="a7864aed51eb3c9b">
+      <excerpt>| 从零搭新项目 | [新项目指南](新项目指南.md) |</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L130" line="130" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="a2e24af5c296db9b">
+      <excerpt>通用流程见 [`CLAUDE.md`](../CLAUDE.md)「接口与页面实测」；以下是展开的细则，实测前先读。本项目的账号、端口、种子数据、权限清单接着写在末尾的填空里。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L132" line="132" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="91df6c3fa11411c1">
+      <excerpt>- **接口要从页面测**：测后端接口时先起后端服务，再在对应的前端页面上模拟真人操作（点击、输入、提交、翻页、筛选）来触发接口。同时看 network 里的状态码和响应体、页面上的提示和数据、库里的记录，三者都要符合预期；错误路径要看到本地化的 `bizerr` 文案，并且页面状态正确（不白屏、不误登出、按钮能恢复可点）。每个接口都要顺带测边界条件：空值、</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L133" line="133" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="c704b21bfb6c9a1e">
+      <excerpt>- **权限（重点，普通用户绝不能拿到管理员能力）**：</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L134" line="134" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="eef070e0b995bf08">
+      <excerpt>- 每个 `/api/admin/*`：未登录 401、伪造令牌 401、普通用户 403；再测篡改 JWT payload 的 role、`alg=none`、用默认密钥自签、登录 / 改资料时夹带 `role`（不生效）。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L135" line="135" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="390f919b32ec284c">
+      <excerpt>- 用户之间的资源隔离：A 拿 B 的资源 ID 必须失败（回 NotFound）；跨租户 / 换租户头也一样。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L136" line="136" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="975231ab2b3ddea0">
+      <excerpt>- 会话以数据库为准：被踢、账号停用、角色被撤、管理员降级之后，旧令牌的下一次请求立即按新状态处理。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L137" line="137" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="6f3c36fe4be11b67">
+      <excerpt>- 支付回调：伪造签名必须被拒，订单状态不变。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L138" line="138" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="a8cd68dd98ff29d9">
+      <excerpt>- **页面**：用 Playwright MCP 工具（`mcp__playwright__*`）开**有界面浏览器**（不自己写脚本替代，工具没加载就停下告诉用户，截图、走查记录和 HTML 汇总页放 `cmd/.playwright-mcp/&lt;YYYY-MM-DD&gt;-&lt;需求名&gt;/`，不进 git，docs 里不另存测试记录），页面顶部叠加字幕说明当前步</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>browser</decisions>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L139" line="139" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="3cae84ea0f3b448d">
+      <excerpt>- **长内容与注入**：超长名称、描述、公告（2 万字 + 不换行长单词）、昵称、备注，确认库里不截断、页面不撑破；内容里夹 `&lt;script&gt;`、`&lt;img onerror&gt;`、`javascript:` 链接，确认页面不执行（重点看 Markdown 渲染）；超过 1MB 的请求体应返回 413。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L140" line="140" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="6d6eabff5b5064ea">
+      <excerpt>- **防误判**：只有 401 会登出，403 只提示，先看 network 是哪个接口；SQL 改权限数据后要清对应缓存键才生效，不是代码 bug；改 localStorage 后必须 `reload`；每页先断言仍在目标路由且没有登录跳转，loading 结束再取数；同一账号设备数有上限，反复登录会挤掉旧会话，测试用专用 e2e 账号；`Idempot</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+    <item id="docs/架构.md:L141" line="141" section="12. 接口与页面实测细则" status="文档资源" condition="适用业务或职责存在时" fingerprint="ea5b75b37f62e8ac">
+      <excerpt>- **本地隔离后端**（不碰共享库、不发真短信）：本机 Postgres 新建临时库（`create extension "uuid-ossp"`）、`redis-server --port &lt;空闲端口&gt;`，复制配置只改 `Port`、`Database.DSN`、`Redis.Addrs` 和空密码，起服务后表由 `CreateTable` 建出；用 S</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/architecture.md" />
+    </item>
+  </source>
+  <source file="docs/系统设计.md" sha256="54984a2f3864ceee63c980b0322baf01fa3f693d1222a0663a02aa35b40c7807">
+    <item id="docs/系统设计.md:L3" line="3" section="系统设计" status="文档资源" condition="适用业务或职责存在时" fingerprint="3cb9a67078ebe03e">
+      <excerpt>现行业务规则、状态与流程的设计依据，**以它为准**（需求文档只是当时的设计）；实现现状以代码为准。需求完成后，把现行规则并入这里，不在这里留新旧并存。新项目按下面的提示填空，填完删掉提示。创建：YYYY-MM-DD。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/system-design.md" />
+    </item>
+    <item id="docs/系统设计.md:L7" line="7" section="系统设计" status="文档资源" condition="适用业务或职责存在时" fingerprint="f88aa6ce3b00a488">
+      <excerpt>- 每条规则尽量附实现位置（`文件:函数`，路径相对仓库根）；每章开头先写一句结论。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/system-design.md" />
+    </item>
+    <item id="docs/系统设计.md:L8" line="8" section="系统设计" status="文档资源" condition="适用业务或职责存在时" fingerprint="e3dc5671c89072b7">
+      <excerpt>- 正文只写现状；与 `CLAUDE.md` 目标规则的差距、不确定的说法、没做完的事写进 `需求/进行中/&lt;版本&gt;-版本规划.md`（见 [`docs/README.md`](README.md)「版本规划」），不写成事实。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <decisions>roles</decisions>
+      <target file="templates/default/guides/system-design.md" />
+    </item>
+    <item id="docs/系统设计.md:L9" line="9" section="系统设计" status="文档资源" condition="适用业务或职责存在时" fingerprint="b2ff02ab6244c155">
+      <excerpt>- 本文不含密钥、账号、令牌取值。</excerpt>
+      <treatment>项目地图与业务事实提供写作资源；其中可复用规则归 engineering/gozero/gorm/redis/workflow，模板占位不冒充当前实现</treatment>
+      <target file="templates/default/guides/system-design.md" />
+    </item>
+  </source>
+  <source file="docs/新项目指南.md" sha256="5b4eaf25602b10b18832d089c779b587a413982d712bab7817015035783b5c95">
+    <item id="docs/新项目指南.md:L3" line="3" section="新项目指南" status="项目指南" condition="适用业务或职责存在时" fingerprint="1c6fa9633d0d6f3f">
+      <excerpt>从模板仓库到第一个接口上线的步骤，以及日常开发循环。规则本身在 [`CLAUDE.md`](../CLAUDE.md)，这里只讲怎么走。创建：2026-10-21。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+      <decisions>roles</decisions>
+    </item>
+    <item id="docs/新项目指南.md:L7" line="7" section="一、第一次准备（每台机器一次）" status="项目指南" condition="适用业务或职责存在时" fingerprint="fe459e56a11869ed">
+      <excerpt>1. 装工具：Go（版本见 `go.mod`）、[goctl](https://go-zero.dev)、Node + pnpm、PostgreSQL（本地开发和连库测试用）。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L8" line="8" section="一、第一次准备（每台机器一次）" status="项目指南" condition="适用业务或职责存在时" fingerprint="8fac2c49dad6c227">
+      <excerpt>2. 确认 `~/.claude/CLAUDE.md`（个人通用约定）和 `~/.claude/skills/go-zero`（接口、模型、缓存、迁移的规则）已存在；没有就从你自己的 claude 配置仓库软链过来。模板不再带这两份副本，项目里的 `CLAUDE.md`、`AGENTS.md` 都按 `~/.claude` 读取。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+      <decisions>roles</decisions>
+    </item>
+    <item id="docs/新项目指南.md:L12" line="12" section="二、从模板创建项目" status="项目指南" condition="适用业务或职责存在时" fingerprint="cf4a4d375e11c978">
+      <excerpt>1. GitHub 上点 **Use this template** 新建仓库，克隆到本地。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L13" line="13" section="二、从模板创建项目" status="项目指南" condition="适用业务或职责存在时" fingerprint="1da8e04b0329135d">
+      <excerpt>2. 改模块名和服务名（同时替换 `shared/`、`tpls/`、`cmd/`、文档里的占位路径，把示例服务 `cmd/starter` 改成 `cmd/&lt;服务名&gt;`，并跑 `go build`、`go vet`、`go test`）：</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L19" line="19" section="二、从模板创建项目" status="项目指南" condition="适用业务或职责存在时" fingerprint="4043087d9864b93f">
+      <excerpt>模板自带一个能直接跑的示例服务 `cmd/starter`：三段式装配（`internal/svc`）、`internal/config`、`internal/pkg/apperr`、`etc/config.example.yaml`、`desc/api.api` 加健康检查、`Makefile`、前端壳 `web/`。改名之后就是你的第一个服务，不用再手写</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L21" line="21" section="二、从模板创建项目" status="项目指南" condition="适用业务或职责存在时" fingerprint="9daac4d3b56736df">
+      <excerpt>3. 填 [`CLAUDE.md`](../CLAUDE.md) 末尾「本项目特有」块：项目一句话、主开发分支、服务与端口（把 `cmd/&lt;服务名&gt;` 落成真实目录名）、业务硬约束、外部接入、数据库与测试环境、术语。每节开头的「填写提示」填完就删。**不要改 `BEGIN GENERIC` 到 `END GENERIC` 之间的通用块**，它只在模板仓库里改</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+      <decisions>roles</decisions>
+    </item>
+    <item id="docs/新项目指南.md:L22" line="22" section="二、从模板创建项目" status="项目指南" condition="适用业务或职责存在时" fingerprint="c913f89e7babaffc">
+      <excerpt>4. 填 [`docs/架构.md`](架构.md) 和 [`docs/系统设计.md`](系统设计.md) 的提示项；没有对应内容的节整节删掉。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L23" line="23" section="二、从模板创建项目" status="项目指南" condition="适用业务或职责存在时" fingerprint="32f3d17d013b7b93">
+      <excerpt>5. 前端：前端壳在 `cmd/&lt;服务名&gt;/web`（含 `embed.go`，`//go:embed all:dist`，提供 `web.Handler`）；`cd cmd/&lt;服务名&gt; &amp;&amp; make web` 装依赖并构建 `dist`，`embed.go` 把它打进二进制；`dist/.gitkeep` 入库，没构建前 `go build` 也过。`m</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L27" line="27" section="三、建库和第一张表" status="项目指南" condition="适用业务或职责存在时" fingerprint="6a9dca9edc539145">
+      <excerpt>1. 本地建库（只连本地 / 测试库，不连线上）：`createdb &lt;项目&gt;_dev`，连接串只放命令行，不写进任何文件。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L28" line="28" section="三、建库和第一张表" status="项目指南" condition="适用业务或职责存在时" fingerprint="6d3bac9bf676184f">
+      <excerpt>2. 先用 SQL 建一张只有 `id` 的表（`id uuid primary key default uuid_generate_v4()`，需要 `uuid-ossp` 扩展）。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L29" line="29" section="三、建库和第一张表" status="项目指南" condition="适用业务或职责存在时" fingerprint="5970160ab961ed7c">
+      <excerpt>3. 生成模型：</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L35" line="35" section="三、建库和第一张表" status="项目指南" condition="适用业务或职责存在时" fingerprint="36e2fe2786ce13e2">
+      <excerpt>连接串只在命令行传入（`DB_URL` 必填，缺了 make 报错），指向本地 / 测试库，库名和密码不要写进 Makefile 或提交进项目。生成 `shared/models/&lt;table&gt;_model_gen.go`、`&lt;table&gt;_model.go`、`doc.go`。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L36" line="36" section="三、建库和第一张表" status="项目指南" condition="适用业务或职责存在时" fingerprint="01dc53ae058319fa">
+      <excerpt>4. 删掉 `_gen.go` 里生成的字段，按 `~/.claude/skills/go-zero/model.md` 末「规则：数据库与模型」手写（gorm tag 简写、`CreatedAt` / `UpdatedAt` / `DeletedAt` 三件套、状态列用 domain 类型）。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+      <decisions>roles</decisions>
+    </item>
+    <item id="docs/新项目指南.md:L37" line="37" section="三、建库和第一张表" status="项目指南" condition="适用业务或职责存在时" fingerprint="1f557656d5727d5a">
+      <excerpt>5. 把模型登记进 `cmd/&lt;服务名&gt;/internal/svc/service_context.go` 的 `tables` 列表，清库后启动，由 `CreateTable` 建出完整的表。已有库上改表结构，同一批在 `docs/db-migration/&lt;YYYY-MM-DD&gt;/` 写手工脚本（写法见架构.md 第 9 节）。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L41" line="41" section="四、第一个服务和接口" status="项目指南" condition="适用业务或职责存在时" fingerprint="0486170847f9226e">
+      <excerpt>1. 看一遍示例服务已经带好的东西：`main.go`（全局中间件装配）、`internal/config`（只放启动项）、`internal/svc/service_context.go`（模型 → service → 中间件三段式，`tables` 列表登记建表）、`internal/pkg/apperr`（logic 用 `apperr.Client`</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L42" line="42" section="四、第一个服务和接口" status="项目指南" condition="适用业务或职责存在时" fingerprint="9782fad5d7abc1b0">
+      <excerpt>`main.go` 的全局中间件装配顺序不能换（骨架已按此写好，见 `cmd/&lt;服务名&gt;/main.go`）。顺序原因：`RequestIDRouter` 在最外层、`PayloadLimitRouter` 在里面，反过来超限的 413 响应没有 `X-Request-Id`；`RequestLogMiddleware` 必须先于 `RecoverMiddl</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L44" line="44" section="四、第一个服务和接口" status="项目指南" condition="适用业务或职责存在时" fingerprint="cccd14f0938cf526">
+      <excerpt>2. `main.go` 里的 `//go:generate` 三行是 `make api` 的全部内容，`goctl api go` 那行**必须带 `-home ../../tpls`**（手敲 goctl 会漏掉，一律走 make）。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L45" line="45" section="四、第一个服务和接口" status="项目指南" condition="适用业务或职责存在时" fingerprint="94222d12c11b5d47">
+      <excerpt>3. 契约先行：改 `desc/*.api` → `cd cmd/&lt;服务名&gt; &amp;&amp; make api`；`make api` 会打印「暂不支持 map 类型」，无害 → 写 logic → 需要时写 service。步骤、范例见 `~/.claude/skills/go-zero`。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+      <decisions>roles</decisions>
+    </item>
+    <item id="docs/新项目指南.md:L46" line="46" section="四、第一个服务和接口" status="项目指南" condition="适用业务或职责存在时" fingerprint="658d99c7e0d247a1">
+      <excerpt>4. 每步验证：`gofmt -l &lt;改动文件&gt; &amp;&amp; go build ./... &amp;&amp; go vet ./... &amp;&amp; go test ./...`。连库测试（`*_pg_test.go`）默认跳过，要跑时把 `STARTER_TEST_PG_DSN` 指向本地临时库（测试自己建、删一次性 schema），绝不指向共享库或线上库。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L47" line="47" section="四、第一个服务和接口" status="项目指南" condition="适用业务或职责存在时" fingerprint="db2b91b901d9db84">
+      <excerpt>5. 编译带版本信息：`cd cmd/&lt;服务名&gt; &amp;&amp; make build`。前端单独开发：`cd cmd/&lt;服务名&gt;/web &amp;&amp; pnpm dev`（端口 3000，`/api` 代理到后端），其余命令见 `cmd/&lt;服务名&gt;/web/README.md`。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L51" line="51" section="五、第一个需求怎么走" status="项目指南" condition="适用业务或职责存在时" fingerprint="8e17419dd4df75ce">
+      <excerpt>1. **先设计**：在 `docs/需求/进行中/&lt;名称&gt;.md` 按 [`docs/README.md`](README.md)「需求文档模板」写设计，标题下状态行 `状态：待确认`；有页面的写 `docs/需求/原型/YYYY-MM-DD-&lt;名称&gt;.html` 并在文档里链接。至少写清问题、业务规则和边界（钱、权限、状态迁移）、接口 / 表 / 页面改</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L52" line="52" section="五、第一个需求怎么走" status="项目指南" condition="适用业务或职责存在时" fingerprint="e7b4267cb793846e">
+      <excerpt>2. **用户确认**：改设计直到用户说「可以开发」，状态行改成 `状态：可以开发 YYYY-MM-DD`。没确认前不写代码、不改 `.api`、不改模型、不派子代理。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L53" line="53" section="五、第一个需求怎么走" status="项目指南" condition="适用业务或职责存在时" fingerprint="391021a62a6d4b16">
+      <excerpt>3. **开发**：新功能开独立 worktree 分支（`git worktree add ../&lt;项目目录名&gt;-&lt;需求名&gt; -b feat/&lt;需求名&gt; &lt;主开发分支&gt;`），派 `developer` 子代理按 [`AGENTS.md`](../AGENTS.md) 开发、分步提交、在需求文档末尾追加开发记录。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L54" line="54" section="五、第一个需求怎么走" status="项目指南" condition="适用业务或职责存在时" fingerprint="dce839da1d900443">
+      <excerpt>4. **收尾**（自动做完，见 `CLAUDE.md`「开发完成后的收尾」和 [开发与实测流程.md](开发与实测流程.md)「三」）：编译 / 单测 → 接口与页面实测 → 派审核子代理逐文件审 diff → 提交 → 更新文档 → 关测试实例（测试数据默认留着共用，只有遗留数据影响本需求功能或别的测试判断时才清理）→ 汇报。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+      <decisions>roles</decisions>
+    </item>
+    <item id="docs/新项目指南.md:L55" line="55" section="五、第一个需求怎么走" status="项目指南" condition="适用业务或职责存在时" fingerprint="c43e6aea982aa848">
+      <excerpt>5. **上线**：用户说「上线」后合并进主开发分支，需求文档挪到 `docs/需求/已完成/`，补回溯信息，现行规则并入系统设计。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+    </item>
+    <item id="docs/新项目指南.md:L65" line="65" section="六、让项目跟上模板" status="项目指南" condition="适用业务或职责存在时" fingerprint="5f8757dbd87dcccc">
+      <excerpt>`AGENTS.md`、`.claude/agents/developer.md`、`docs/playbook.md`、`tpls/` 目前手工对照模板仓库的 `git log` 同步（只拷通用部分，别把项目业务带回模板）。反方向（项目里新增的通用规范回馈模板）的规则在 `~/.claude/CLAUDE.md`「提交与文档」最后一条。</excerpt>
+      <treatment>初始化、make 与同步属于原项目指南，保留其原位置；工程规则已分主题迁入，不执行 init/sync 或复制项目业务</treatment>
+      <decisions>roles</decisions>
+    </item>
+  </source>
+  <external-gaps>
+    <gap name="~/.claude/CLAUDE.md" status="不随来源包提供或本机不可用">不猜写缺失内容，不声明已经安装；需要时由用户提供或在目标项目中明确适配。</gap>
+    <gap name="~/.claude/skills/go-zero/api.md" status="不随来源包提供或本机不可用">不猜写缺失内容，不声明已经安装；需要时由用户提供或在目标项目中明确适配。</gap>
+    <gap name="~/.claude/skills/go-zero/model.md" status="不随来源包提供或本机不可用">不猜写缺失内容，不声明已经安装；需要时由用户提供或在目标项目中明确适配。</gap>
+    <gap name="shared/cache" status="不随来源包提供或本机不可用">不猜写缺失内容，不声明已经安装；需要时由用户提供或在目标项目中明确适配。</gap>
+    <gap name="预筛／审核分级／常驻测试数据脚本" status="不随来源包提供或本机不可用">不猜写缺失内容，不声明已经安装；需要时由用户提供或在目标项目中明确适配。</gap>
+  </external-gaps>
+</scaffold-map>

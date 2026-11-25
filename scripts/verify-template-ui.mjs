@@ -1,0 +1,54 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import { once } from 'node:events';
+import { chromium } from 'playwright';
+import { createApp } from '../src/server.mjs';
+import { atomic } from '../src/io.mjs';
+const output=path.resolve('.local/tabbed-template-ui');fs.mkdirSync(output,{recursive:true});
+const temp=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'awb-template-ui-')));
+const projectRoot=path.join(temp,'empty');fs.mkdirSync(projectRoot);
+const {server,store}=createApp({dataDir:path.join(temp,'state')});const project=store.register({root:projectRoot,name:'示例项目'});
+const existingRoot=path.join(temp,'existing');fs.mkdirSync(existingRoot);
+atomic(path.join(existingRoot,'AGENTS.md'),'# 项目入口\n\nBUSINESS_BOUNDARY\n');atomic(path.join(existingRoot,'.agent-workbench/rules/index.md'),'# 当前索引\n');atomic(path.join(existingRoot,'.agent-workbench/rules/business.md'),'# 业务边界\n\nBUSINESS_FILE\n');
+atomic(path.join(existingRoot,'web/package.json'),JSON.stringify({dependencies:{react:'19'},devDependencies:{typescript:'5'}}));atomic(path.join(existingRoot,'pyproject.toml'),'[project]\ndependencies = ["fastapi>=0.115", "SQLAlchemy[asyncio]>=2", "aiosqlite>=0.21"]');
+const existing=store.register({root:existingRoot,name:'现有工坊'});
+const visualRoot=path.join(temp,'visual');fs.mkdirSync(visualRoot);
+for(const [file,content] of Object.entries({'AGENTS.md':'# 项目入口\n','index.md':'# 当前索引\n','工程约定.md':'# 原工程约定\n','playbook.md':'# 原踩坑手册\n','架构.md':'# 架构总览\n\n## 仓库地图\n\n- cmd/starter：服务入口与装配。\n- shared：模型、中间件与公共能力。\n- cmd/starter/web：前端界面。\n\n## 依赖边界\n\n- Handler → Logic → Service → Model。\n- 业务状态由所属服务维护。\n\n## 相关说明\n\n[系统设计](系统设计.md)\n','系统设计.md':'# 系统设计\n\n示例业务规则。\n'}))atomic(path.join(visualRoot,file==='AGENTS.md'?file:'.agent-workbench/rules/'+file),content);
+const visual=store.register({root:visualRoot,name:'示例项目'});
+
+server.listen(0,'127.0.0.1');await once(server,'listening');const base=`http://127.0.0.1:${server.address().port}`;
+const executablePath=process.env.AWB_CHROME??['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome','/usr/bin/google-chrome'].find(file=>fs.existsSync(file));
+let browser;const checks=[],errors=[];
+try{
+ browser=await chromium.launch({headless:true,...(executablePath?{executablePath}:{})});const page=await browser.newPage({viewport:{width:1487,height:1058},deviceScaleFactor:1});page.on('pageerror',error=>errors.push(error.message));
+ const d=page.locator('#dialog');const bodyValue=()=>d.getByRole('textbox',{name:'约束正文',exact:true}).inputValue();const idle=()=>page.waitForFunction(()=>!document.querySelector('#dialog .set-editor-main')?.inert);
+ const choose=async(id,name)=>{await d.locator('#'+id+' .dropdown-trigger').click();await d.getByRole('option',{name,exact:true}).click();if(id!=='constraint-directory')await idle();};
+ const tab=async name=>{await d.getByRole('tab',{name:new RegExp('^'+name)}).click();};
+ const file=async name=>{await d.locator('[data-set-file]').filter({hasText:new RegExp('^'+name.replaceAll('.','\\.')+'$')}).click();};
+ const open=async id=>{await page.goto(base+'/#'+new URLSearchParams({project:id,view:'rules'}));await page.getByRole('button',{name:'整体编辑',exact:true}).click();await d.waitFor({state:'visible'});};
+ const shot=async name=>{await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:path.join(output,name+'.png'),animations:'disabled'});};
+ await open(project.id);assert.equal(await d.getByRole('tab',{name:'模板配置',exact:true}).getAttribute('aria-selected'),'true');
+ await choose('constraint-template','默认模板');assert.equal(await d.locator('.set-config-group').count(),4);assert.equal(await d.locator('.set-editor-layout').count(),0);assert.equal(await d.locator('select').count(),0);await shot('01-config');checks.push('configuration tab has real dependent controls without the file editor');
+ await d.getByRole('button',{name:'架构.md',exact:false}).click();assert.match(await d.locator('.set-resource-source').innerText(),/不是项目现状/);await d.getByRole('button',{name:'返回编辑',exact:true}).click();assert.deepEqual(fs.readdirSync(projectRoot),[]);checks.push('project fact resources stay read-only and never create empty active rules');
+ await tab('目录与内容');assert.equal(await d.locator('.set-technology').count(),0);assert.equal(await d.locator('[name=filename],#constraint-directory').count(),0);
+ await file('后端.md');assert.match(await d.getByRole('textbox',{name:'约束正文',exact:true}).inputValue(),/go-zero/);await shot('02-content');
+ await d.getByRole('textbox',{name:'约束正文',exact:true}).fill('# 自己的后端\n\nPRESERVE_DRAFT');await tab('模板配置');await choose('constraint-config-backendLanguage','Python');await choose('constraint-config-database','SQLite');
+ assert.equal(await d.locator('.set-tab-count').innerText(),'1');assert.match(await d.locator('.set-config-group').nth(1).innerText(),/FastAPI/);await tab('目录与内容');await file('后端.md');assert.match(await d.getByRole('textbox',{name:'约束正文',exact:true}).inputValue(),/PRESERVE_DRAFT/);
+ await d.getByRole('button',{name:'查看整套差异',exact:true}).click();assert.match(await d.locator('.set-error').innerText(),/处理文件合并冲突/);await shot('03-file-conflict');await d.getByRole('button',{name:'采用模板',exact:true}).click();checks.push('switching tabs preserves edits and regeneration retains conflicts until an explicit resolution');
+ await tab('模板配置');await choose('constraint-config-cache','不使用');await choose('constraint-config-storage','本地文件');await tab('目录与内容');await file('数据与存储.md');
+ const data=await d.getByRole('textbox',{name:'约束正文',exact:true}).inputValue();assert.match(data,/Python × SQLite/);assert.match(data,/不自动创建空状态/);assert.ok(!data.includes('## Redis 与业务缓存'));checks.push('database, no-cache and local-storage choices render actual scoped rules');
+ await d.getByRole('button',{name:'后端.md 更多操作',exact:true}).click();await d.getByRole('menuitem',{name:'移除文件',exact:true}).click();await tab('模板配置');await choose('constraint-config-backendLanguage','Go');await tab('目录与内容');await file('后端.md');assert.equal(await bodyValue(),'');await d.getByRole('textbox',{name:'约束正文',exact:true}).fill('# 恢复后手写的后端');await d.getByRole('button',{name:'保留原文',exact:true}).click();assert.equal(await bodyValue(),'# 恢复后手写的后端');checks.push('a deleted generated file can be rewritten without losing its new draft during conflict resolution');
+ await d.getByRole('button',{name:'保存为我的模板',exact:true}).click();await d.getByRole('textbox',{name:'模板名称',exact:true}).fill('个人工坊模板');await d.getByRole('button',{name:'保存模板',exact:true}).click();await idle();assert.equal(store.templates().filter(item=>!item.builtin).length,1);assert.deepEqual(fs.readdirSync(projectRoot),[]);await d.getByRole('button',{name:'关闭',exact:true}).click();checks.push('personal snapshot saves in a temporary form without writing project rules');
+ await open(existing.id);assert.equal(await d.getByRole('tab',{name:'目录与内容',exact:true}).getAttribute('aria-selected'),'true');await tab('模板配置');await choose('constraint-template','默认模板');assert.match(await d.locator('#constraint-config-backendLanguage .dropdown-trigger').innerText(),/Python/);assert.match(await d.locator('#constraint-config-frontendFramework .dropdown-trigger').innerText(),/React/);assert.equal(await d.locator('.set-tab-count').innerText(),'2');await choose('constraint-config-storage','本地文件');assert.equal(await d.locator('.set-tab-count').innerText(),'2');
+ await tab('目录与内容');for(const name of ['AGENTS.md','index.md']){await file(name);await d.getByRole('button',{name:'保留原文',exact:true}).click();}
+ await file('AGENTS.md');assert.match(await d.getByRole('textbox',{name:'约束正文',exact:true}).inputValue(),/BUSINESS_BOUNDARY/);
+ await d.getByRole('button',{name:'查看整套差异',exact:true}).click();await d.locator('.set-review').waitFor();assert.equal(fs.existsSync(path.join(existingRoot,'.agent-workbench/rules/工程约定.md')),false);await shot('04-review');await d.getByRole('button',{name:'返回编辑',exact:true}).click();assert.equal(await d.getByRole('tab',{name:'目录与内容',exact:true}).getAttribute('aria-selected'),'true');
+ await d.getByRole('button',{name:'查看整套差异',exact:true}).click();await d.locator('.set-review').waitFor();await d.locator('.set-overlay').getByRole('button',{name:'确认保存整套约束',exact:true}).click();await d.waitFor({state:'hidden'});
+ assert.match(fs.readFileSync(path.join(existingRoot,'AGENTS.md'),'utf8'),/BUSINESS_BOUNDARY/);assert.match(fs.readFileSync(path.join(existingRoot,'.agent-workbench/rules/business.md'),'utf8'),/BUSINESS_FILE/);assert.match(fs.readFileSync(path.join(existingRoot,'.agent-workbench/rules/技术栈/后端.md'),'utf8'),/FastAPI/);assert.equal(store.journal(existing.id).length,1);checks.push('existing business files survive conflict resolution, overlay return and one exact reviewed save');
+ await page.setViewportSize({width:390,height:844});await open(project.id);await choose('constraint-template','我的模板 · 个人工坊模板');assert.equal(await d.locator('.set-technology').count(),0);await d.getByRole('button',{name:'关闭',exact:true}).click();await open(project.id);await choose('constraint-template','默认模板');await shot('05-mobile-config');assert.ok(await d.evaluate(node=>node.scrollWidth<=node.clientWidth));
+ await d.getByRole('tab',{name:'模板配置',exact:true}).focus();await page.keyboard.press('ArrowRight');assert.equal(await d.getByRole('tab',{name:'目录与内容',exact:true}).getAttribute('aria-selected'),'true');await file('工程约定.md');await shot('06-mobile-content');assert.ok(await d.evaluate(node=>node.scrollWidth<=node.clientWidth));assert.deepEqual(errors,[]);checks.push('mobile tabs, keyboard switching and legacy personal snapshots remain usable without overflow');
+ await d.getByRole('button',{name:'关闭',exact:true}).click();await page.setViewportSize({width:1487,height:1058});await open(visual.id);await tab('模板配置');await choose('constraint-template','默认模板');await shot('07-reference-config');await tab('目录与内容');for(const name of ['AGENTS.md','index.md']){await file(name);await d.getByRole('button',{name:'保留原文',exact:true}).click();}await file('架构.md');await shot('08-reference-content');assert.equal(await d.locator('.set-tab-count').innerText(),'2');assert.equal(await d.locator('[name=filename],#constraint-directory').count(),0);checks.push('reference document layout and per-file conflict indicators match the selected visual state');
+ fs.writeFileSync(path.join(output,'report.json'),JSON.stringify({checks,errors},null,2));console.log(`Tabbed template UI: ${checks.length} checks passed; ${output}`);
+}finally{await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));fs.rmSync(temp,{recursive:true,force:true});}

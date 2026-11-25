@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<architecture>
+  <title>项目架构</title>
+  <description>组件职责与数据传递</description>
+  <requestId></requestId>
+  <rootGraphId>overview</rootGraphId>
+  <graphs>
+    <graph>
+      <id>overview</id><title>组件总览</title><kind>component</kind><direction>DOWN</direction>
+      <nodes>
+        <node>
+          <id>entry</id><title>请求入口</title><description>接收输入并交给业务模块</description>
+          <document><![CDATA[## 职责
+
+结合实际源码填写说明，保持简短。
+]]></document>
+          <snippets>
+            <snippet><title>请求处理</title><file>src/server.mjs</file><start>1</start><end>12</end></snippet>
+            <snippet><title>补充实现</title><file>src/server.mjs</file><start>13</start><end>20</end></snippet>
+          </snippets>
+          <childGraphId></childGraphId>
+        </node>
+      </nodes>
+      <edges></edges>
+    </graph>
+  </graphs>
+</architecture>

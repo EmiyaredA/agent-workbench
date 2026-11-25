@@ -69,8 +69,10 @@ node scripts/capture-readme.mjs
 
 ## 整套项目约束
 
-本轮实际页面截图：约束按文件阅读，支持整体编辑和保存为个人模板。通过 `node scripts/verify-rule-modules-ui.mjs` 使用隔离项目生成，完整的差异、模板复用与手机截图位于 `.local/constraint-set-previews/`。
+本轮实际页面截图：整体编辑分为模板配置、目录与内容，切换保留草稿；文件位置操作在临时表单中完成。通过 `node scripts/verify-template-ui.mjs` 使用隔离项目生成下面两张 1487×1058 的截图，来源与功能证据位于 `.local/tabbed-template-ui/`；文件菜单、差异与手机截图另见 `.local/constraint-set-previews/`。
 
-![整套编辑：目录结构、文件正文、当前文件预览](constraint-set-editor.png)
+![模板配置：真实技术选项、对应文档与只读写作参考](constraint-template-config.png)
+
+![目录与内容：文件菜单、正文与当前文件预览](constraint-set-editor.png)
 
 ![按文件阅读：文件目录与当前正文](constraint-set-reading.png)

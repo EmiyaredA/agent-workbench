@@ -6,6 +6,8 @@ import { randomBytes } from 'node:crypto';
 import { Workbench, Fault } from './store.mjs';
 import { seedDemo, demoDirectory } from './demo.mjs';
 import { projectLayout } from './layout.mjs';
+import { Architecture } from './architecture.mjs';
+import { composeDefault, detectTemplateContext } from './template-composer.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(directory, '..');
@@ -15,6 +17,9 @@ const assets = {
   '/maintenance.js': ['web/maintenance.js','text/javascript; charset=utf-8'],
   '/app.js': ['web/app.js', 'text/javascript; charset=utf-8'],
   '/rule-modules.js': ['web/rule-modules.js', 'text/javascript; charset=utf-8'],
+  '/template-draft.js': ['web/template-draft.js', 'text/javascript; charset=utf-8'],
+  '/architecture.js': ['web/architecture.js', 'text/javascript; charset=utf-8'],
+  '/architecture.css': ['web/architecture.css', 'text/css; charset=utf-8'],
   '/style.css': ['web/style.css', 'text/css; charset=utf-8'],
   '/theme.css': ['web/theme.css', 'text/css; charset=utf-8'],
   '/assets/kurisu-avatar.png': ['web/assets/kurisu-avatar.png', 'image/png'],
@@ -28,6 +33,7 @@ const assets = {
 const send = (res, status, data) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(data)); };
 export function createApp({ demo = false, dataDir = path.join(root,'.runtime',demo ? demoDirectory : 'workbench'), store = new Workbench(dataDir) } = {}) {
   store.recover(); if (demo) seedDemo(store);
+  const architecture=new Architecture(store);
   const nonce = randomBytes(32).toString('hex');
   const server = http.createServer(async (req, res) => {
   try {
@@ -40,7 +46,7 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     const pathname = url.pathname;
     if (req.method === 'GET' && pathname === '/api/session') return send(res, 200, { nonce, demo, dataDir: store.dataDir, root, version: '0.1.0', layout: projectLayout });
     if (req.method === 'GET' && pathname === '/api/skill') {
-      const allowed = ['SKILL.md','references/maintenance-records.md','assets/maintenance/record.xml','assets/constraints/change.xml','assets/constraints/propose.xml','references/decision-notes.md','references/note-operations.md','assets/notes/proposed.md','assets/notes/implemented.md','assets/notes/rejected.md'].map(file=>'skills/agent-workbench/'+file);
+      const allowed = ['SKILL.md','references/architecture.md','assets/architecture/version.xml','references/maintenance-records.md','assets/maintenance/record.xml','assets/constraints/change.xml','assets/constraints/propose.xml','references/decision-notes.md','references/note-operations.md','assets/notes/proposed.md','assets/notes/implemented.md','assets/notes/rejected.md'].map(file=>'skills/agent-workbench/'+file);
       const file = url.searchParams.get('file') ?? allowed[0];
       if (!allowed.includes(file)) throw new Fault('Skill 资源未开放',404);
       return send(res, 200, { file, path: path.join(root,file), content: fs.readFileSync(path.join(root,file),'utf8') });
@@ -49,7 +55,8 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     if (req.method !== 'GET') {
       if (req.headers.origin !== `http://${req.headers.host}` || req.headers['x-workbench-nonce'] !== nonce) throw new Fault('请从当前看板页面发起操作', 403);
       const chunks = []; let size = 0;
-      for await (const chunk of req) { size += chunk.length; if (size > 1_000_000) throw new Fault('请求内容过长', 413); chunks.push(chunk); }
+      const limit=/^\/api\/projects\/[^/]+\/architecture\/import$/.test(pathname) ? 16_000_000 : 1_000_000;
+      for await (const chunk of req) { size += chunk.length; if (size > limit) throw new Fault('请求内容过长', 413); chunks.push(chunk); }
       try { input = JSON.parse(Buffer.concat(chunks).toString() || '{}'); if (!input || typeof input !== 'object' || Array.isArray(input)) throw Error(); } catch { throw new Fault('JSON 格式不正确'); }
     }
     if (req.method === 'GET' && pathname === '/api/state') {
@@ -63,11 +70,35 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     if (pathname === '/api/projects/inspect' && req.method === 'POST') return send(res,200,store.inspect(input));
     if (pathname === '/api/templates' && req.method === 'GET') return send(res,200,store.templates());
     if (pathname === '/api/templates' && req.method === 'POST') return send(res,201,store.saveTemplate(input));
+    const templateMatch=pathname.match(/^\/api\/templates\/([\w-]+)\/compose$/);
+    if (templateMatch && req.method==='POST') {
+      const template=store.templates().find(item=>item.id===templateMatch[1]);
+      if(!template) throw new Fault('模板不存在',404);
+      try { return send(res,200,template.id==='default' ? composeDefault(input.selection) : {files:template.files,selection:{}}); }
+      catch(error) { throw new Fault(error.message); }
+    }
+    const templateContextMatch=pathname.match(/^\/api\/projects\/([^/]+)\/template-context$/);
+    if(templateContextMatch && req.method==='GET') {
+      const project=store.project(templateContextMatch[1]);
+      if(project.id==='global') throw new Fault('全局偏好不使用项目模板');
+      return send(res,200,detectTemplateContext(project.root));
+    }
     if (pathname === '/api/constraints/preview' && req.method === 'POST') return send(res,200,store.previewConstraintSet(input));
     if (pathname === '/api/constraints' && req.method === 'POST') return send(res,201,store.saveConstraintSet(input));
     if (pathname === '/api/projects' && req.method === 'POST') return send(res, 201, store.register(input));
     if (pathname === '/api/global' && req.method === 'POST') { store.setGlobal(input.file); return send(res, 200, { ok: true }); }
     if (pathname === '/api/changes' && req.method === 'POST') return send(res,201,store.writeChange(input));
+    const architectureMatch=pathname.match(/^\/api\/projects\/([^/]+)\/architecture(?:\/(status|source|import|adopt|request|compare))?$/);
+    if (architectureMatch) {
+      const [,id,operation]=architectureMatch;
+      if (!operation && req.method==='GET') return send(res,200,architecture.read(id,url.searchParams.get('version')));
+      if (operation==='status' && req.method==='GET') return send(res,200,architecture.status(id,url.searchParams.get('version')));
+      if (operation==='source' && req.method==='GET') return send(res,200,architecture.liveSource(id,url.searchParams.get('version'),url.searchParams.get('file')));
+      if (operation==='compare' && req.method==='GET') return send(res,200,architecture.compare(id,url.searchParams.get('left'),url.searchParams.get('right')));
+      if (operation==='import' && req.method==='POST') return send(res,201,await architecture.import(id,input.xml));
+      if (operation==='adopt' && req.method==='POST') return send(res,200,architecture.adopt(id,input));
+      if (operation==='request' && req.method==='POST') return send(res,201,architecture.request(id,input));
+    }
     const changeRetry=pathname.match(/^\/api\/changes\/([\w-]+)\/retry$/);
     if (changeRetry && req.method === 'POST') {
       const change=store.proposal(changeRetry[1]);

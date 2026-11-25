@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template id="default" name="默认模板" version="1">
+  <group id="frontend" label="前端" icon="monitor">
+    <field id="frontendLanguage" label="语言" default="typescript">
+      <option value="typescript" label="TypeScript" />
+      <option value="none" label="不适用" />
+    </field>
+    <field id="frontendFramework" label="框架" default="vue">
+      <option value="vue" label="Vue 3"><requires field="frontendLanguage" values="typescript" /></option>
+      <option value="react" label="React"><requires field="frontendLanguage" values="typescript" /></option>
+      <option value="none" label="不适用"><requires field="frontendLanguage" values="none" /></option>
+    </field>
+  </group>
+  <group id="backend" label="后端" icon="code">
+    <field id="backendLanguage" label="语言" default="go">
+      <option value="go" label="Go" />
+      <option value="python" label="Python" />
+      <option value="none" label="不适用" />
+    </field>
+    <field id="backendFramework" label="框架" default="gozero">
+      <option value="gozero" label="go-zero"><requires field="backendLanguage" values="go" /></option>
+      <option value="fastapi" label="FastAPI"><requires field="backendLanguage" values="python" /></option>
+      <option value="none" label="不适用"><requires field="backendLanguage" values="none" /></option>
+    </field>
+  </group>
+  <group id="data" label="数据" icon="database">
+    <field id="database" label="数据库" default="postgres">
+      <option value="postgres" label="PostgreSQL"><requires field="backendLanguage" values="go,python" /></option>
+      <option value="sqlite" label="SQLite"><requires field="backendLanguage" values="go,python" /></option>
+      <option value="none" label="不使用" />
+    </field>
+    <field id="cache" label="缓存" default="redis">
+      <option value="redis" label="Redis"><requires field="backendLanguage" values="go,python" /></option>
+      <option value="none" label="不使用" />
+    </field>
+  </group>
+  <group id="storage" label="文件存储" icon="cloud-arrow-up">
+    <field id="storage" label="存储方式" default="oss">
+      <option value="local" label="本地文件"><requires field="backendLanguage" values="go,python" /></option>
+      <option value="oss" label="对象存储（OSS）"><requires field="backendLanguage" values="go,python" /></option>
+      <option value="none" label="不适用" />
+    </field>
+  </group>
+  <module file="AGENTS.md" title="项目约束" when="开始项目任务"><part source="rules/entry.md" /></module>
+  <module file=".agent-workbench/rules/工程约定.md" title="工程约定" when="修改身份、状态、契约或持久化"><part source="rules/engineering.md" /></module>
+  <module file=".agent-workbench/rules/开发与实测流程.md" title="开发与实测流程" when="设计、开发、验收与交付"><part source="rules/workflow.md" /></module>
+  <module file=".agent-workbench/rules/playbook.md" title="踩坑手册" when="核对规则原因或排查已知风险"><part source="rules/playbook.md" /></module>
+  <module file=".agent-workbench/rules/技术栈/前端.md" title="前端约束" when="修改前端界面、接口交互或多语言">
+    <requires field="frontendLanguage" values="typescript" />
+    <part source="rules/typescript.md" /><part source="rules/frontend-common.md" />
+    <part source="rules/vue.md"><requires field="frontendFramework" values="vue" /></part>
+    <part source="rules/react.md"><requires field="frontendFramework" values="react" /></part>
+  </module>
+  <module file=".agent-workbench/rules/技术栈/后端.md" title="后端约束" when="修改后端接口、分层、配置或生成代码">
+    <part source="rules/go.md"><requires field="backendLanguage" values="go" /></part>
+    <part source="rules/gozero.md"><requires field="backendFramework" values="gozero" /></part>
+    <part source="rules/python.md"><requires field="backendLanguage" values="python" /></part>
+    <part source="rules/fastapi.md"><requires field="backendFramework" values="fastapi" /></part>
+  </module>
+  <module file=".agent-workbench/rules/技术栈/数据与存储.md" title="数据与存储约束" when="修改数据库、缓存、文件或迁移">
+    <part source="rules/postgres.md"><requires field="database" values="postgres" /></part>
+    <part source="rules/sqlite.md"><requires field="database" values="sqlite" /></part>
+    <part source="rules/gorm.md"><requires field="backendLanguage" values="go" /><requires field="database" values="postgres,sqlite" /></part>
+    <part source="rules/sqlalchemy.md"><requires field="backendLanguage" values="python" /><requires field="database" values="postgres,sqlite" /></part>
+    <part source="rules/go-postgres.md"><requires field="backendLanguage" values="go" /><requires field="database" values="postgres" /></part>
+    <part source="rules/go-sqlite.md"><requires field="backendLanguage" values="go" /><requires field="database" values="sqlite" /></part>
+    <part source="rules/python-postgres.md"><requires field="backendLanguage" values="python" /><requires field="database" values="postgres" /></part>
+    <part source="rules/python-sqlite.md"><requires field="backendLanguage" values="python" /><requires field="database" values="sqlite" /></part>
+    <part source="rules/redis.md"><requires field="cache" values="redis" /></part>
+    <part source="rules/local.md"><requires field="storage" values="local" /></part>
+    <part source="rules/oss.md"><requires field="storage" values="oss" /></part>
+  </module>
+  <resource name="架构.md" source="guides/architecture.md" />
+  <resource name="系统设计.md" source="guides/system-design.md" />
+</template>

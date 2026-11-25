@@ -83,7 +83,9 @@ CLI 的 change／propose／record 支持 XML 输入：根标签为命令名，�
 ## 整套项目约束
 
 - `GET /api/projects/:id/constraints`：整套文件 `files[{file,content,hash}]` 与 `baseHash`，只读。global 使用独立文件，不支持此接口。
-- `GET /api/templates`：内置与个人整套项目约束模板，不包含维护历史或 Skill 资源。`POST /api/templates` 输入 `name`、可选 `description`、`files[{file,content}]`，只保存模板副本。
+- `GET /api/templates`：默认模板及个人快照，不包含维护历史或 Skill 资源。默认模板增加 `configuration.groups[{id,label,icon,fields}]`、字段默认值 `configuration.defaults` 和默认 `selection`；另有只读写作参考 `resources[{name,content}]`，不参与 compose 输出或项目保存。字段 `options[{value,label,requires}]` 的 requires 为条件数组 `{field,values}`，values 为逗号分隔允许值，所有条件须满足；旧个人模板没有 configuration。`POST /api/templates` 输入 `name`、可选 `description`、`files[{file,content}]`，只保存模板副本。
+- `GET /api/projects/:id/template-context`：只读返回 `detected`、`evidence[{file,fields}]` 和 `warnings`。只检查已知、普通、限长的相对清单／入口文件；跳过符号链接，不执行项目代码，不读取运行凭据。不确定或矛盾的技术不返回识别值，全局不支持。
+- `POST /api/templates/:id/compose`：输入 `{selection}`，默认模板要求完整已知字段且依赖兼容；返回 `{selection,files[{file,content}]}`，只生成正文，不写项目或维护记录。无效配置 400，未知模板 404。默认组合输出 AGENTS、index、工程约定、开发与实测流程、playbook 和技术栈下的前端、后端、数据与存储共八份文件；不适用的技术模块省略，索引使用相对链接。架构与系统设计不自动生成。个人快照返回原文件与空 selection。仍需看板 nonce 与同源请求；最终保存走原有差异确认接口。
 - `POST /api/constraints/preview`：输入 projectId、读取时的 baseHash、整套 files 和可选 reason；返回所有变化文件的精确 `fileChanges` 与 `contentHash`，不保存候选或写入项目。
 - `POST /api/constraints`：在同一输入上增加 `reviewHash`（预览返回的 contentHash）和稳定 `operationId`。再次核对整套版本与差异后保存，返回 applied 的多文件记录。相同标识与原请求可重试；不同内容拒绝。修改按 process 类别统一留档。
 

@@ -44,3 +44,7 @@ node <skill目录>/scripts/workbench.mjs <命令> --project <项目ID或目录> 
 - 实际日志保存在 `docs/maintenance/`；日志和决定不自动成为项目约束。category 从 architecture、feature、bug-fix、simplification、process、testing 中选择。
 
 命令输出 JSON；报错或非零退出时先处理具体错误，不报告成功。CLI 没有约束批准命令。
+
+## 架构图
+
+用 `architecture` 查询、校验和导入架构版本，具体字段见[架构版本](references/architecture.md)与[XML 模板](assets/architecture/version.xml)。由 Agent 阅读源码生成；看板联动展示目录、图示、文档与独立代码片段。导入为候选，核对后在看板采用。

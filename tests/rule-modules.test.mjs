@@ -21,14 +21,14 @@ test('whole templates persist file paths and bodies as independent copies',t=>{
   const f=fixture(t);const data=input(f);const saved=f.store.saveTemplate({...data,name:'我的项目约束',description:'团队模板'});
   assert.equal(saved.files.length,3);assert.ok(!Object.hasOwn(saved,'directories'));assert.ok(saved.files.every(file=>!Object.hasOwn(file,'purpose')));
   const reopened=new Workbench(f.data);assert.equal(reopened.templates().find(i=>i.id===saved.id).files[2].content,data.files[2].content);
-  assert.equal(reopened.templates().filter(i=>i.builtin).length,2);assert.deepEqual(fs.readdirSync(f.projectRoot),[]);
+  assert.equal(reopened.templates().filter(i=>i.builtin).length,1);assert.deepEqual(fs.readdirSync(f.projectRoot),[]);
   assert.throws(()=>f.store.saveTemplate({...data,name:saved.name}),/名称已存在/);
 });
 
 test('project templates preserve maintenance history and cannot copy logs or Skill files',t=>{
   const f=fixture(t);const month='docs/maintenance/'+new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'}).slice(0,7)+'.md';
   const history='# 项目维护日志\n\n## 2026-11-01 · 原有记录\n\n- **结果**：HISTORY_STAYS_WITH_PROJECT\n';f.write(month,history);
-  const template=f.store.templates().find(item=>item.id==='modular');
+  const template=f.store.templates().find(item=>item.id==='default');
   const request={...template,projectId:f.project.id,baseHash:f.store.constraintSet(f.project.id).baseHash};
   f.store.previewConstraintSet(request);assert.equal(fs.readFileSync(path.join(f.projectRoot,month),'utf8'),history);
   save(f,request,'apply-project-template');
@@ -36,7 +36,7 @@ test('project templates preserve maintenance history and cannot copy logs or Ski
   const context=f.store.context(f.project.id);assert.ok(!JSON.stringify(context).includes('HISTORY_STAYS_WITH_PROJECT'));
   for(const doc of template.files.filter(item=>!['AGENTS.md','.agent-workbench/rules/index.md'].includes(item.file)))assert.ok(context.indexes[0].content.includes(doc.file.split('/').pop()));
   const snapshot=f.store.constraintSet(f.project.id);const personal=f.store.saveTemplate({...snapshot,name:'Project only'});
-  assert.equal(personal.files.length,6);assert.ok(!JSON.stringify(personal).includes('HISTORY_STAYS_WITH_PROJECT'));
+  assert.equal(personal.files.length,8);assert.ok(!JSON.stringify(personal).includes('HISTORY_STAYS_WITH_PROJECT'));
   for(const file of [month,'skills/agent-workbench/SKILL.md'])assert.throws(()=>f.store.saveTemplate({...snapshot,name:'Invalid '+file,files:[...snapshot.files,{file,content:'# Not a project constraint'}]}),/约束只保存在/);
 });
 test('whole save supports add, rename and deletion with exact history',t=>{

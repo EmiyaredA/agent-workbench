@@ -82,14 +82,31 @@ test('GET requests do not recover or write interrupted transactions',async t => 
 
 test('whole constraint set APIs preview read-only and save the exact reviewed tree',async t=>{
   const f=await service(t); assert.equal((await fetch(f.base+'/rule-modules.js')).status,200);
-  const templates=await fetch(f.base+'/api/templates').then(r=>r.json());assert.equal(templates.length,2);
+  const templates=await fetch(f.base+'/api/templates').then(r=>r.json());assert.equal(templates.length,1);
   const snapshot=await fetch(f.base+`/api/projects/${f.project.id}/constraints`).then(r=>r.json());
   const input={...templates[0],projectId:f.project.id,baseHash:snapshot.baseHash};
   assert.equal((await f.request('/api/templates',{...input,name:'Personal'})).status,201);
   assert.equal((await f.request('/api/constraints/preview',input,'POST',{'X-Workbench-Nonce':'bad'})).status,403);
-  const preview=await f.request('/api/constraints/preview',input).then(r=>r.json());assert.equal(preview.fileChanges.length,2);assert.deepEqual(fs.readdirSync(f.projectRoot),[]);
+  const preview=await f.request('/api/constraints/preview',input).then(r=>r.json());assert.equal(preview.fileChanges.length,templates[0].files.length);assert.deepEqual(fs.readdirSync(f.projectRoot),[]);
   const response=await f.request('/api/constraints',{...input,reviewHash:preview.contentHash,operationId:'http-set'});assert.equal(response.status,201);
   const p=await response.json();assert.equal(p.status,'applied');
-  const state=await fetch(f.base+'/api/state').then(r=>r.json());assert.equal(state.proposals[0].files,undefined);assert.equal(state.proposals[0].affectedFiles.length,2);
-  const detail=await fetch(f.base+'/api/proposals/'+p.id).then(r=>r.json());assert.equal(detail.fileChanges.length,2);
+  const state=await fetch(f.base+'/api/state').then(r=>r.json());assert.equal(state.proposals[0].files,undefined);assert.equal(state.proposals[0].affectedFiles.length,templates[0].files.length);
+  const detail=await fetch(f.base+'/api/proposals/'+p.id).then(r=>r.json());assert.equal(detail.fileChanges.length,templates[0].files.length);
+});
+
+test('template composition and evidence endpoints are read-only and validate actual options',async t=>{
+  const f=await service(t);
+  f.write('pyproject.toml','[project]\ndependencies = ["fastapi>=0.115", "aiosqlite>=0.21"]');
+  const templates=await fetch(f.base+'/api/templates').then(r=>r.json());
+  assert.equal(templates[0].name,'默认模板');assert.equal(templates[0].configuration.groups.length,4);
+  const context=await fetch(f.base+`/api/projects/${f.project.id}/template-context`).then(r=>r.json());
+  assert.equal(context.detected.backendFramework,'fastapi');assert.equal(context.detected.database,'sqlite');
+  const selection={...templates[0].selection,...context.detected,storage:'local'};
+  assert.equal((await f.request('/api/templates/default/compose',{selection},'POST',{'X-Workbench-Nonce':'bad'})).status,403);
+  const rendered=await f.request('/api/templates/default/compose',{selection}).then(r=>r.json());
+  assert.ok(rendered.files.some(file=>file.content.includes('Python × SQLite')));
+  assert.equal((await f.request('/api/templates/default/compose',{selection:{...selection,database:'invented'}})).status,400);
+  assert.equal((await f.request('/api/templates/missing/compose',{selection})).status,404);
+  assert.equal((await fetch(f.base+'/template-draft.js')).status,200);
+  assert.deepEqual(fs.readdirSync(f.projectRoot),['pyproject.toml']);assert.equal(f.store.proposals().length,0);
 });

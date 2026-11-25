@@ -48,7 +48,14 @@ try {
     assert.equal(response.status,200,route);
     assert.ok((await response.arrayBuffer()).byteLength,route);
   }
-  const templates=await fetch(base+'/api/templates').then(r=>r.json());assert.equal(templates.find(item=>item.id==='modular').files.length,6);
+  const templates=await fetch(base+'/api/templates').then(r=>r.json());assert.equal(templates.find(item=>item.id==='default').files.length,8);
+  const composed=await request('/api/templates/default/compose',{selection:{...templates[0].selection,backendLanguage:'python',backendFramework:'fastapi',database:'sqlite',cache:'none',storage:'local'}});
+  assert.ok(composed.files.some(file=>file.content.includes('Python × SQLite')));
+  assert.ok(composed.files.some(file=>file.content.includes('## 本地文件')));
+  assert.equal(composed.files.some(file=>file.content.includes('## Redis 与业务缓存')),false);
+  assert.ok(composed.files.some(file=>file.file==='.agent-workbench/rules/技术栈/数据与存储.md'));
+  assert.deepEqual(templates.find(item=>item.id==='default').resources.map(item=>item.name),['架构.md','系统设计.md']);
+  assert.equal((await fetch(base+'/template-draft.js')).status,200);
   for(const file of ['references/maintenance-records.md','assets/maintenance/record.xml','assets/constraints/change.xml','assets/constraints/propose.xml']){
     const relative='skills/agent-workbench/'+file;
     const response=await fetch(base+'/api/skill?file='+encodeURIComponent(relative));assert.equal(response.status,200);

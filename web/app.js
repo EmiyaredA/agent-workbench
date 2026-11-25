@@ -1,5 +1,6 @@
 import { renderMaintenance } from './maintenance.js';
 import { ruleModules } from './rule-modules.js';
+import { architectureBoard } from './architecture.js';
 import { marked } from '/vendor/marked.js';
 import DOMPurify from '/vendor/purify.js';
 
@@ -97,7 +98,7 @@ function toast(message,error = false) {
 }
 function route(view, options = {}) {
   if (options.projectId && options.projectId !== S.projectId) Object.assign(S,maintenanceDefaults,{changeQuery:'',changeView:'list',proposalFilter:'all',proposal:''});
-  if ((options.projectId ?? S.projectId) === 'global' && view === 'journal') { view='rules'; options={...options,maintenanceSelection:''}; }
+  if ((options.projectId ?? S.projectId) === 'global' && ['journal','architecture'].includes(view)) { view='rules'; options={...options,maintenanceSelection:''}; }
   Object.assign(S,options,{view});
   if (options.file) revealFile(options.file);
   const hash = new URLSearchParams({project:S.projectId,view,file:S.file,proposal:S.proposal,...(view==='proposals' ? {changeView:S.changeView,changeQuery:S.changeQuery,proposalFilter:S.proposalFilter} : {}),...(view === 'journal' ? Object.fromEntries(Object.keys(maintenanceDefaults).map(key=>[key,S[key]])) : {})}).toString();
@@ -113,8 +114,8 @@ function readRoute() {
   if (values.get('project') && values.get('project') !== previous.split('|')[0]) Object.assign(S,maintenanceDefaults);
   for (const [key,value] of Object.entries(maintenanceDefaults)) S[key] = values.has(key) ? values.get(key) : value;
   if (!['baseline','timeline','pitfalls','list'].includes(S.maintenanceView)) S.maintenanceView='baseline';
-  if (!['rules','proposals','journal','connect'].includes(S.view)) S.view = 'rules';
-  if (S.projectId === 'global' && S.view === 'journal') {
+  if (!['rules','proposals','journal','connect','architecture'].includes(S.view)) S.view = 'rules';
+  if (S.projectId === 'global' && ['journal','architecture'].includes(S.view)) {
     S.view='rules'; Object.assign(S,maintenanceDefaults);
     values.set('view','rules'); for (const key of Object.keys(maintenanceDefaults)) values.delete(key);
     history.replaceState(null,'','#'+values.toString());
@@ -142,7 +143,7 @@ window.addEventListener('resize',updateMaintenanceLayout);
 function shell(content) {
   const project = activeProject();
   const projectButtons = S.data.projects.map(p => `<button class="project-button ${S.projectId === p.id ? 'active' : ''}" data-action="project" data-id="${esc(p.id)}">${icon('folder')}<span>${esc(p.name)}</span>${pending(p.id).length ? `<span class="pill pending">${pending(p.id).length}</span>` : ''}</button>`).join('');
-  const tabs = (S.projectId === 'global' ? [['rules','全局约束'],['proposals','变更记录']] : [['rules','约束'],['proposals','变更记录'],['journal','维护记录']]).map(([id,label]) => `<button class="tab ${S.view === id ? 'active' : ''}" data-action="tab" data-view="${id}" aria-current="${S.view === id ? 'page' : 'false'}">${label}${id === 'proposals' && pending().length ? `<span class="count">${pending().length}</span>` : ''}</button>`).join('');
+  const tabs = (S.projectId === 'global' ? [['rules','全局约束'],['proposals','变更记录']] : [['rules','约束'],['proposals','变更记录'],['journal','维护记录'],['architecture','架构']]).map(([id,label]) => `<button class="tab ${S.view === id ? 'active' : ''}" data-action="tab" data-view="${id}" aria-current="${S.view === id ? 'page' : 'false'}">${label}${id === 'proposals' && pending().length ? `<span class="count">${pending().length}</span>` : ''}</button>`).join('');
   $('#app').innerHTML = `<aside class="sidebar"><div class="brand"><span class="brand-mark"><img src="/assets/kurisu-avatar.png" width="44" height="44" alt="Q 版红莉栖" decoding="async"></span><span class="brand-name"><strong><span>agent-</span>workbench</strong><small>你的 Agent 工作台</small></span></div><div class="project-label">项目 <span>${S.data.projects.length}</span></div><div class="projects">${projectButtons || '<p class="muted small">尚未登记项目</p>'}</div>${button(icon('plus')+' 登记项目','register','','register')}<div class="sidebar-bottom"><button class="project-button ${S.projectId === 'global' ? 'active':''}" data-action="global">${icon('gear-six')}<span>全局偏好</span></button><button class="project-button ${S.view === 'connect' ? 'active':''}" data-action="connect">${icon('plugs')}<span>Skill 接入</span></button><button class="project-button" data-action="local">${icon('folder-open')}<span>本地文件</span></button></div><div class="local-note">LOCAL · FILES FIRST · v0.1</div>${dropdown('project-switcher','切换项目',[...S.data.projects.map(p => ({value:p.id,label:p.name})),{value:'__global',label:'全局偏好'},{value:'__connect',label:'Skill 接入'},{value:'__register',label:'登记项目…'}],S.view === 'connect' ? '__connect' : S.projectId === 'global' ? '__global' : S.projectId,'mobile-project')}</aside><main class="app-main"><header class="header"><div class="header-top"><h1 title="${esc(project?.root ?? '')}">${esc(project?.name ?? '我的项目')}</h1><span class="root-path" title="${esc(project?.root)}">${esc(project?.root ?? '登记项目后开始使用')}</span><nav class="tabs" aria-label="项目页面">${tabs}</nav><div class="header-context" role="group" aria-label="当前页面操作"></div><button class="btn header-search" data-action="search" aria-label="搜索文档与提案" ${!project ? 'disabled':''}>${icon('magnifying-glass')}<span class="search-text">搜索文档与提案</span><span class="key">/</span></button>${button(icon('gear-six'),'settings','aria-label="文档来源设置" title="文档来源设置"','icon')}</div></header>${S.session.demo ? '<div class="demo-bar">演示工作区 · 数据隔离</div>':''}${S.data.warnings?.length ? `<div class="page">${S.data.warnings.map(w => `<p class="notice warning">${esc(w)}</p>`).join('')}</div>` : ''}${S.message ? `<div class="page"><div class="notice ${esc(S.message.type ?? 'success')}">${esc(S.message.text)}</div></div>`:''}${content}</main>`;
   const toolbar = document.querySelector('.app-main > .page .proposal-toolbar, .app-main > .page .maintenance-nav');
   if (toolbar) {
@@ -180,6 +181,7 @@ async function load() {
     let content;
     if (!S.projectId && S.view !== 'connect') content = welcome();
     else if (S.view === 'connect') content = await connection(sequence);
+    else if (S.view === 'architecture') content = await architecture.render(S.projectId);
     else if (['rules','proposals','journal'].includes(S.view)) {
       const catalog = await api(`/api/projects/${S.projectId}`); if (sequence !== renderSequence) return; S.catalog = catalog;
       if (S.view === 'rules') content = await rules(sequence);
@@ -188,6 +190,7 @@ async function load() {
     }
     if (sequence !== renderSequence) return;
     shell(content);
+    if (S.view === 'architecture') architecture.mount();
   } catch(error) {
     if (sequence !== renderSequence) return;
     if (S.data) shell(`<div class="page"><div class="notice error">${esc(error.message)}</div><div class="actions">${button('重试读取','refresh')}</div></div>`);
@@ -296,10 +299,10 @@ $('#dialog').addEventListener('click',event => {
   const dismiss = drawerBackdropPress && isDrawerBackdrop(event); drawerBackdropPress = false;
   if (dismiss) { event.preventDefault(); event.stopPropagation(); closeDialog(); }
 });
-function showDialog(title, body, { subtitle = '', wide = false, drawer = false, submit } = {}) {
-  const dialog = $('#dialog'); lastFocus = document.activeElement;
+function showDialog(title, body, { subtitle = '', wide = false, drawer = false, submit, retainOpen = false } = {}) {
+  const dialog = $('#dialog'); if(!retainOpen || !dialog.open)lastFocus = document.activeElement;
   drawerBackdropPress = false;
-  if (dialog.open) dialog.close();
+  if (dialog.open && !retainOpen) dialog.close();
   dialog.onkeydown = null;
   dialog.className = drawer ? 'drawer' : wide ? 'wide-dialog' : '';
   dialog.innerHTML = `<div class="dialog-content"><div class="dialog-head"><div><h2 id="dialog-title">${esc(title)}</h2>${subtitle ? `<p>${esc(subtitle)}</p>`:''}</div>${button(icon('x'),'close','aria-label="关闭"','icon ghost')}</div>${submit ? `<form id="dialog-form">${body}<div class="form-error notice error" role="alert"></div></form>` : body}</div>`;
@@ -309,10 +312,11 @@ function showDialog(title, body, { subtitle = '', wide = false, drawer = false, 
     try { await submit(Object.fromEntries(new FormData(form)),form); }
     catch(error) { errorNode.textContent = error.message; if (submitButton) submitButton.disabled = false; }
   };
-  dialog.showModal();
+  if(!dialog.open)dialog.showModal();
 }
 const field = (label, name, value = '', { textarea = false, required = false, placeholder = '', help = '', rows = 3, readonly = false, cls = '' } = {}) => `<label class="field"><span>${esc(label)}${required ? ' *':''}</span>${textarea ? `<textarea name="${name}" rows="${rows}" class="${cls}" ${required ? 'required':''}>${esc(value)}</textarea>` : `<input name="${name}" value="${esc(value)}" ${required ? 'required':''} ${readonly ? 'readonly':''} placeholder="${esc(placeholder)}">`}${help ? `<p class="help">${esc(help)}</p>`:''}</label>`;
 const modules = ruleModules({api,showDialog,closeDialog,button,icon,esc,markdown,renderDiff,dropdown,toast,saved:()=>route('rules',{proposal:''})});
+const architecture = architectureBoard({api,showDialog,closeDialog,button,icon,esc,markdown,dropdown,toast,reload:load});
 const formActions = (primary, extra = '') => `<div class="modal-actions">${extra}${button('取消','close')}<button class="btn primary" type="submit">${primary}</button></div>`;
 
 function registerProject() {
@@ -435,6 +439,7 @@ function scrollMaintenanceAnchor(anchor) {
 }
 async function action(target) {
   const { action: name } = target.dataset;
+  if (name?.startsWith('architecture-')) return architecture.action(target);
   if (name === 'dropdown-toggle') {
     const control = target.closest('.custom-select');
     if (target.getAttribute('aria-expanded') === 'true') closeDropdowns(true); else openDropdown(control);
@@ -443,7 +448,9 @@ async function action(target) {
   if (name === 'dropdown-option') {
     const id = target.closest('.custom-select').id; const value = target.dataset.value;
     closeDropdowns(true);
+    if (id.startsWith('architecture-')) return architecture.choose(id,value);
     if (id === 'constraint-template') return modules.selectTemplate(value);
+    if (id.startsWith('constraint-config-')) return modules.selectConfiguration(id.slice('constraint-config-'.length),value);
     if (id === 'constraint-directory') return modules.selectDirectory(value);
     if (id === 'record-category' || id === 'change-category' || id === 'module-category') { const control = target.closest('.custom-select'); control.querySelector('.dropdown-trigger span').textContent = target.querySelector('.option-label').textContent; control.querySelectorAll('[role=option]').forEach(option=>option.setAttribute('aria-selected',String(option===target))); $('#dialog input[name=category]').value=value; return; }
     const filterFields = {'month-filter':'month','maintenance-category':'maintenanceCategory','maintenance-status':'noteStatus','maintenance-sort':'maintenanceSort'};
