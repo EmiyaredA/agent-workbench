@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { Acceptance } from './acceptance.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Workbench } from './store.mjs';
@@ -12,7 +13,7 @@ const args = process.argv.slice(2); const command = args[0];
 const option = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i + 1]; };
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 try {
-  if (!['projects', 'context', 'read', 'journal', 'maintenance', 'propose', 'change', 'record', 'notes','architecture'].includes(command)) throw Error('可用命令：projects/context/read/journal/maintenance/propose/change/record/notes/architecture。没有提案批准命令。');
+  if (!['projects', 'context', 'read', 'journal', 'maintenance', 'propose', 'change', 'record', 'notes','architecture','acceptance'].includes(command)) throw Error('可用命令：projects/context/read/journal/maintenance/propose/change/record/notes/architecture。没有提案批准命令。');
   const store = new Workbench(option('--data', process.env.AGENT_WORKBENCH_DATA ?? path.join(root, '.runtime/workbench')));
   const projectArg = option('--project');
   const requested = path.resolve(projectArg ?? '.');
@@ -41,6 +42,13 @@ try {
     else if (action === 'archive') result=planArchive(store,project,{file:option('--file'),successor:option('--successor')});
     else if (action === 'apply') result=applyArchive(store,project,JSON.parse(fs.readFileSync(option('--input'),'utf8')));
     else throw Error('notes --action 只支持 verify、archive（只读生成计划）、apply（执行归档计划）');
+  }
+  if(command==='acceptance') {
+    const service=new Acceptance(store), action=option('--action','list');
+    if(action==='list')result=service.list(project);
+    else if(action==='read')result=service.read(project,option('--id',option('--file')));
+    else if(['verify','write','append'].includes(action))result=service.write(project,fs.readFileSync(option('--input'),'utf8'),{dryRun:action==='verify',append:action==='append'});
+    else throw Error('acceptance --action 支持 list/read/verify/write/append');
   }
   if (command === 'architecture') {
     const service=new Architecture(store), action=option('--action','list');

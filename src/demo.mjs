@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import {seedAcceptance} from './demo-acceptance.mjs';
 import path from 'node:path';
 import { atomic } from './store.mjs';
 import { demoProjects, demoGlobalRules } from './demo-data.mjs';
@@ -7,7 +8,7 @@ export const demoDirectory = 'demo-v4';
 
 export function seedDemo(store) {
   const marker = path.join(store.dataDir, 'demo-seeded');
-  if (fs.existsSync(marker)) return;
+  if (fs.existsSync(marker)) { seedAcceptance(store); return; }
   if (store.registry.projects.some(p => !p.demo)) throw Error('演示数据只能初始化到隔离的空工作区');
   const noteFile = note => `.agents/notes/${note.status}/${note.category}/${note.date}-${note.slug}.md`;
   // Resolve only explicitly authored relationships; invalid fixture references
@@ -76,5 +77,6 @@ export function seedDemo(store) {
   if (!store.registry.global) store.setGlobal(globalFile);
   store.propose({projectId:'global',file:'AGENTS.md',title:'保留反馈里的条件和例外',reason:'避免提炼后把局部要求写成绝对规则。',category:'process',source:'隔离演示：用户纠正有明确的适用条件。',content:demoGlobalRules+'\n- 提炼偏好时保留原话中的条件、否定和例外。\n'});
   fs.mkdirSync(path.join(root,'new-project'),{recursive:true});
+  seedAcceptance(store);
   atomic(marker,'Decision-centered fictional demo v4; real project files are never seeded.\n');
 }

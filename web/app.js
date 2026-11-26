@@ -1,3 +1,4 @@
+import { renderAcceptance } from './acceptance.js';
 import { renderMaintenance } from './maintenance.js';
 import { ruleModules } from './rule-modules.js';
 import { architectureBoard } from './architecture.js';
@@ -59,7 +60,9 @@ function openDropdown(control, position) {
 const S = {session:null,data:null,projectId:'',view:'rules',file:'',proposal:'',raw:false,skillRaw:false,proposalFilter:'all',changeView:'list',changeQuery:'',logMode:'journal',month:'',noteStatus:'all',searchKind:'all',lastProject:'',message:null};
 const maintenanceDefaults = {maintenanceView:'baseline',maintenanceSelection:'',maintenanceFormat:'read',month:'',noteStatus:'all',maintenanceCategory:'',maintenanceQuery:'',maintenanceSort:'newest'};
 Object.assign(S,maintenanceDefaults);
+Object.assign(S,{acceptanceId:'',acceptanceQuery:'',acceptanceStatus:'',acceptancePanel:'',acceptanceEvidence:''});
 let lastMaintenanceFocus; let focusMaintenanceAfterRender=false; let maintenanceOriginScroll; let maintenanceAnchor=''; let maintenanceDrawerScroll;
+const readingPositions=new Map();let renderedRoute='';let acceptanceReturnFocus;
 let renderSequence = 0; let lastFocus; let toastTimeout;
 let lastChangeFocus=''; let restoreChangeFocus=false;
 const collapsedFolders = new Set();
@@ -98,24 +101,27 @@ function toast(message,error = false) {
 }
 function route(view, options = {}) {
   if (options.projectId && options.projectId !== S.projectId) Object.assign(S,maintenanceDefaults,{changeQuery:'',changeView:'list',proposalFilter:'all',proposal:''});
-  if ((options.projectId ?? S.projectId) === 'global' && ['journal','architecture'].includes(view)) { view='rules'; options={...options,maintenanceSelection:''}; }
+  if ((options.projectId ?? S.projectId) === 'global' && ['journal','architecture','acceptance'].includes(view)) { view='rules'; options={...options,maintenanceSelection:''}; }
   Object.assign(S,options,{view});
+  if(options.projectId && options.projectId!==S.lastProject)Object.assign(S,{acceptanceId:'',acceptanceQuery:'',acceptanceStatus:'',acceptancePanel:'',acceptanceEvidence:''},options);
   if (options.file) revealFile(options.file);
-  const hash = new URLSearchParams({project:S.projectId,view,file:S.file,proposal:S.proposal,...(view==='proposals' ? {changeView:S.changeView,changeQuery:S.changeQuery,proposalFilter:S.proposalFilter} : {}),...(view === 'journal' ? Object.fromEntries(Object.keys(maintenanceDefaults).map(key=>[key,S[key]])) : {})}).toString();
+  const hash = new URLSearchParams({project:S.projectId,view,file:S.file,proposal:S.proposal,...Object.fromEntries(['acceptanceId','acceptanceQuery','acceptanceStatus','acceptancePanel','acceptanceEvidence'].map(key=>[key,S[key]])),...(view==='proposals' ? {changeView:S.changeView,changeQuery:S.changeQuery,proposalFilter:S.proposalFilter} : {}),...(view === 'journal' ? Object.fromEntries(Object.keys(maintenanceDefaults).map(key=>[key,S[key]])) : {})}).toString();
   if (location.hash.slice(1) === hash) load(); else location.hash = hash;
 }
 function readRoute() {
   const previous = S.projectId+'|'+S.file;
   const values = new URLSearchParams(location.hash.slice(1));
+  for(const key of ['acceptanceId','acceptanceQuery','acceptanceStatus','acceptancePanel','acceptanceEvidence'])S[key]=values.get(key)??'';
   for (const [field,key] of [['projectId','project'],['view','view'],['file','file'],['proposal','proposal']]) if (values.has(key)) S[field] = values.get(key);
   for (const key of ['changeView','changeQuery','proposalFilter']) if (values.has(key)) S[key]=values.get(key);
   if (!['timeline','list'].includes(S.changeView)) S.changeView='list';
   if (!['all','pending','recorded','applied','rejected'].includes(S.proposalFilter)) S.proposalFilter='all';
   if (values.get('project') && values.get('project') !== previous.split('|')[0]) Object.assign(S,maintenanceDefaults);
   for (const [key,value] of Object.entries(maintenanceDefaults)) S[key] = values.has(key) ? values.get(key) : value;
+  if(S.maintenanceSelection==='history:all')S.maintenanceSelection='';
   if (!['baseline','timeline','pitfalls','list'].includes(S.maintenanceView)) S.maintenanceView='baseline';
-  if (!['rules','proposals','journal','connect','architecture'].includes(S.view)) S.view = 'rules';
-  if (S.projectId === 'global' && ['journal','architecture'].includes(S.view)) {
+  if (!['rules','proposals','journal','connect','architecture','acceptance'].includes(S.view)) S.view = 'rules';
+  if (S.projectId === 'global' && ['journal','architecture','acceptance'].includes(S.view)) {
     S.view='rules'; Object.assign(S,maintenanceDefaults);
     values.set('view','rules'); for (const key of Object.keys(maintenanceDefaults)) values.delete(key);
     history.replaceState(null,'','#'+values.toString());
@@ -133,8 +139,8 @@ function keepSelectedFileVisible() {
   else if (item.bottom > bounds.bottom) tree.scrollTop += item.bottom - bounds.bottom;
 }
 function updateMaintenanceLayout() {
-  const modal = (S.view==='journal' && !!S.maintenanceSelection || S.view==='proposals' && !!S.proposal) && !!document.querySelector('.maintenance-detail');
-  document.querySelectorAll('.sidebar,.header,.maintenance-nav,.maintenance-filters,.maintenance-content,.change-controls,.change-stream,.demo-bar,.maintenance-warnings').forEach(node=>node.inert=modal);
+  const modal = (S.view==='journal' && !!S.maintenanceSelection || S.view==='proposals' && !!S.proposal || S.view==='acceptance' && !!S.acceptancePanel) && !!document.querySelector('.maintenance-detail');
+  document.querySelectorAll('.sidebar,.header,.maintenance-nav,.maintenance-filters,.maintenance-content,.change-controls,.change-stream,.demo-bar,.maintenance-warnings,.acceptance-workspace').forEach(node=>node.inert=modal);
   const detail=document.querySelector('.maintenance-detail');
   if (detail) { if (modal) { detail.setAttribute('role','dialog'); detail.setAttribute('aria-modal','true'); } else { detail.removeAttribute('role'); detail.removeAttribute('aria-modal'); } }
   document.body.classList.toggle('maintenance-drawer-open',modal);
@@ -143,7 +149,7 @@ window.addEventListener('resize',updateMaintenanceLayout);
 function shell(content) {
   const project = activeProject();
   const projectButtons = S.data.projects.map(p => `<button class="project-button ${S.projectId === p.id ? 'active' : ''}" data-action="project" data-id="${esc(p.id)}">${icon('folder')}<span>${esc(p.name)}</span>${pending(p.id).length ? `<span class="pill pending">${pending(p.id).length}</span>` : ''}</button>`).join('');
-  const tabs = (S.projectId === 'global' ? [['rules','全局约束'],['proposals','变更记录']] : [['rules','约束'],['proposals','变更记录'],['journal','维护记录'],['architecture','架构']]).map(([id,label]) => `<button class="tab ${S.view === id ? 'active' : ''}" data-action="tab" data-view="${id}" aria-current="${S.view === id ? 'page' : 'false'}">${label}${id === 'proposals' && pending().length ? `<span class="count">${pending().length}</span>` : ''}</button>`).join('');
+  const tabs = (S.projectId === 'global' ? [['rules','全局约束'],['proposals','变更记录']] : [['rules','约束'],['proposals','变更记录'],['acceptance','验收'],['journal','维护记录'],['architecture','架构']]).map(([id,label]) => `<button class="tab ${S.view === id ? 'active' : ''}" data-action="tab" data-view="${id}" aria-current="${S.view === id ? 'page' : 'false'}">${label}${id === 'proposals' && pending().length ? `<span class="count">${pending().length}</span>` : ''}</button>`).join('');
   $('#app').innerHTML = `<aside class="sidebar"><div class="brand"><span class="brand-mark"><img src="/assets/kurisu-avatar.png" width="44" height="44" alt="Q 版红莉栖" decoding="async"></span><span class="brand-name"><strong><span>agent-</span>workbench</strong><small>你的 Agent 工作台</small></span></div><div class="project-label">项目 <span>${S.data.projects.length}</span></div><div class="projects">${projectButtons || '<p class="muted small">尚未登记项目</p>'}</div>${button(icon('plus')+' 登记项目','register','','register')}<div class="sidebar-bottom"><button class="project-button ${S.projectId === 'global' ? 'active':''}" data-action="global">${icon('gear-six')}<span>全局偏好</span></button><button class="project-button ${S.view === 'connect' ? 'active':''}" data-action="connect">${icon('plugs')}<span>Skill 接入</span></button><button class="project-button" data-action="local">${icon('folder-open')}<span>本地文件</span></button></div><div class="local-note">LOCAL · FILES FIRST · v0.1</div>${dropdown('project-switcher','切换项目',[...S.data.projects.map(p => ({value:p.id,label:p.name})),{value:'__global',label:'全局偏好'},{value:'__connect',label:'Skill 接入'},{value:'__register',label:'登记项目…'}],S.view === 'connect' ? '__connect' : S.projectId === 'global' ? '__global' : S.projectId,'mobile-project')}</aside><main class="app-main"><header class="header"><div class="header-top"><h1 title="${esc(project?.root ?? '')}">${esc(project?.name ?? '我的项目')}</h1><span class="root-path" title="${esc(project?.root)}">${esc(project?.root ?? '登记项目后开始使用')}</span><nav class="tabs" aria-label="项目页面">${tabs}</nav><div class="header-context" role="group" aria-label="当前页面操作"></div><button class="btn header-search" data-action="search" aria-label="搜索文档与提案" ${!project ? 'disabled':''}>${icon('magnifying-glass')}<span class="search-text">搜索文档与提案</span><span class="key">/</span></button>${button(icon('gear-six'),'settings','aria-label="文档来源设置" title="文档来源设置"','icon')}</div></header>${S.session.demo ? '<div class="demo-bar">演示工作区 · 数据隔离</div>':''}${S.data.warnings?.length ? `<div class="page">${S.data.warnings.map(w => `<p class="notice warning">${esc(w)}</p>`).join('')}</div>` : ''}${S.message ? `<div class="page"><div class="notice ${esc(S.message.type ?? 'success')}">${esc(S.message.text)}</div></div>`:''}${content}</main>`;
   const toolbar = document.querySelector('.app-main > .page .proposal-toolbar, .app-main > .page .maintenance-nav');
   if (toolbar) {
@@ -169,6 +175,7 @@ function shell(content) {
 function empty(title, description, actions = '', glyph = 'files') { return `<div class="empty">${icon(glyph)}<h2>${esc(title)}</h2><p>${esc(description)}</p><div class="actions">${actions}</div></div>`; }
 
 async function load() {
+  if(renderedRoute)readingPositions.set(renderedRoute,{top:scrollY,drawer:document.querySelector('.maintenance-detail')?.scrollTop??0});
   const previousDetail=$('.maintenance-detail:not(.change-detail)');
   maintenanceDrawerScroll=previousDetail ? {selection:previousDetail.dataset.selection,format:previousDetail.dataset.format,top:previousDetail.scrollTop} : undefined;
   const sequence = ++renderSequence; readRoute();
@@ -181,6 +188,7 @@ async function load() {
     let content;
     if (!S.projectId && S.view !== 'connect') content = welcome();
     else if (S.view === 'connect') content = await connection(sequence);
+    else if(S.view==='acceptance'){const data=await api(`/api/projects/${S.projectId}/acceptance`);S.acceptanceData=data;content=renderAcceptance(data,S,{esc,icon,button,markdown,dropdown,empty});}
     else if (S.view === 'architecture') content = await architecture.render(S.projectId);
     else if (['rules','proposals','journal'].includes(S.view)) {
       const catalog = await api(`/api/projects/${S.projectId}`); if (sequence !== renderSequence) return; S.catalog = catalog;
@@ -190,6 +198,14 @@ async function load() {
     }
     if (sequence !== renderSequence) return;
     shell(content);
+    renderedRoute=location.hash;
+    const position=readingPositions.get(renderedRoute);
+    if(position){window.scrollTo(0,position.top);const drawer=document.querySelector('.maintenance-detail');if(drawer)drawer.scrollTop=position.drawer;}
+    if(S.view==='acceptance'){
+      const drawer=document.querySelector('.acceptance-drawer');
+      if(drawer)drawer.focus({preventScroll:true});
+      else if(acceptanceReturnFocus){[...document.querySelectorAll('[data-action=acceptance-panel]')].find(node=>node.dataset.panel===acceptanceReturnFocus.panel&&node.dataset.file===acceptanceReturnFocus.file)?.focus({preventScroll:true});acceptanceReturnFocus=undefined;}
+    }
     if (S.view === 'architecture') architecture.mount();
   } catch(error) {
     if (sequence !== renderSequence) return;
@@ -266,7 +282,7 @@ async function proposals(sequence) {
 
 async function journal(sequence) {
   const data = await api(`/api/projects/${S.projectId}/maintenance`);
-  if (sequence !== renderSequence) return ''; S.maintenanceData = data; S.entries = data.entries;
+  if (sequence !== renderSequence) return ''; data.requirements=(await api(`/api/projects/${S.projectId}/acceptance`)).items; S.maintenanceData = data; S.entries = data.entries;
   const selected = data.notes.find(note => 'note:'+note.file === S.maintenanceSelection) ?? S.catalog.docs.find(doc=>'document:'+doc.file===S.maintenanceSelection);
   S.maintenanceDocument = selected ? await api(`/api/projects/${S.projectId}/document?file=${encodeURIComponent(selected.file)}`) : null;
   if (sequence !== renderSequence) return '';
@@ -389,6 +405,7 @@ async function rebase(id) {
 
 async function documentDetail(projectId,file) {
   const catalog = await api(`/api/projects/${projectId}`); const doc = catalog.docs.find(item => item.file === file);
+  if(doc?.role==='requirement')return route('acceptance',{projectId,acceptanceId:file,acceptancePanel:'',acceptanceEvidence:''});
   const result = await api(`/api/projects/${projectId}/document?file=${encodeURIComponent(file)}`);
   if (S.view==='journal' && S.maintenanceSelection && projectId===S.projectId) return openMaintenance(doc?.role==='decision' ? 'note':'document',file);
   const backlinks = catalog.docs.filter(item => item.file !== file && (item.title === file || item.file === result.supersededBy));
@@ -449,6 +466,7 @@ async function action(target) {
     const id = target.closest('.custom-select').id; const value = target.dataset.value;
     closeDropdowns(true);
     if (id.startsWith('architecture-')) return architecture.choose(id,value);
+    if(id==='acceptance-status'){focusSelectAfterRender=id;return route('acceptance',{acceptanceStatus:value});}
     if (id === 'constraint-template') return modules.selectTemplate(value);
     if (id.startsWith('constraint-config-')) return modules.selectConfiguration(id.slice('constraint-config-'.length),value);
     if (id === 'constraint-directory') return modules.selectDirectory(value);
@@ -463,6 +481,10 @@ async function action(target) {
     return route('rules',{projectId:value,file:''});
   }
   if (name === 'close') return closeDialog();
+  if(name==='acceptance-go')return route('acceptance',{acceptanceId:target.dataset.id,acceptancePanel:'',acceptanceEvidence:''});
+  if(name==='acceptance-back')return route('acceptance',{acceptanceId:'',acceptancePanel:'',acceptanceEvidence:''});
+  if(name==='acceptance-decision')return route('journal',{maintenanceView:'list',maintenanceSelection:'note:'+target.dataset.file});
+  if(name==='acceptance-panel'){if(!S.acceptancePanel)acceptanceReturnFocus={panel:target.dataset.panel,file:target.dataset.file??''};return route('acceptance',{acceptancePanel:target.dataset.panel,acceptanceEvidence:target.dataset.file??''});}
   if (name === 'refresh') { S.message = null; return load(); }
   if (name === 'register') return registerProject();
   if (name === 'edit-constraints') return modules.open(sourceId());
@@ -566,6 +588,8 @@ document.addEventListener('keydown',event => {
   if (event.key === '/' && !S.maintenanceSelection && !event.target.closest('.custom-select') && !$('#dialog').open && !event.target.matches('input,textarea,select')) { event.preventDefault(); searchDialog(); }
 });
 $('#dialog').addEventListener('cancel',() => setTimeout(() => lastFocus?.focus?.(),0));
+document.addEventListener('submit',event=>{if(event.target.id!=='acceptance-search')return;event.preventDefault();route('acceptance',{acceptanceQuery:new FormData(event.target).get('query').trim()});});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&S.view==='acceptance'&&S.acceptancePanel){event.preventDefault();route('acceptance',{acceptancePanel:'',acceptanceEvidence:''});}});
 window.addEventListener('hashchange',load);
 window.addEventListener('resize',keepSelectedFileVisible);
 window.addEventListener('focus',() => { if (S.session && !$('#dialog').open) load(); });

@@ -1,0 +1,16 @@
+<acceptance>
+  <file>docs/需求/进行中/项目成员权限.md</file>
+  <baseHash>读取需求获得的完整hash</baseHash>
+  <operationId>verify-member-permissions-1</operationId>
+  <runs><run>
+    <id>permissions-round-1</id>
+    <at>2026-11-26T08:00:00+08:00</at>
+    <version>实际被测代码版本</version>
+    <results><result>
+      <criterionId>member-readonly</criterionId>
+      <standard>普通成员无法修改配置</standard>
+      <status>passed</status>
+      <evidenceList><evidence><title>权限请求记录</title><file>docs/证据/权限请求.txt</file></evidence></evidenceList>
+    </result></results>
+  </run></runs>
+</acceptance>

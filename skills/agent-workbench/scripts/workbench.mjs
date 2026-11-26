@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const root = path.resolve(process.env.AGENT_WORKBENCH_ROOT ?? path.join(path.dirname(fileURLToPath(import.meta.url)),'../../..'));
-const commands = ['projects','context','read','journal','maintenance','propose','change','record','notes','architecture'];
+const commands = ['projects','context','read','journal','maintenance','propose','change','record','notes','architecture','acceptance'];
 try {
   if (!commands.includes(process.argv[2])) throw Error('只支持读取、查询、提案、维护记录与决策笔记操作；没有约束批准命令。可用命令：'+commands.join(', '));
   const manifest = JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));

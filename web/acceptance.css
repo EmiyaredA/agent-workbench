@@ -1,0 +1,215 @@
+.acceptance-workspace {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  min-height: calc(100vh - 90px);
+}
+.acceptance-list {
+  padding: 28px 22px;
+  border-right: 1px solid var(--line);
+}
+.acceptance-list h2 {
+  font-size: 20px;
+  margin: 0 0 20px;
+}
+.acceptance-list form {
+  display: flex;
+  margin-bottom: 12px;
+}
+.acceptance-list input {
+  min-width: 0;
+  width: 100%;
+}
+.acceptance-list select {
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+}
+.requirement-row {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: 18px 10px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.requirement-row > span {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+}
+.requirement-row small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+}
+.requirement-row.active {
+  background: #f8eeeb;
+  border-radius: 8px;
+  box-shadow: inset 3px 0 #a33f37;
+}
+.acceptance-reader {
+  padding: 32px;
+  min-width: 0;
+  max-width: 1300px;
+}
+.requirement-heading {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.requirement-heading h1 {
+  font-size: 26px;
+  margin: 0;
+}
+.requirement-heading > .btn:last-child {
+  margin-left: auto;
+}
+.acceptance-reader > section {
+  margin-top: 30px;
+}
+.acceptance-reader h2 {
+  font-size: 20px;
+}
+.acceptance-status {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  background: #eee;
+  color: #666;
+}
+.acceptance-status.passed,
+.acceptance-status.na,
+.acceptance-status.completed {
+  background: #e6f4e9;
+  color: #27603a;
+}
+.acceptance-status.failed {
+  background: #fbe7e6;
+  color: #9e352e;
+}
+.acceptance-status.active,
+.acceptance-status.blocked,
+.acceptance-status.stale {
+  background: #fff0d9;
+  color: #91551d;
+}
+.acceptance-table {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 16px 0;
+}
+.acceptance-table .table {
+  width: 100%;
+  margin: 0;
+}
+.acceptance-table td small {
+  display: block;
+  max-width: 220px;
+}
+.acceptance-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  border-block: 1px solid var(--line);
+  margin-top: 30px;
+  padding: 20px 0;
+}
+.acceptance-summary section + section {
+  border-left: 1px solid var(--line);
+  padding-left: 30px;
+}
+.acceptance-mobile-back {
+  display: none;
+}
+.acceptance-evidence {
+  width: 100%;
+  height: 60vh;
+  border: 1px solid var(--line);
+  background: white;
+}
+.verification-round {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 20px;
+}
+.verification-result {
+  padding: 15px 0;
+  border-top: 1px solid var(--line);
+}
+.verification-result > .acceptance-status {
+  margin-left: 12px;
+}
+.acceptance-drawer {
+  z-index: 60;
+}
+.acceptance-page .notice {
+  margin: 12px 24px;
+}
+.acceptance-reader:focus {
+  outline: 0;
+}
+@media (max-width: 1050px) {
+  .acceptance-workspace {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+  .acceptance-reader {
+    padding: 24px;
+  }
+  .acceptance-summary {
+    grid-template-columns: 1fr;
+  }
+  .acceptance-summary section + section {
+    border: 0;
+    padding: 0;
+  }
+}
+@media (max-width: 700px) {
+  .acceptance-workspace {
+    display: block;
+  }
+  .acceptance-list {
+    border: 0;
+  }
+  .acceptance-reader {
+    display: none;
+  }
+  .acceptance-page.has-selection .acceptance-list {
+    display: none;
+  }
+  .acceptance-page.has-selection .acceptance-reader {
+    display: block;
+  }
+  .acceptance-mobile-back {
+    display: inline-flex;
+    margin-bottom: 20px;
+  }
+  .acceptance-table {
+    font-size: 13px;
+  }
+  .requirement-heading > .btn:last-child {
+    margin-left: 0;
+  }
+  .acceptance-drawer {
+    width: 100%;
+  }
+}
+
+.acceptance-list .custom-select {
+  width: 100%;
+  margin-bottom: 20px;
+}
+.acceptance-list .dropdown-trigger {
+  width: 100%;
+}

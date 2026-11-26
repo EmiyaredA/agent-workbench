@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { Acceptance } from './acceptance.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -14,6 +15,8 @@ const root = path.resolve(directory, '..');
 const iconsDirectory = path.dirname(fileURLToPath(import.meta.resolve('@phosphor-icons/web/regular')));
 const assets = {
   '/': ['web/index.html', 'text/html; charset=utf-8'],
+  '/acceptance.js': ['web/acceptance.js','text/javascript; charset=utf-8'],
+  '/acceptance.css': ['web/acceptance.css','text/css; charset=utf-8'],
   '/maintenance.js': ['web/maintenance.js','text/javascript; charset=utf-8'],
   '/app.js': ['web/app.js', 'text/javascript; charset=utf-8'],
   '/rule-modules.js': ['web/rule-modules.js', 'text/javascript; charset=utf-8'],
@@ -34,6 +37,7 @@ const send = (res, status, data) => { res.writeHead(status, { 'Content-Type': 'a
 export function createApp({ demo = false, dataDir = path.join(root,'.runtime',demo ? demoDirectory : 'workbench'), store = new Workbench(dataDir) } = {}) {
   store.recover(); if (demo) seedDemo(store);
   const architecture=new Architecture(store);
+  const acceptance=new Acceptance(store);
   const nonce = randomBytes(32).toString('hex');
   const server = http.createServer(async (req, res) => {
   try {
@@ -41,12 +45,12 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     const allowedHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
     if (!allowedHosts.has(req.headers.host)) throw new Fault('Host 不匹配', 403);
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'self'; frame-ancestors 'none'; base-uri 'none'");
     const url = new URL(req.url, `http://${req.headers.host}`);
     const pathname = url.pathname;
     if (req.method === 'GET' && pathname === '/api/session') return send(res, 200, { nonce, demo, dataDir: store.dataDir, root, version: '0.1.0', layout: projectLayout });
     if (req.method === 'GET' && pathname === '/api/skill') {
-      const allowed = ['SKILL.md','references/architecture.md','assets/architecture/version.xml','references/maintenance-records.md','assets/maintenance/record.xml','assets/constraints/change.xml','assets/constraints/propose.xml','references/decision-notes.md','references/note-operations.md','assets/notes/proposed.md','assets/notes/implemented.md','assets/notes/rejected.md'].map(file=>'skills/agent-workbench/'+file);
+      const allowed = ['SKILL.md','references/acceptance.md','assets/acceptance/requirement.xml','assets/acceptance/run.xml','references/architecture.md','assets/architecture/version.xml','references/maintenance-records.md','assets/maintenance/record.xml','assets/constraints/change.xml','assets/constraints/propose.xml','references/decision-notes.md','references/note-operations.md','assets/notes/proposed.md','assets/notes/implemented.md','assets/notes/rejected.md'].map(file=>'skills/agent-workbench/'+file);
       const file = url.searchParams.get('file') ?? allowed[0];
       if (!allowed.includes(file)) throw new Fault('Skill 资源未开放',404);
       return send(res, 200, { file, path: path.join(root,file), content: fs.readFileSync(path.join(root,file),'utf8') });
@@ -88,6 +92,17 @@ export function createApp({ demo = false, dataDir = path.join(root,'.runtime',de
     if (pathname === '/api/projects' && req.method === 'POST') return send(res, 201, store.register(input));
     if (pathname === '/api/global' && req.method === 'POST') { store.setGlobal(input.file); return send(res, 200, { ok: true }); }
     if (pathname === '/api/changes' && req.method === 'POST') return send(res,201,store.writeChange(input));
+    const acceptanceMatch=pathname.match(/^\/api\/projects\/([^/]+)\/acceptance(?:\/(evidence))?$/);
+    if(acceptanceMatch && req.method==='GET') {
+      const [,id,operation]=acceptanceMatch;
+      const key=url.searchParams.get('id');
+      if(operation==='evidence') {
+        const result=acceptance.evidence(id,key,url.searchParams.get('file'));
+        res.setHeader('Content-Security-Policy',"sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'; frame-ancestors 'self'");
+        res.writeHead(200,{'Content-Type':result.type,'Cache-Control':'no-store'});return res.end(result.data);
+      }
+      return send(res,200,key?acceptance.read(id,key):acceptance.list(id));
+    }
     const architectureMatch=pathname.match(/^\/api\/projects\/([^/]+)\/architecture(?:\/(status|source|import|adopt|request|compare))?$/);
     if (architectureMatch) {
       const [,id,operation]=architectureMatch;

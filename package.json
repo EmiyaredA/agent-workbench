@@ -16,7 +16,7 @@
     "check": "node scripts/check.mjs",
     "build": "node scripts/build.mjs",
     "agent": "node src/cli.mjs",
-    "test:ui": "node scripts/verify-ui.mjs && node scripts/verify-maintenance-ui.mjs && node scripts/verify-rule-modules-ui.mjs && node scripts/verify-template-ui.mjs && node scripts/verify-architecture-ui.mjs"
+    "test:ui": "node scripts/verify-ui.mjs && node scripts/verify-maintenance-ui.mjs && node scripts/verify-rule-modules-ui.mjs && node scripts/verify-template-ui.mjs && node scripts/verify-architecture-ui.mjs && node scripts/verify-acceptance-ui.mjs"
   },
   "dependencies": {
     "@phosphor-icons/web": "2.1.2",

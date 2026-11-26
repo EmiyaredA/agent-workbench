@@ -154,12 +154,10 @@ try {
   assert.ok(fs.readFileSync(path.join(projectRoot,'AGENTS.md'),'utf8').includes('用户后续编辑')); check('conflict blocks write; rebase remains pending and preserves external edits');
   await page.locator('[data-action=reject-proposal]').click(); await fill('reason','冲突验收完成，不应用候选。'); await submit(); await waitFormClosed();
 
-  store.record(projectId,{title:'浏览器验收记录',category:'testing',background:'验证看板阅读',result:'记录保存在标准维护目录',verification:'隔离浏览器检查',next:'后续按真实项目维护',topic:'AGENTS.md',operationId:'board-journal-fixture'});
+  const journalRecord=store.record(projectId,{title:'浏览器验收记录',category:'testing',background:'验证看板阅读',result:'记录保存在标准维护目录',verification:'隔离浏览器检查',next:'后续按真实项目维护',topic:'AGENTS.md',operationId:'board-journal-fixture'});
   await openTab('journal'); await visible(page.getByRole('heading',{name:'维护路径',exact:true})); await noAuthoring();
-  await page.locator('[data-action=maintenance-open][data-kind=history]').click();
-  await visible(page.locator('.maintenance-history').getByRole('button',{name:'浏览器验收记录',exact:true}));
-  await capture('12-maintenance-history');
-  await page.locator('.maintenance-history').getByRole('button',{name:'浏览器验收记录',exact:true}).click();
+  assert.equal(await page.locator('[data-action=maintenance-open][data-kind=history]').count(),0);
+  await page.goto(base+`/#project=${projectId}&view=journal&maintenanceSelection=${encodeURIComponent('entry:'+journalRecord.key)}`);
   await visible(page.locator('.maintenance-detail h1').getByText('浏览器验收记录',{exact:true}));
   await noAuthoring(); await capture('13-read-journal-entry');
   await page.locator('[data-action=maintenance-close]').click(); await page.locator('.maintenance-detail').waitFor({state:'hidden'});

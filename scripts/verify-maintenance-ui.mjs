@@ -27,6 +27,7 @@ fs.appendFileSync(path.join(project.root,secondNote),'\n## 相关决定\n\n[文�
 try {
   await page.goto(base+`/#project=${project.id}&view=journal`);await page.getByRole('heading',{name:'系统承重墙',exact:true}).waitFor();
   assert.equal(await page.locator('.maintenance-tabs button').count(),4);assert.ok(await page.locator('.decision-card').count()>=5);
+  assert.deepEqual(await page.locator('.maintenance-tabs button').allTextContents(),['架构基线','演进时间线','避坑智库','决策清单']);
   const viewGroup=page.getByRole('group',{name:'维护记录视图',exact:true});
   assert.equal(await viewGroup.locator('[aria-pressed=true]').count(),1);
   assert.equal(await viewGroup.locator('button .ph').count(),4);
@@ -67,18 +68,38 @@ try {
   await page.locator('.decision-chapter [data-kind=entry]').first().click();await page.locator('.maintenance-detail[data-selection^="entry:"]').waitFor();assert.equal(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('maintenanceView'),'baseline');assert.ok(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('maintenanceSelection').startsWith('entry:'));
   await capture('03-linked-iteration');await click('maintenance-close');await page.goBack();await page.locator('.maintenance-detail').waitFor();await click('maintenance-close');checks.push('decision to iteration links and browser navigation');
   await view('timeline');await page.locator('.iteration-row').first().waitFor();await capture('04-timeline');
-  await choose('month-filter','2026-10');await page.waitForFunction(()=>[...document.querySelectorAll('.iteration-row time')].every(node=>node.textContent.startsWith('2026-10')));assert.ok(await page.locator('.iteration-row').count()>0);
-  assert.equal(await page.locator('#maintenance-kind').count(),0);
+  const timelineUrl=page.url();await page.reload();await page.getByRole('heading',{name:'技术演进时间线',exact:true}).waitFor();
+  assert.equal(page.url(),timelineUrl);
+  assert.equal(await page.locator('[data-action=maintenance-view][data-view=timeline]').getAttribute('aria-pressed'),'true');
+  await choose('month-filter','2026-10');await page.waitForFunction(()=>document.querySelectorAll('.iteration-row').length>0 && [...document.querySelectorAll('.iteration-row time')].every(node=>node.textContent.startsWith('2026-10')));
   const filteredTimeline=await page.locator('.iteration-row [data-kind=note]').evaluateAll(nodes=>nodes.map(n=>n.dataset.key).sort());
   assert.ok(filteredTimeline.length>0);assert.equal(await page.locator('.iteration-row [data-kind=entry]').count(),0);
   await view('list');await page.waitForFunction(()=>document.querySelectorAll('.decision-table tbody tr').length>0);
   assert.deepEqual(await page.locator('.decision-table [data-kind=note]').evaluateAll(nodes=>nodes.map(n=>n.dataset.key).sort()),filteredTimeline);
   assert.equal(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('month'),'2026-10');
-  await click('maintenance-reset');await view('timeline');await capture('05-decision-timeline');checks.push('timeline and list project the same decision IDs; switching views preserves month filters');
-  const timelineIds=await page.locator('.iteration-row [data-kind=note]').evaluateAll(nodes=>nodes.map(n=>n.dataset.key).sort());
+  await click('maintenance-reset');await view('timeline');await capture('05-decision-timeline');
   const sourceNotes=store.maintenance(project.id).notes;
+  const timelineIds=await page.locator('.iteration-row [data-kind=note]').evaluateAll(nodes=>nodes.map(n=>n.dataset.key).sort());
   assert.deepEqual(timelineIds,sourceNotes.map(n=>n.file).sort());
-  await view('list');assert.deepEqual(await page.locator('.decision-table [data-kind=note]').evaluateAll(nodes=>nodes.map(n=>n.dataset.key).sort()),timelineIds);
+  await choose('maintenance-sort','oldest');
+  const oldestDates=await page.locator('.iteration-row time').allTextContents();
+  assert.deepEqual(oldestDates,oldestDates.slice().sort());
+  await choose('maintenance-sort','references');
+  const headings=await page.locator('.maintenance-timeline .month-heading').allTextContents();
+  assert.equal(new Set(headings.map(text=>text.split(' · ')[0])).size,headings.length);
+  for (const width of [320,390,1512]) {
+    await page.setViewportSize({width,height:844});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`decision timeline overflows at ${width}`);
+    await capture(`decision-timeline-${width}`);
+  }
+  await page.locator('.iteration-row [data-kind=note]').first().click();await page.locator('.maintenance-detail h1').waitFor();
+  const timelineDetailUrl=page.url();await page.reload();await page.locator('.maintenance-detail h1').waitFor();assert.equal(page.url(),timelineDetailUrl);
+  await click('maintenance-close');await page.goBack();await page.locator('.maintenance-detail h1').waitFor();
+  await page.goForward();await page.locator('.maintenance-detail').waitFor({state:'hidden'});
+  await view('list');
+  await page.waitForFunction(count=>document.querySelectorAll('.decision-table tbody tr').length===count,sourceNotes.length);
+  assert.deepEqual(await page.locator('.decision-table [data-kind=note]').evaluateAll(nodes=>nodes.map(n=>n.dataset.key).sort()),timelineIds);
+  checks.push('timeline and list retain the same decisions and month filters; timeline deep links, sorting, history and narrow layouts work');
   await choose('maintenance-category','architecture');await choose('maintenance-status','implemented');await choose('maintenance-sort','references');
   await page.locator('#maintenance-query').fill('文件作为唯一正式来源');await page.locator('#maintenance-query').press('Enter');
   await page.waitForFunction(()=>document.querySelectorAll('.decision-table tbody tr').length===1);
@@ -101,19 +122,15 @@ try {
   store.record(project.id,{title:'浏览器维护关联验收',category:'testing',background:'跨 Agent 交接需要关联决定',result:'四视图读取同一批文件',verification:'隔离浏览器完成交互',next:'观察实际使用规模',relatedFiles:['AGENTS.md'],decisionFiles:[firstNote],operationId:'board-maintenance-fixture'});
   assert.equal(store.journal(project.id).length,before+1);
   await page.reload(); await page.locator('.maintenance-tabs').waitFor();
-  await page.locator('[data-action=maintenance-open][data-kind=history]').click();
-  await page.locator('.maintenance-history [data-kind=entry]').filter({hasText:'浏览器维护关联验收'}).click();
+  assert.equal(await page.locator('[data-action=maintenance-open][data-kind=history]').count(),0);
+  await view('baseline');await page.locator(`.decision-card[data-key="${firstNote}"]`).click();await page.locator('.maintenance-detail').waitFor();
+  await page.locator('.decision-chapter [data-kind=entry]').filter({hasText:'浏览器维护关联验收'}).click();
   await page.locator('.maintenance-detail h1').getByText('浏览器维护关联验收',{exact:true}).waitFor();
-  assert.equal(await page.locator('.maintenance-detail').getByText(/awb-record:/).count(),0);
-  assert.equal(await page.locator('[data-action=add-journal]').count(),0);
-  await capture('09-read-linked-record');checks.push('board reads Agent-created linked iterations without manual record controls');
-  await click('maintenance-close');await click('maintenance-reset');await view('timeline');
-  assert.equal(await page.locator('[data-action=maintenance-view][data-view=timeline]').getAttribute('aria-pressed'),'true');
+  await capture('09-read-linked-record');await click('maintenance-close');
+  await click('maintenance-reset');await view('timeline');
   assert.equal(await page.evaluate(()=>document.activeElement?.dataset.view),'timeline');
   assert.equal(await page.locator('.iteration-row').filter({hasText:'浏览器维护关联验收'}).count(),0);
-  await page.locator('[data-action=maintenance-open][data-kind=history]').click();await page.locator('.maintenance-detail h1').getByText('项目迭代日志',{exact:true}).waitFor();
-  await page.locator('.maintenance-history [data-kind=entry]').filter({hasText:'浏览器维护关联验收'}).click();await page.locator('.maintenance-detail h1').getByText('浏览器维护关联验收',{exact:true}).waitFor();
-  assert.equal(await page.locator('#dialog[open]').count(),0);await click('maintenance-close');checks.push('new iteration stays in journal history and relations, never becomes a decision timeline item');
+  checks.push('historical logs remain readable through source relations with no independent entry and never become decision timeline items');
   const invalidFile='.agents/notes/implemented/architecture/2026-11-25-invalid.md';
   const invalidText='# Agent Note: 校验失败的临时决定\n\nStatus: implemented\n\n## Problem\n\n缺少必要的决策章节。\n';fs.writeFileSync(path.join(project.root,invalidFile),invalidText);
   await view('baseline');await page.reload();await page.getByRole('heading',{name:'系统承重墙',exact:true}).waitFor();
@@ -126,7 +143,7 @@ try {
   await page.setViewportSize({width:390,height:844});await page.locator('.maintenance-detail[aria-modal=true]').waitFor();await capture('10-mobile-detail');
   assert.equal(await page.locator('.maintenance-content').evaluate(node=>node.inert),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('.maintenance-detail').focus();await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>!!document.activeElement.closest('.maintenance-detail')),true);await page.keyboard.press('Escape');await page.locator('.maintenance-detail').waitFor({state:'hidden'});await capture('11-mobile-baseline');checks.push('mobile drawer traps focus, closes with Escape and has no viewport overflow');
-  await view('timeline');await page.locator('#month-filter .dropdown-trigger').press('ArrowDown');await page.keyboard.press('End');await page.keyboard.press('Enter');assert.equal(await page.locator('#month-filter .dropdown-trigger').getAttribute('aria-expanded'),'false');assert.equal(await page.locator('select').count(),0);checks.push('custom dropdown keyboard operation and no native selects');
+  await view('list');await page.locator('#month-filter .dropdown-trigger').press('ArrowDown');await page.keyboard.press('End');await page.keyboard.press('Enter');assert.equal(await page.locator('#month-filter .dropdown-trigger').getAttribute('aria-expanded'),'false');assert.equal(await page.locator('select').count(),0);checks.push('custom dropdown keyboard operation and no native selects');
   await page.setViewportSize({width:1512,height:982});await page.locator('[data-action=project]').filter({hasText:'portfolio'}).click();await page.locator('.header h1').filter({hasText:'portfolio'}).waitFor();await page.locator('.tabs [data-action=tab][data-view=journal]').click();await page.locator('.maintenance-tabs').waitFor();assert.equal(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('maintenanceSelection'),'');assert.equal(await page.locator('.maintenance-detail').count(),0);checks.push('project switching clears selections and resets filters');
   await click('global');await page.locator('.reader h1').waitFor();
   assert.deepEqual(await page.locator('.tabs [data-action=tab]').evaluateAll(nodes=>nodes.map(node=>node.dataset.view)),['rules','proposals']);
@@ -136,7 +153,9 @@ try {
   assert.equal(new URLSearchParams(new URL(page.url()).hash.slice(1)).get('view'),'rules');
   assert.equal(await page.locator('.maintenance-page').count(),0);await capture('12-global-constraints');checks.push('global preferences expose only constraints and changes; legacy maintenance links return to constraints');
   const emptyRoot=path.join(temporary,'empty-project');fs.mkdirSync(emptyRoot);const empty=store.register({name:'Empty',root:emptyRoot});
-  await page.goto(base+`/#project=${empty.id}&view=journal`);await page.getByRole('heading',{name:'暂无当前架构决定',exact:true}).waitFor();await capture('13-empty');checks.push('empty projects remain usable without scaffolding creation');
+  await page.goto(base+`/#project=${empty.id}&view=journal`);await page.getByRole('heading',{name:'暂无当前架构决定',exact:true}).waitFor();await capture('13-empty');
+  await view('timeline');await page.getByRole('heading',{name:'没有匹配的决策',exact:true}).waitFor();
+  assert.equal(fs.readdirSync(emptyRoot).length,0);checks.push('empty projects and decision timelines remain usable without scaffolding creation');
   assert.deepEqual(errors,[]);checks.push('no browser runtime errors');
   fs.writeFileSync(path.join(output,'report.json'),JSON.stringify({result:'passed',checks,screenshots},null,2));console.log(JSON.stringify({result:'passed',checks:checks.length,screenshots:screenshots.length,output}));
 } catch(error) {await capture('failure').catch(()=>{});fs.writeFileSync(path.join(output,'report.json'),JSON.stringify({result:'failed',error:error.stack,checks,screenshots,errors},null,2));throw error;}

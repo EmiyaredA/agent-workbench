@@ -1,0 +1,16 @@
+<acceptance>
+  <file>docs/需求/进行中/项目成员权限.md</file>
+  <baseHash></baseHash>
+  <operationId>create-member-permissions</operationId>
+  <id>member-permissions</id>
+  <title>项目成员权限</title>
+  <description>管理员维护配置，普通成员只读。</description>
+  <version>填写实际代码版本</version>
+  <status>active</status>
+  <criteria>
+    <criterion><id>member-readonly</id><text>普通成员无法修改配置</text></criterion>
+    <criterion><id>admin-save</id><text>管理员可正常保存配置</text></criterion>
+  </criteria>
+  <review><status>pending</status></review>
+  <delivery>尚未合并，等待验证。</delivery>
+</acceptance>

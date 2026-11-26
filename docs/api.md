@@ -103,3 +103,11 @@ Skill 资源白名单提供维护记录指引及 `assets/maintenance/record.xml`
 新增日志在落盘前检查单行标题（不超过500字）、记录标识、字段与元数据的解析一致性，以及旧日志追加后仍能独立解析。实际关联的决策须通过格式与活跃链接检查；引用归档须匹配磁盘封印。无效输入返回400并保留原文，重复完成请求不重复写入。约束直接修改、批准和整套保存也在改正式文件前预检对应维护记录。
 
 `maintenance.notes[].validation` 返回 `{scope:'format',ok,errors}`，格式错误同步列入 `warnings`。看板标为“格式待修”并排除架构基线，其余视图保留原文。此为结构校验，不证明业务实现、自然语言约束或 verification 字段中的事实；完整封印历史校验继续使用 notes verify 与正确的 base-ref。
+
+## 需求验收
+
+- `GET /api/projects/:id/acceptance` 返回 items 和 warnings，条目包含原文 file/hash、结构 model、当前 criteria 状态、passed 和关联 decisions。
+- `GET /api/projects/:id/acceptance?id=<稳定ID或文件>` 返回一个需求。重复 ID 或目标缺失返回 404。
+- `GET /api/projects/:id/acceptance/evidence?id=<需求ID>&file=<项目相对路径>` 只读取该需求引用的证据或原型。最大 5 MB，路径遵守项目边界，HTML 在 sandbox CSP 下展示。
+
+写入通过 CLI `acceptance --action verify/write/append --input <XML>` 完成。verify 验证完整写入但不改项目文件；write 更新需求管理区，append 追加轮次。baseHash 与当前原文不一致返回冲突，相同 operationId 和相同输入重试幂等。格式见 Skill 验收参考。

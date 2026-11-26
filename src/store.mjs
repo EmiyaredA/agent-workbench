@@ -145,7 +145,7 @@ export class Workbench {
     };
     for (const file of project.ruleFiles) if (exists(path.join(project.root,file))) found.add(file);
     for (const file of project.referenceFiles ?? []) if (exists(path.join(project.root,file))) found.add(file);
-    if (id !== 'global') for (const dir of [...project.ruleRoots, projectLayout.journalDir, projectLayout.decisionDir]) walk(dir);
+    if (id !== 'global') for (const dir of [...project.ruleRoots, projectLayout.journalDir, projectLayout.decisionDir,...projectLayout.requirementRoots]) walk(dir);
     if (limited || found.size >= 1000) warnings.push({ message: '固定来源扫描达到数量或深度上限，结果可能不完整' });
     const docs = [];
     for (const file of found) {
@@ -154,7 +154,7 @@ export class Workbench {
         const title = content.match(/^#\s+(?:Agent Note[:：]\s*)?(.+)$/m)?.[1] ?? path.basename(file);
         const note = file.match(/^\.agents\/notes\/(proposed|implemented|rejected|archived)\/([^/]+)\//);
         const lineage = parseDocLineage(content, project.root, file);
-        const role = note ? 'decision' : this.isRule(project, file) ? 'rule' : file.startsWith(projectLayout.journalDir + '/') ? 'journal' : 'document';
+        const role = projectLayout.requirementRoots.some(root=>file.startsWith(root+'/')) ? 'requirement' : note ? 'decision' : this.isRule(project, file) ? 'rule' : file.startsWith(projectLayout.journalDir + '/') ? 'journal' : 'document';
         docs.push({ file, title, role, scope: project.scope ?? (project.ruleFiles.includes(file) ? 'project' : 'module'),
           status: note?.[1] ?? (lineage.superseded ? 'superseded' : 'current'), category: note?.[2] ?? '',
           date: path.basename(file).match(/^\d{4}-\d{2}(?:-\d{2})?/)?.[0] ?? '', ...lineage });
